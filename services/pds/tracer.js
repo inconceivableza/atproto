@@ -7,6 +7,9 @@ const { registerInstrumentations } = require('@opentelemetry/instrumentation')
 const {
   BetterSqlite3Instrumentation,
 } = require('opentelemetry-plugin-better-sqlite3')
+const {
+  UndiciInstrumentation
+} = require('@opentelemetry/instrumentation-undici')
 const { TracerProvider } = require('dd-trace') // Only works with commonjs
   .init({ logInjection: true })
   .use('express', {
@@ -18,7 +21,12 @@ tracer.register()
 
 registerInstrumentations({
   tracerProvider: tracer,
-  instrumentations: [new BetterSqlite3Instrumentation()],
+  instrumentations: [
+    new BetterSqlite3Instrumentation(),
+    new UndiciInstrumentation({
+      requestHook: (span, req) => { console.log("OPENTELEMETRY-UNDICI"); span.setTag('debug-propagate', 'pds-otel-trace'); },
+    })
+  ],
 })
 
 const path = require('node:path')
