@@ -12,6 +12,9 @@ const { TracerProvider } = require('dd-trace') // Only works with commonjs
   .use('express', {
     hooks: { request: maintainXrpcResource },
   })
+  .use('undici', {
+    hooks: { request: (span, req) => { span.setTag('http.url', req.origin + req.path); span.setTag('debug-propagate', 'pds-dd-trace'); }}
+  })
 
 const tracer = new TracerProvider()
 tracer.register()
