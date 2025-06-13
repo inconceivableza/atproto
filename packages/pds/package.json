@@ -1,6 +1,6 @@
 {
   "name": "@atproto/pds",
-  "version": "0.4.143",
+  "version": "0.4.147",
   "license": "MIT",
   "description": "Reference implementation of atproto Personal Data Server (PDS)",
   "keywords": [
@@ -47,6 +47,7 @@
     "@atproto/xrpc-server": "workspace:^",
     "@did-plc/lib": "^0.0.4",
     "@hapi/address": "^5.1.1",
+    "@opentelemetry/api": "^1.9.0",
     "better-sqlite3": "^10.0.0",
     "bytes": "^3.1.2",
     "compression": "^1.7.4",

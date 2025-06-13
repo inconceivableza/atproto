@@ -4,10 +4,14 @@
 'use strict'
 
 const { registerInstrumentations } = require('@opentelemetry/instrumentation')
+const otel = require('@opentelemetry/api')
 const {
   BetterSqlite3Instrumentation,
 } = require('opentelemetry-plugin-better-sqlite3')
-const { TracerProvider } = require('dd-trace') // Only works with commonjs
+const {
+  UndiciInstrumentation
+} = require('@opentelemetry/instrumentation-undici')
+const { TracerProvider, tracer } = require('dd-trace') // Only works with commonjs
   .init({ logInjection: true })
   .use('express', {
     hooks: { request: maintainXrpcResource },
@@ -16,13 +20,31 @@ const { TracerProvider } = require('dd-trace') // Only works with commonjs
     hooks: { request: (span, req) => { span.setTag('http.url', req.origin + req.path); span.setTag('debug-propagate', 'pds-dd-trace'); }}
   })
 
-const tracer = new TracerProvider()
-tracer.register()
+const tracerProvider = new TracerProvider()
+const otelTracer = otel.trace.getTracer('pds')
 
 registerInstrumentations({
-  tracerProvider: tracer,
-  instrumentations: [new BetterSqlite3Instrumentation()],
+  tracerProvider: tracerProvider,
+  instrumentations: [
+    new BetterSqlite3Instrumentation(),
+    new UndiciInstrumentation({
+      requestHook: (span, req) => {
+        try {
+          const activeSpan = tracer.scope().active()
+          const childSpan = tracer.startSpan('undici.requestHook', {childOf: activeSpan})
+          childSpan.setTag('http.method', req.method)
+          childSpan.setTag('http.origin', req.origin)
+          childSpan.setTag('http.path', req.path)
+          childSpan.finish()
+        } catch (error) {
+          console.error("OpenTelemetry UndiciInstrumentation request hook error:", error);
+        }
+      },
+    })
+  ],
 })
+
+tracerProvider.register()
 
 const path = require('node:path')
 
