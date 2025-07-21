@@ -1389,6 +1389,10 @@ export const schemaDict = {
                   'lex:com.atproto.repo.strongRef',
                 ],
               },
+              modTool: {
+                type: 'ref',
+                ref: 'lex:com.atproto.moderation.createReport#modTool',
+              },
             },
           },
         },
@@ -1432,6 +1436,23 @@ export const schemaDict = {
                 format: 'datetime',
               },
             },
+          },
+        },
+      },
+      modTool: {
+        type: 'object',
+        description:
+          'Moderation tool information for tracing the source of the action',
+        required: ['name'],
+        properties: {
+          name: {
+            type: 'string',
+            description:
+              "Name/identifier of the source (e.g., 'bsky-app/android', 'bsky-web/chrome')",
+          },
+          meta: {
+            type: 'unknown',
+            description: 'Additional arbitrary metadata about the source',
           },
         },
       },
@@ -4732,6 +4753,10 @@ export const schemaDict = {
             type: 'ref',
             ref: 'lex:app.bsky.actor.defs#profileAssociatedChat',
           },
+          activitySubscription: {
+            type: 'ref',
+            ref: 'lex:app.bsky.actor.defs#profileAssociatedActivitySubscription',
+          },
         },
       },
       profileAssociatedChat: {
@@ -4741,6 +4766,16 @@ export const schemaDict = {
           allowIncoming: {
             type: 'string',
             knownValues: ['all', 'none', 'following'],
+          },
+        },
+      },
+      profileAssociatedActivitySubscription: {
+        type: 'object',
+        required: ['allowSubscriptions'],
+        properties: {
+          allowSubscriptions: {
+            type: 'string',
+            knownValues: ['followers', 'mutuals', 'none'],
           },
         },
       },
@@ -4776,8 +4811,16 @@ export const schemaDict = {
             format: 'at-uri',
           },
           knownFollowers: {
+            description:
+              'This property is present only in selected cases, as an optimization.',
             type: 'ref',
             ref: 'lex:app.bsky.actor.defs#knownFollowers',
+          },
+          activitySubscription: {
+            description:
+              'This property is present only in selected cases, as an optimization.',
+            type: 'ref',
+            ref: 'lex:app.bsky.notification.defs#activitySubscription',
           },
         },
       },
@@ -9724,6 +9767,30 @@ export const schemaDict = {
       },
     },
   },
+  AppBskyNotificationDeclaration: {
+    lexicon: 1,
+    id: 'app.bsky.notification.declaration',
+    defs: {
+      main: {
+        type: 'record',
+        description:
+          "A declaration of the user's choices related to notifications that can be produced by them.",
+        key: 'literal:self',
+        record: {
+          type: 'object',
+          required: ['allowSubscriptions'],
+          properties: {
+            allowSubscriptions: {
+              type: 'string',
+              description:
+                "A declaration of the user's preference for allowing activity subscriptions from other users. Absence of a record implies 'followers'.",
+              knownValues: ['followers', 'mutuals', 'none'],
+            },
+          },
+        },
+      },
+    },
+  },
   AppBskyNotificationDefs: {
     lexicon: 1,
     id: 'app.bsky.notification.defs',
@@ -9734,9 +9801,9 @@ export const schemaDict = {
       },
       chatPreference: {
         type: 'object',
-        required: ['filter', 'push'],
+        required: ['include', 'push'],
         properties: {
-          filter: {
+          include: {
             type: 'string',
             knownValues: ['all', 'accepted'],
           },
@@ -9747,9 +9814,9 @@ export const schemaDict = {
       },
       filterablePreference: {
         type: 'object',
-        required: ['filter', 'list', 'push'],
+        required: ['include', 'list', 'push'],
         properties: {
-          filter: {
+          include: {
             type: 'string',
             knownValues: ['all', 'follows'],
           },
@@ -9845,6 +9912,34 @@ export const schemaDict = {
           },
         },
       },
+      activitySubscription: {
+        type: 'object',
+        required: ['post', 'reply'],
+        properties: {
+          post: {
+            type: 'boolean',
+          },
+          reply: {
+            type: 'boolean',
+          },
+        },
+      },
+      subjectActivitySubscription: {
+        description:
+          'Object used to store activity subscription data in stash.',
+        type: 'object',
+        required: ['subject', 'activitySubscription'],
+        properties: {
+          subject: {
+            type: 'string',
+            format: 'did',
+          },
+          activitySubscription: {
+            type: 'ref',
+            ref: 'lex:app.bsky.notification.defs#activitySubscription',
+          },
+        },
+      },
     },
   },
   AppBskyNotificationGetPreferences: {
@@ -9903,6 +9998,50 @@ export const schemaDict = {
             properties: {
               count: {
                 type: 'integer',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  AppBskyNotificationListActivitySubscriptions: {
+    lexicon: 1,
+    id: 'app.bsky.notification.listActivitySubscriptions',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Enumerate all accounts to which the requesting account is subscribed to receive notifications for. Requires auth.',
+        parameters: {
+          type: 'params',
+          properties: {
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['subscriptions'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              subscriptions: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.actor.defs#profileView',
+                },
               },
             },
           },
@@ -10015,6 +10154,7 @@ export const schemaDict = {
               'unverified',
               'like-via-repost',
               'repost-via-repost',
+              'subscribed-post',
             ],
           },
           reasonSubject: {
@@ -10036,6 +10176,51 @@ export const schemaDict = {
             items: {
               type: 'ref',
               ref: 'lex:com.atproto.label.defs#label',
+            },
+          },
+        },
+      },
+    },
+  },
+  AppBskyNotificationPutActivitySubscription: {
+    lexicon: 1,
+    id: 'app.bsky.notification.putActivitySubscription',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Puts an activity subscription entry. The key should be omitted for creation and provided for updates. Requires auth.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['subject', 'activitySubscription'],
+            properties: {
+              subject: {
+                type: 'string',
+                format: 'did',
+              },
+              activitySubscription: {
+                type: 'ref',
+                ref: 'lex:app.bsky.notification.defs#activitySubscription',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['subject'],
+            properties: {
+              subject: {
+                type: 'string',
+                format: 'did',
+              },
+              activitySubscription: {
+                type: 'ref',
+                ref: 'lex:app.bsky.notification.defs#activitySubscription',
+              },
             },
           },
         },
@@ -10177,6 +10362,44 @@ export const schemaDict = {
               appId: {
                 type: 'string',
               },
+              ageRestricted: {
+                type: 'boolean',
+                description: 'Set to true when the actor is age restricted',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  AppBskyNotificationUnregisterPush: {
+    lexicon: 1,
+    id: 'app.bsky.notification.unregisterPush',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'The inverse of registerPush - inform a specified service that push notifications should no longer be sent to the given token for the requesting account. Requires auth.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['serviceDid', 'token', 'platform', 'appId'],
+            properties: {
+              serviceDid: {
+                type: 'string',
+                format: 'did',
+              },
+              token: {
+                type: 'string',
+              },
+              platform: {
+                type: 'string',
+                knownValues: ['ios', 'android', 'web'],
+              },
+              appId: {
+                type: 'string',
+              },
             },
           },
         },
@@ -10283,6 +10506,104 @@ export const schemaDict = {
           byteEnd: {
             type: 'integer',
             minimum: 0,
+          },
+        },
+      },
+    },
+  },
+  AppBskyUnspeccedCheckHandleAvailability: {
+    lexicon: 1,
+    id: 'app.bsky.unspecced.checkHandleAvailability',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Checks whether the provided handle is available. If the handle is not available, available suggestions will be returned. Optional inputs will be used to generate suggestions.',
+        parameters: {
+          type: 'params',
+          required: ['handle'],
+          properties: {
+            handle: {
+              type: 'string',
+              format: 'handle',
+              description:
+                'Tentative handle. Will be checked for availability or used to build handle suggestions.',
+            },
+            email: {
+              type: 'string',
+              description:
+                'User-provided email. Might be used to build handle suggestions.',
+            },
+            birthDate: {
+              type: 'string',
+              format: 'datetime',
+              description:
+                'User-provided birth date. Might be used to build handle suggestions.',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['handle', 'result'],
+            properties: {
+              handle: {
+                type: 'string',
+                format: 'handle',
+                description: 'Echo of the input handle.',
+              },
+              result: {
+                type: 'union',
+                refs: [
+                  'lex:app.bsky.unspecced.checkHandleAvailability#resultAvailable',
+                  'lex:app.bsky.unspecced.checkHandleAvailability#resultUnavailable',
+                ],
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'InvalidEmail',
+            description: 'An invalid email was provided.',
+          },
+        ],
+      },
+      resultAvailable: {
+        type: 'object',
+        description: 'Indicates the provided handle is available.',
+        properties: {},
+      },
+      resultUnavailable: {
+        type: 'object',
+        description:
+          'Indicates the provided handle is unavailable and gives suggestions of available handles.',
+        required: ['suggestions'],
+        properties: {
+          suggestions: {
+            type: 'array',
+            description:
+              'List of suggested handles based on the provided inputs.',
+            items: {
+              type: 'ref',
+              ref: 'lex:app.bsky.unspecced.checkHandleAvailability#suggestion',
+            },
+          },
+        },
+      },
+      suggestion: {
+        type: 'object',
+        required: ['handle', 'method'],
+        properties: {
+          handle: {
+            type: 'string',
+            format: 'handle',
+          },
+          method: {
+            type: 'string',
+            description:
+              'Method used to build this suggestion. Should be considered opaque to clients. Can be used for metrics.',
           },
         },
       },
@@ -10483,6 +10804,84 @@ export const schemaDict = {
           author: {
             type: 'ref',
             ref: 'lex:app.bsky.feed.defs#blockedAuthor',
+          },
+        },
+      },
+      ageAssuranceState: {
+        type: 'object',
+        description:
+          'The computed state of the age assurance process, returned to the user in question on certain authenticated requests.',
+        required: ['status'],
+        properties: {
+          lastInitiatedAt: {
+            type: 'string',
+            format: 'datetime',
+            description: 'The timestamp when this state was last updated.',
+          },
+          status: {
+            type: 'string',
+            description: 'The status of the age assurance process.',
+            knownValues: ['unknown', 'pending', 'assured', 'blocked'],
+          },
+        },
+      },
+      ageAssuranceEvent: {
+        type: 'object',
+        description: 'Object used to store age assurance data in stash.',
+        required: ['createdAt', 'status', 'attemptId'],
+        properties: {
+          createdAt: {
+            type: 'string',
+            format: 'datetime',
+            description: 'The date and time of this write operation.',
+          },
+          status: {
+            type: 'string',
+            description: 'The status of the age assurance process.',
+            knownValues: ['unknown', 'pending', 'assured'],
+          },
+          attemptId: {
+            type: 'string',
+            description:
+              'The unique identifier for this instance of the age assurance flow, in UUID format.',
+          },
+          email: {
+            type: 'string',
+            description: 'The email used for AA.',
+          },
+          initIp: {
+            type: 'string',
+            description: 'The IP address used when initiating the AA flow.',
+          },
+          initUa: {
+            type: 'string',
+            description: 'The user agent used when initiating the AA flow.',
+          },
+          completeIp: {
+            type: 'string',
+            description: 'The IP address used when completing the AA flow.',
+          },
+          completeUa: {
+            type: 'string',
+            description: 'The user agent used when completing the AA flow.',
+          },
+        },
+      },
+    },
+  },
+  AppBskyUnspeccedGetAgeAssuranceState: {
+    lexicon: 1,
+    id: 'app.bsky.unspecced.getAgeAssuranceState',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Returns the current state of the age assurance process for an account. This is used to check if the user has completed age assurance or if further action is required.',
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'ref',
+            ref: 'lex:app.bsky.unspecced.defs#ageAssuranceState',
           },
         },
       },
@@ -11246,6 +11645,59 @@ export const schemaDict = {
             },
           },
         },
+      },
+    },
+  },
+  AppBskyUnspeccedInitAgeAssurance: {
+    lexicon: 1,
+    id: 'app.bsky.unspecced.initAgeAssurance',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          "Initiate age assurance for an account. This is a one-time action that will start the process of verifying the user's age.",
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['email', 'language', 'countryCode'],
+            properties: {
+              email: {
+                type: 'string',
+                description:
+                  "The user's email address to receive assurance instructions.",
+              },
+              language: {
+                type: 'string',
+                description:
+                  "The user's preferred language for communication during the assurance process.",
+              },
+              countryCode: {
+                type: 'string',
+                description:
+                  "An ISO 3166-1 alpha-2 code of the user's location.",
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'ref',
+            ref: 'lex:app.bsky.unspecced.defs#ageAssuranceState',
+          },
+        },
+        errors: [
+          {
+            name: 'InvalidEmail',
+          },
+          {
+            name: 'DidTooLong',
+          },
+          {
+            name: 'InvalidInitiation',
+          },
+        ],
       },
     },
   },
@@ -13163,17 +13615,27 @@ export const ids = {
   AppBskyLabelerDefs: 'app.bsky.labeler.defs',
   AppBskyLabelerGetServices: 'app.bsky.labeler.getServices',
   AppBskyLabelerService: 'app.bsky.labeler.service',
+  AppBskyNotificationDeclaration: 'app.bsky.notification.declaration',
   AppBskyNotificationDefs: 'app.bsky.notification.defs',
   AppBskyNotificationGetPreferences: 'app.bsky.notification.getPreferences',
   AppBskyNotificationGetUnreadCount: 'app.bsky.notification.getUnreadCount',
+  AppBskyNotificationListActivitySubscriptions:
+    'app.bsky.notification.listActivitySubscriptions',
   AppBskyNotificationListNotifications:
     'app.bsky.notification.listNotifications',
+  AppBskyNotificationPutActivitySubscription:
+    'app.bsky.notification.putActivitySubscription',
   AppBskyNotificationPutPreferences: 'app.bsky.notification.putPreferences',
   AppBskyNotificationPutPreferencesV2: 'app.bsky.notification.putPreferencesV2',
   AppBskyNotificationRegisterPush: 'app.bsky.notification.registerPush',
+  AppBskyNotificationUnregisterPush: 'app.bsky.notification.unregisterPush',
   AppBskyNotificationUpdateSeen: 'app.bsky.notification.updateSeen',
   AppBskyRichtextFacet: 'app.bsky.richtext.facet',
+  AppBskyUnspeccedCheckHandleAvailability:
+    'app.bsky.unspecced.checkHandleAvailability',
   AppBskyUnspeccedDefs: 'app.bsky.unspecced.defs',
+  AppBskyUnspeccedGetAgeAssuranceState:
+    'app.bsky.unspecced.getAgeAssuranceState',
   AppBskyUnspeccedGetConfig: 'app.bsky.unspecced.getConfig',
   AppBskyUnspeccedGetPopularFeedGenerators:
     'app.bsky.unspecced.getPopularFeedGenerators',
@@ -13197,6 +13659,7 @@ export const ids = {
   AppBskyUnspeccedGetTrendingTopics: 'app.bsky.unspecced.getTrendingTopics',
   AppBskyUnspeccedGetTrends: 'app.bsky.unspecced.getTrends',
   AppBskyUnspeccedGetTrendsSkeleton: 'app.bsky.unspecced.getTrendsSkeleton',
+  AppBskyUnspeccedInitAgeAssurance: 'app.bsky.unspecced.initAgeAssurance',
   AppBskyUnspeccedSearchActorsSkeleton:
     'app.bsky.unspecced.searchActorsSkeleton',
   AppBskyUnspeccedSearchPostsSkeleton: 'app.bsky.unspecced.searchPostsSkeleton',
