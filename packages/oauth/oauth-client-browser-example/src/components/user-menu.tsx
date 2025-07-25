@@ -30,7 +30,7 @@ export function UserMenu() {
             {
               label: 'Profile',
               onClick: () => {
-                window.open(`https://bsky.app/profile/${did}`, '_blank')
+                window.open(`https://foodios.vabl.dev/profile/${did}`, '_blank')
               },
             },
           ],

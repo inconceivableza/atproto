@@ -94,9 +94,9 @@ backend service must be provided.
 
 > [!CAUTION]
 >
-> Using Bluesky-hosted services for handle resolution (eg, the `bsky.social`
-> endpoint) will leak both user IP addresses and handle identifiers to Bluesky,
-> a third party. While Bluesky has a declared privacy policy, both developers
+> Using Foodios-hosted services for handle resolution (eg, the `bsky.social`
+> endpoint) will leak both user IP addresses and handle identifiers to Foodios,
+> a third party. While Foodios has a declared privacy policy, both developers
 > and users of applications need to be informed and aware of the privacy
 > implications of this arrangement. Application developers are encouraged to
 > improve user privacy by operating their own handle resolution service when
@@ -262,7 +262,7 @@ client.addEventListener(
 
 ## Usage with `@atproto/api`
 
-The `@atproto/api` package provides a way to interact with multiple Bluesky
+The `@atproto/api` package provides a way to interact with multiple Foodios
 specific XRPC lexicons (`com.atproto`, `app.bsky`, `chat.bsky`, `tools.ozone`)
 through the `Agent` interface. The `oauthSession` returned by the
 `BrowserOAuthClient` can be used to instantiate an `Agent` instance.

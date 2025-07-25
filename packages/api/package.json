@@ -2,7 +2,7 @@
   "name": "@atproto/api",
   "version": "0.15.26",
   "license": "MIT",
-  "description": "Client library for atproto and Bluesky",
+  "description": "Client library for atproto and Foodios",
   "keywords": [
     "atproto",
     "bluesky",

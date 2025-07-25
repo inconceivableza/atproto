@@ -5479,7 +5479,7 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'record',
-        description: 'A declaration of a Bluesky account profile.',
+        description: 'A declaration of a Foodios account profile.',
         key: 'literal:self',
         record: {
           type: 'object',
@@ -5512,7 +5512,7 @@ export const schemaDict = {
             labels: {
               type: 'union',
               description:
-                'Self-label values, specific to the Bluesky application, on the overall account.',
+                'Self-label values, specific to the Foodios application, on the overall account.',
               refs: ['lex:com.atproto.label.defs#selfLabels'],
             },
             joinedViaStarterPack: {
@@ -5660,7 +5660,7 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'record',
-        description: 'A declaration of a Bluesky account status.',
+        description: 'A declaration of a Foodios account status.',
         key: 'literal:self',
         record: {
           type: 'object',
@@ -5725,7 +5725,7 @@ export const schemaDict = {
       main: {
         type: 'object',
         description:
-          "A representation of some externally linked content (eg, a URL and 'card'), embedded in a Bluesky record (eg, a post).",
+          "A representation of some externally linked content (eg, a URL and 'card'), embedded in a Foodios record (eg, a post).",
         required: ['external'],
         properties: {
           external: {
@@ -5790,7 +5790,7 @@ export const schemaDict = {
   AppBskyEmbedImages: {
     lexicon: 1,
     id: 'app.bsky.embed.images',
-    description: 'A set of images embedded in a Bluesky record (eg, a post).',
+    description: 'A set of images embedded in a Foodios record (eg, a post).',
     defs: {
       main: {
         type: 'object',
@@ -5873,7 +5873,7 @@ export const schemaDict = {
     lexicon: 1,
     id: 'app.bsky.embed.record',
     description:
-      'A representation of a record embedded in a Bluesky record (eg, a post). For example, a quote-post, or sharing a feed generator record.',
+      'A representation of a record embedded in a Foodios record (eg, a post). For example, a quote-post, or sharing a feed generator record.',
     defs: {
       main: {
         type: 'object',
@@ -6014,7 +6014,7 @@ export const schemaDict = {
     lexicon: 1,
     id: 'app.bsky.embed.recordWithMedia',
     description:
-      'A representation of a record embedded in a Bluesky record (eg, a post), alongside other compatible embeds. For example, a quote post and image, or a quote post and external URL card.',
+      'A representation of a record embedded in a Foodios record (eg, a post), alongside other compatible embeds. For example, a quote post and image, or a quote post and external URL card.',
     defs: {
       main: {
         type: 'object',
@@ -6057,7 +6057,7 @@ export const schemaDict = {
   AppBskyEmbedVideo: {
     lexicon: 1,
     id: 'app.bsky.embed.video',
-    description: 'A video embedded in a Bluesky record (eg, a post).',
+    description: 'A video embedded in a Foodios record (eg, a post).',
     defs: {
       main: {
         type: 'object',
@@ -7642,7 +7642,7 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'record',
-        description: 'Record containing a Bluesky post.',
+        description: 'Record containing a Foodios post.',
         key: 'tid',
         record: {
           type: 'object',
@@ -7830,7 +7830,7 @@ export const schemaDict = {
     defs: {
       main: {
         description:
-          "Record representing a 'repost' of an existing Bluesky post.",
+          "Record representing a 'repost' of an existing Foodios post.",
         type: 'record',
         key: 'tid',
         record: {
@@ -8089,7 +8089,7 @@ export const schemaDict = {
       main: {
         type: 'record',
         description:
-          "Record declaring a 'block' relationship against another account. NOTE: blocks are public in Bluesky; see blog posts for details.",
+          "Record declaring a 'block' relationship against another account. NOTE: blocks are public in Foodios; see blog posts for details.",
         key: 'tid',
         record: {
           type: 'object',
@@ -9234,7 +9234,7 @@ export const schemaDict = {
       main: {
         type: 'procedure',
         description:
-          'Creates a mute relationship for the specified account. Mutes are private in Bluesky. Requires auth.',
+          'Creates a mute relationship for the specified account. Mutes are private in Foodios. Requires auth.',
         input: {
           encoding: 'application/json',
           schema: {
@@ -9258,7 +9258,7 @@ export const schemaDict = {
       main: {
         type: 'procedure',
         description:
-          'Creates a mute relationship for the specified list of accounts. Mutes are private in Bluesky. Requires auth.',
+          'Creates a mute relationship for the specified list of accounts. Mutes are private in Foodios. Requires auth.',
         input: {
           encoding: 'application/json',
           schema: {
@@ -9282,7 +9282,7 @@ export const schemaDict = {
       main: {
         type: 'procedure',
         description:
-          'Mutes a thread preventing notifications from the thread and any of its children. Mutes are private in Bluesky. Requires auth.',
+          'Mutes a thread preventing notifications from the thread and any of its children. Mutes are private in Foodios. Requires auth.',
         input: {
           encoding: 'application/json',
           schema: {
@@ -12099,7 +12099,7 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'record',
-        description: 'A declaration of a Bluesky chat account.',
+        description: 'A declaration of a Foodios chat account.',
         key: 'literal:self',
         record: {
           type: 'object',

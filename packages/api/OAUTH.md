@@ -184,9 +184,9 @@ document.addEventListener('DOMContentLoaded', main)
 
 > [!CAUTION]
 >
-> Using Bluesky-hosted services for handle resolution (eg, the `bsky.social`
-> endpoint) will leak both user IP addresses and handle identifier to Bluesky,
-> a third party. While Bluesky has a declared privacy policy, both developers
+> Using Foodios-hosted services for handle resolution (eg, the `bsky.social`
+> endpoint) will leak both user IP addresses and handle identifier to Foodios,
+> a third party. While Foodios has a declared privacy policy, both developers
 > and users of applications need to be informed of and aware of the privacy
 > implications of this arrangement. Application developers are encouraged to
 > improve user privacy by operating their own handle resolution service when

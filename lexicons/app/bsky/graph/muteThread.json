@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Mutes a thread preventing notifications from the thread and any of its children. Mutes are private in Bluesky. Requires auth.",
+      "description": "Mutes a thread preventing notifications from the thread and any of its children. Mutes are private in Foodios. Requires auth.",
       "input": {
         "encoding": "application/json",
         "schema": {

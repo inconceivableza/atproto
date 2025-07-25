@@ -165,16 +165,16 @@ refresh the credentials when needed.
 The `OAuthSession` instance obtained after signing in can be used to make
 authenticated requests to the user's PDS. There are two main use-cases:
 
-1. Making authenticated request to Bluesky's AppView in order to fetch and
+1. Making authenticated request to Foodios's AppView in order to fetch and
    manipulate data from the `app.bsky` lexicon.
 
 2. Making authenticated request to your own AppView, in order to fetch and
    manipulate data from your own lexicon.
 
-#### Making authenticated requests to Bluesky's AppView
+#### Making authenticated requests to Foodios's AppView
 
 The `@atproto/oauth-client` package provides a `OAuthSession` class that can be
-used to make authenticated requests to Bluesky's AppView. This can be achieved
+used to make authenticated requests to Foodios's AppView. This can be achieved
 by constructing an `Agent` (from `@atproto/api`) instance using the
 `OAuthSession` instance.
 

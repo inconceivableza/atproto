@@ -7,7 +7,7 @@ TypeScript library for syncing data from the [atproto](https://atproto.com) netw
 
 ## Usage
 
-The firehose class will spin up a websocket connection to `com.atproto.sync.subscribeRepos` on a given repo host (by default the Relay run by Bluesky).
+The firehose class will spin up a websocket connection to `com.atproto.sync.subscribeRepos` on a given repo host (by default the Relay run by Foodios).
 
 Each event will be parsed, authenticated, and then passed on to the supplied `handleEvt` which can handle indexing.
 

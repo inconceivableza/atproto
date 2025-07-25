@@ -2,7 +2,7 @@
   "name": "@atproto/bsky",
   "version": "0.0.173",
   "license": "MIT",
-  "description": "Reference implementation of app.bsky App View (Bluesky API)",
+  "description": "Reference implementation of app.bsky App View (Foodios API)",
   "keywords": [
     "atproto",
     "bluesky"

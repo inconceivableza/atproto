@@ -2,7 +2,7 @@
 
 This API is a client for ATProtocol servers. It communicates using HTTP. It includes:
 
-- ✔️ APIs for ATProto and Bluesky.
+- ✔️ APIs for ATProto and Foodios.
 - ✔️ Validation and complete typescript types.
 - ✔️ Session management.
 - ✔️ A RichText library.

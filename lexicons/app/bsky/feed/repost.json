@@ -3,7 +3,7 @@
   "id": "app.bsky.feed.repost",
   "defs": {
     "main": {
-      "description": "Record representing a 'repost' of an existing Bluesky post.",
+      "description": "Record representing a 'repost' of an existing Foodios post.",
       "type": "record",
       "key": "tid",
       "record": {

@@ -8,7 +8,7 @@ export function ProfileInfo() {
   return (
     <div>
       <h2>
-        Bluesky profile
+        Foodios profile
         <Button
           onClick={() => result.refetch({ throwOnError: false })}
           className="ml-1"

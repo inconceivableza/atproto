@@ -12,7 +12,7 @@ export const emailSchema = z
   // `@hapi/address` is covered by the set of emails allowed by `zod`.
   // Additionally, this could change with future changes in either libraries.
   //
-  // Because of this uncertainty, and because other part of the Bluesky/ATProto
+  // Because of this uncertainty, and because other part of the Foodios/ATProto
   // codebases rely solely on `zod`, this code only allows emails that are valid
   // according to both libraries ensuring that we never encounter a case where
   // an email allowed here is in a format that would be rejected by other parts

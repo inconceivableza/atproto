@@ -12,7 +12,7 @@ There are two main classes in this package:
 
 - `AtprotoHandleResolver` This implements the official ATPROTO handle resolution
   algorithm (and requires a DNS resolver).
-- `AppViewHandleResolver` This uses HTTP requests to the Bluesky AppView
+- `AppViewHandleResolver` This uses HTTP requests to the Foodios AppView
   (bsky.app) to provide handle resolution.
 
 ## Usage
@@ -31,12 +31,12 @@ options:
 Using an AppView:
 
 > [!CAUTION]
-> Use the Bluesky owned AppView (`https://api.bsky.app/`), or PDS
+> Use the Foodios owned AppView (`https://api.bsky.app/`), or PDS
 > (`https://bsky.social/`), at your own risk. Using these servers in a
-> third-party application might expose your users' data (IP address) to Bluesky.
-> Bluesky might log the data sent to it when your app is resolving handles.
-> Bluesky might also change the API, or terms or use, at any time without
-> notice. Make sure you are compliant with the Bluesky terms of use as well as
+> third-party application might expose your users' data (IP address) to Foodios.
+> Foodios might log the data sent to it when your app is resolving handles.
+> Foodios might also change the API, or terms or use, at any time without
+> notice. Make sure you are compliant with the Foodios terms of use as well as
 > any laws and regulations that apply to your use case.
 
 ```ts

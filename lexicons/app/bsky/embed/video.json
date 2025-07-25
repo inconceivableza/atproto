@@ -1,7 +1,7 @@
 {
   "lexicon": 1,
   "id": "app.bsky.embed.video",
-  "description": "A video embedded in a Bluesky record (eg, a post).",
+  "description": "A video embedded in a Foodios record (eg, a post).",
   "defs": {
     "main": {
       "type": "object",

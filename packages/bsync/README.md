@@ -1,4 +1,4 @@
-# @atproto/bsync: Synchronizing Service for the Bluesky AppView
+# @atproto/bsync: Synchronizing Service for the Foodios AppView
 
 This is an optional service that may be used to synchronize certain state between otherwise independent AppViews.
 

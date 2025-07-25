@@ -58,7 +58,7 @@ export interface AtpAgentGlobalOpts {
 }
 
 /**
- * Bluesky feed view preferences
+ * Foodios feed view preferences
  */
 
 export interface BskyFeedViewPreference {
@@ -71,7 +71,7 @@ export interface BskyFeedViewPreference {
 }
 
 /**
- * Bluesky thread view preferences
+ * Foodios thread view preferences
  */
 export interface BskyThreadViewPreference {
   sort: string
@@ -80,7 +80,7 @@ export interface BskyThreadViewPreference {
 }
 
 /**
- * Bluesky interests preferences
+ * Foodios interests preferences
  */
 export interface BskyInterestsPreference {
   tags: string[]
@@ -88,7 +88,7 @@ export interface BskyInterestsPreference {
 }
 
 /**
- * Bluesky preferences
+ * Foodios preferences
  */
 export interface BskyPreferences {
   /**

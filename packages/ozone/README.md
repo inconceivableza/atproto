@@ -1,6 +1,6 @@
-# @atproto/ozone: Bluesky Moderation Service
+# @atproto/ozone: Foodios Moderation Service
 
-Backend service for moderating the Bluesky network.
+Backend service for moderating the Foodios network.
 
 [![NPM](https://img.shields.io/npm/v/@atproto/ozone)](https://www.npmjs.com/package/@atproto/ozone)
 [![Github CI Status](https://github.com/bluesky-social/atproto/actions/workflows/repo.yaml/badge.svg)](https://github.com/bluesky-social/atproto/actions/workflows/repo.yaml)

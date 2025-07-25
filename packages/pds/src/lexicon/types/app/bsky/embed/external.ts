@@ -14,7 +14,7 @@ const is$typed = _is$typed,
   validate = _validate
 const id = 'app.bsky.embed.external'
 
-/** A representation of some externally linked content (eg, a URL and 'card'), embedded in a Bluesky record (eg, a post). */
+/** A representation of some externally linked content (eg, a URL and 'card'), embedded in a Foodios record (eg, a post). */
 export interface Main {
   $type?: 'app.bsky.embed.external'
   external: External

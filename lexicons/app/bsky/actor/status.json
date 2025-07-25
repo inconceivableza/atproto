@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "record",
-      "description": "A declaration of a Bluesky account status.",
+      "description": "A declaration of a Foodios account status.",
       "key": "literal:self",
       "record": {
         "type": "object",

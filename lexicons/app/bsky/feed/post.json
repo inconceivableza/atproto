@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "record",
-      "description": "Record containing a Bluesky post.",
+      "description": "Record containing a Foodios post.",
       "key": "tid",
       "record": {
         "type": "object",

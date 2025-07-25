@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "record",
-      "description": "A declaration of a Bluesky account profile.",
+      "description": "A declaration of a Foodios account profile.",
       "key": "literal:self",
       "record": {
         "type": "object",
@@ -34,7 +34,7 @@
           },
           "labels": {
             "type": "union",
-            "description": "Self-label values, specific to the Bluesky application, on the overall account.",
+            "description": "Self-label values, specific to the Foodios application, on the overall account.",
             "refs": ["com.atproto.label.defs#selfLabels"]
           },
           "joinedViaStarterPack": {

@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "record",
-      "description": "A declaration of a Bluesky chat account.",
+      "description": "A declaration of a Foodios chat account.",
       "key": "literal:self",
       "record": {
         "type": "object",

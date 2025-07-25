@@ -97,7 +97,7 @@ To gather the label definitions (`labelDefs`) see the _Labelers_ section below.
 
 ## Labelers
 
-Labelers are services that provide moderation labels. Your application will typically have 1+ top-level labelers set with the ability to do "takedowns" on content. This is controlled via this static function, though the default is to use Bluesky's moderation:
+Labelers are services that provide moderation labels. Your application will typically have 1+ top-level labelers set with the ability to do "takedowns" on content. This is controlled via this static function, though the default is to use Foodios's moderation:
 
 ```typescript
 BskyAgent.configure({

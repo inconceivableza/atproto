@@ -209,7 +209,7 @@ export class AuthVerifier {
   }
 
   // @NOTE this auth verifier method is not recommended to be implemented by most appviews
-  // this is a short term fix to remove proxy load from Bluesky's PDS and in line with possible
+  // this is a short term fix to remove proxy load from Foodios's PDS and in line with possible
   // future plans to have the client talk directly with the appview
   entrywaySession = async (reqCtx: ReqCtx): Promise<StandardOutput> => {
     const token = bearerTokenFromReq(reqCtx.req)

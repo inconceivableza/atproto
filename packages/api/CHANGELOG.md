@@ -674,7 +674,7 @@
   be implemented in the fetch handler itself rather than by the calling code.
 
   A new abstract class named `Agent`, has been added to `@atproto/api`. This class
-  will be the base class for all Bluesky agents classes in the `@atproto`
+  will be the base class for all Foodios agents classes in the `@atproto`
   ecosystem. It is meant to be extended by implementations that provide session
   management and fetch handling.
 
