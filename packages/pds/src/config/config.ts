@@ -23,6 +23,7 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
     version: env.version, // default?
     privacyPolicyUrl: env.privacyPolicyUrl,
     termsOfServiceUrl: env.termsOfServiceUrl,
+    emailImagesBaseUrl: env.emailImagesBaseUrl ?? 'https://bsky.social/about/images/email/',
     contactEmailAddress: env.contactEmailAddress,
     acceptingImports: env.acceptingImports ?? true,
     blobUploadLimit: env.blobUploadLimit ?? 5 * 1024 * 1024, // 5mb
@@ -40,6 +41,13 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
     sequencerDbLoc: env.sequencerDbLocation ?? dbLoc('sequencer.sqlite'),
     didCacheDbLoc: env.didCacheDbLocation ?? dbLoc('did_cache.sqlite'),
     disableWalAutoCheckpoint,
+  }
+
+  const appCfg: ServerConfig['app'] = {
+    appName: env.socialAppName ?? 'Bluesky',
+    appDescription: env.socialAppDescription ?? 'the social internet',
+    appEmoji: env.socialAppEmoji ?? '🦋',
+    appUrl: env.socialAppUrl ?? 'https://bsky.app',
   }
 
   const actorStoreCfg: ServerConfig['actorStore'] = {
@@ -321,6 +329,7 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
   return {
     service: serviceCfg,
     db: dbCfg,
+    app: appCfg,
     actorStore: actorStoreCfg,
     blobstore: blobstoreCfg,
     identity: identityCfg,
@@ -344,6 +353,7 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
 export type ServerConfig = {
   service: ServiceConfig
   db: DatabaseConfig
+  app: SocialAppConfig
   actorStore: ActorStoreConfig
   blobstore: S3BlobstoreConfig | DiskBlobstoreConfig
   identity: IdentityConfig
@@ -371,6 +381,7 @@ export type ServiceConfig = {
   version?: string
   privacyPolicyUrl?: string
   termsOfServiceUrl?: string
+  emailImagesBaseUrl?: string
   acceptingImports: boolean
   blobUploadLimit: number
   contactEmailAddress?: string
@@ -382,6 +393,13 @@ export type DatabaseConfig = {
   sequencerDbLoc: string
   didCacheDbLoc: string
   disableWalAutoCheckpoint: boolean
+}
+
+export type SocialAppConfig = {
+  appName?: string
+  appDescription?: string
+  appEmoji?: string
+  appUrl?: string
 }
 
 export type ActorStoreConfig = {

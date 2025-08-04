@@ -14,6 +14,7 @@ export const readEnv = (): ServerEnvironment => {
     supportUrl: envStr('PDS_SUPPORT_URL'),
     termsOfServiceUrl: envStr('PDS_TERMS_OF_SERVICE_URL'),
     contactEmailAddress: envStr('PDS_CONTACT_EMAIL_ADDRESS'),
+    emailImagesBaseUrl: envStr('PDS_EMAIL_IMAGES_BASE_URL'),
     acceptingImports: envBool('PDS_ACCEPTING_REPO_IMPORTS'),
     blobUploadLimit: envInt('PDS_BLOB_UPLOAD_LIMIT'),
     devMode: envBool('PDS_DEV_MODE'),
@@ -22,6 +23,12 @@ export const readEnv = (): ServerEnvironment => {
     hcaptchaSiteKey: envStr('PDS_HCAPTCHA_SITE_KEY'),
     hcaptchaSecretKey: envStr('PDS_HCAPTCHA_SECRET_KEY'),
     hcaptchaTokenSalt: envStr('PDS_HCAPTCHA_TOKEN_SALT'),
+
+    // app branding
+    socialAppName: envStr('PDS_SOCIAL_APP_NAME'),
+    socialAppDescription: envStr('PDS_SOCIAL_APP_DESCRIPTION'),
+    socialAppEmoji: envStr('PDS_SOCIAL_APP_EMOJI'),
+    socialAppUrl: envStr('PDS_SOCIAL_APP_URL'),
 
     // branding
     lightColor: envStr('PDS_LIGHT_COLOR'),
@@ -163,6 +170,7 @@ export type ServerEnvironment = {
   supportUrl?: string
   termsOfServiceUrl?: string
   contactEmailAddress?: string
+  emailImagesBaseUrl?: string
   acceptingImports?: boolean
   blobUploadLimit?: number
   devMode?: boolean
@@ -171,6 +179,12 @@ export type ServerEnvironment = {
   hcaptchaSiteKey?: string
   hcaptchaSecretKey?: string
   hcaptchaTokenSalt?: string
+
+  // app branding
+  socialAppName?: string
+  socialAppDescription?: string
+  socialAppEmoji?: string
+  socialAppUrl?: string
 
   // branding
   lightColor?: string

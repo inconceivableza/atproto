@@ -18,7 +18,13 @@ export class ServerMailer {
 
   // The returned config can be used inside email templates.
   static getEmailConfig(_config: ServerConfig) {
-    return {}
+    return {
+      appName: _config.app.appName,
+      appDescription: _config.app.appDescription,
+      appEmoji: _config.app.appEmoji,
+      appUrl: _config.app.appUrl,
+      imageBaseUrl: _config.service.emailImagesBaseUrl,
+    }
   }
 
   async sendResetPassword(
