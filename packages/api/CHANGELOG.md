@@ -1,5 +1,19 @@
 # @atproto/api
 
+## 0.16.0
+
+### Minor Changes
+
+- [#4072](https://github.com/bluesky-social/atproto/pull/4072) [`9751eebd7`](https://github.com/bluesky-social/atproto/commit/9751eebd718066984a91046b63e410caecd64022) Thanks [@rafaelbsky](https://github.com/rafaelbsky)! - Remove app.bsky.unspecced.checkHandleAvailability, add com.atproto.temp.checkHandleAvailability
+
+## 0.15.27
+
+### Patch Changes
+
+- [#4058](https://github.com/bluesky-social/atproto/pull/4058) [`8787fd9de`](https://github.com/bluesky-social/atproto/commit/8787fd9dea769716412c9883e355cd496664bc6e) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Only allow initiating age assurance flow from certain states, return `InvalidInitiation` error if violated.
+
+- [#4049](https://github.com/bluesky-social/atproto/pull/4049) [`dc84906c8`](https://github.com/bluesky-social/atproto/commit/dc84906c865e8a97939a909dd3f75decde538363) Thanks [@rafaelbsky](https://github.com/rafaelbsky)! - app.bsky.unspecced.checkHandleAvailability lexicon
+
 ## 0.15.26
 
 ### Patch Changes
