@@ -17,6 +17,7 @@ export class DataPlaneServer {
   ) {}
 
   static async create(db: Database, port: number, plcUrl?: string) {
+    console.log("*** dataplane server running ***")
     const app = express()
     const didCache = new MemoryCache()
     const idResolver = new IdResolver({ plcUrl, didCache })

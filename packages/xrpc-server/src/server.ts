@@ -123,7 +123,7 @@ export class Server {
     this.addMethod(nsid, configOrFn)
   }
 
-  addMethod<A extends Auth = Auth>(
+addMethod<A extends Auth = Auth>(
     nsid: string,
     configOrFn: MethodConfigOrHandler<A>,
   ) {

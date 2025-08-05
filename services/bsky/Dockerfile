@@ -48,6 +48,12 @@ FROM node:20.11-alpine
 # runit is installed so it can be (optionally) used for logging via svlogd.
 RUN apk add --update dumb-init runit
 
+# COPY ./certs/root.crt /usr/local/share/ca-certificates/root.crt
+# COPY ./certs/intermediate.crt /usr/local/share/ca-certificates/intermediate.crt
+# RUN ls /usr/local/share/ca-certificates
+
+# RUN apk add ca-certificates 
+# RUN update-ca-certificates 
 
 # Avoid zombie processes, handle signal forwarding
 ENTRYPOINT ["dumb-init", "--"]

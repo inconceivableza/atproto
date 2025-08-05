@@ -29,7 +29,7 @@ import * as imageServer from './image/server'
 import { ImageUriBuilder } from './image/uri'
 import { createKwsClient } from './kws'
 import { createServer } from './lexicon'
-import { loggerMiddleware } from './logger'
+import { dbLogger, loggerMiddleware } from './logger'
 import { createStashClient } from './stash'
 import { Views } from './views'
 import { VideoUriBuilder } from './views/util'
@@ -118,7 +118,7 @@ export class BskyAppView {
             config.dataplaneUrls,
           )
         : new BasicHostList(config.dataplaneUrls)
-
+    dbLogger.info("*** creating data plane ***")
     const dataplane = createDataPlaneClient(dataplaneHostList, {
       httpVersion: config.dataplaneHttpVersion,
       rejectUnauthorized: !config.dataplaneIgnoreBadTls,
@@ -225,6 +225,7 @@ export class BskyAppView {
     server.keepAliveTimeout = 90000
     this.terminator = createHttpTerminator({ server })
     await events.once(server, 'listening')
+    console.log("***listening***")
     const { port } = server.address() as AddressInfo
     this.ctx.cfg.assignPort(port)
     return server

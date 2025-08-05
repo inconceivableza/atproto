@@ -46,6 +46,7 @@ tracerProvider.register()
 const path = require('node:path')
 
 function maintainXrpcResource(span, req) {
+  // check this
   // Show actual xrpc method as resource rather than the route pattern
   if (span && req.originalUrl?.startsWith('/xrpc/')) {
     span.setTag(

@@ -1,7 +1,7 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
-import { httpLogger } from '../../../../logger'
+import { dbLogger, httpLogger } from '../../../../logger'
 import { Outbox } from '../../../../sequencer/outbox'
 
 export default function (server: Server, ctx: AppContext) {
@@ -38,6 +38,7 @@ export default function (server: Server, ctx: AppContext) {
     }
 
     for await (const evt of outbox.events(outboxCursor, signal)) {
+      dbLogger.info(evt, 'broadcasting message')
       if (evt.type === 'commit') {
         yield {
           $type: '#commit',

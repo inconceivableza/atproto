@@ -2,6 +2,7 @@ import { DAY } from '@atproto/common'
 import { isErrUniqueViolation, notSoftDeletedClause } from '../../db'
 import { StatusAttr } from '../../lexicon/types/com/atproto/admin/defs'
 import { AccountDb, ActorEntry } from '../db'
+import { dbLogger } from '../../logger'
 
 export class UserAlreadyExistsError extends Error {}
 
@@ -121,6 +122,7 @@ export const registerActor = async (
       .onConflict((oc) => oc.doNothing())
       .returning('did'),
   )
+  dbLogger.info(registered, "Registered actor")
   if (!registered) {
     throw new UserAlreadyExistsError()
   }

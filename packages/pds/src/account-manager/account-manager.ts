@@ -181,6 +181,7 @@ export class AccountManager {
       : undefined
 
     const now = new Date().toISOString()
+    
     await this.db.transaction(async (dbTxn) => {
       if (inviteCode) {
         await invite.ensureInviteIsAvailable(dbTxn, inviteCode)

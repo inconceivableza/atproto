@@ -38,6 +38,8 @@ export class WebSocketKeepAlive {
         forwardSignal(this.opts.signal, ac)
       }
       this.ws.once('open', () => {
+        debugger
+        console.log("*** websocket connected ***")
         this.initialSetup = false
         this.reconnects = 0
         if (this.ws) {
