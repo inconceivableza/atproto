@@ -23,7 +23,7 @@ export class ServerMailer {
       appDescription: _config.app.appDescription,
       appEmoji: _config.app.appEmoji,
       appUrl: _config.app.appUrl,
-      imageBaseUrl: _config.service.emailImagesBaseUrl,
+      imagesBaseUrl: _config.service.emailImagesBaseUrl,
     }
   }
 
