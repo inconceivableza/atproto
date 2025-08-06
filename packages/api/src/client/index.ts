@@ -212,6 +212,7 @@ import * as AppBskyVideoDefs from './types/app/bsky/video/defs.js'
 import * as AppBskyVideoGetJobStatus from './types/app/bsky/video/getJobStatus.js'
 import * as AppBskyVideoGetUploadLimits from './types/app/bsky/video/getUploadLimits.js'
 import * as AppBskyVideoUploadVideo from './types/app/bsky/video/uploadVideo.js'
+import * as AppFoodiosFeedRecipePost from './types/app/foodios/feed/recipePost.js'
 import * as ChatBskyActorDeclaration from './types/chat/bsky/actor/declaration.js'
 import * as ChatBskyActorDefs from './types/chat/bsky/actor/defs.js'
 import * as ChatBskyActorDeleteAccount from './types/chat/bsky/actor/deleteAccount.js'
@@ -490,6 +491,7 @@ export * as AppBskyVideoDefs from './types/app/bsky/video/defs.js'
 export * as AppBskyVideoGetJobStatus from './types/app/bsky/video/getJobStatus.js'
 export * as AppBskyVideoGetUploadLimits from './types/app/bsky/video/getUploadLimits.js'
 export * as AppBskyVideoUploadVideo from './types/app/bsky/video/uploadVideo.js'
+export * as AppFoodiosFeedRecipePost from './types/app/foodios/feed/recipePost.js'
 export * as ChatBskyActorDeclaration from './types/chat/bsky/actor/declaration.js'
 export * as ChatBskyActorDefs from './types/chat/bsky/actor/defs.js'
 export * as ChatBskyActorDeleteAccount from './types/chat/bsky/actor/deleteAccount.js'
@@ -1757,10 +1759,12 @@ export class ComAtprotoTempNS {
 export class AppNS {
   _client: XrpcClient
   bsky: AppBskyNS
+  foodios: AppFoodiosNS
 
   constructor(client: XrpcClient) {
     this._client = client
     this.bsky = new AppBskyNS(client)
+    this.foodios = new AppFoodiosNS(client)
   }
 }
 
@@ -4199,6 +4203,109 @@ export class AppBskyVideoNS {
     opts?: AppBskyVideoUploadVideo.CallOptions,
   ): Promise<AppBskyVideoUploadVideo.Response> {
     return this._client.call('app.bsky.video.uploadVideo', opts?.qp, data, opts)
+  }
+}
+
+export class AppFoodiosNS {
+  _client: XrpcClient
+  feed: AppFoodiosFeedNS
+
+  constructor(client: XrpcClient) {
+    this._client = client
+    this.feed = new AppFoodiosFeedNS(client)
+  }
+}
+
+export class AppFoodiosFeedNS {
+  _client: XrpcClient
+  recipePost: AppFoodiosFeedRecipePostRecord
+
+  constructor(client: XrpcClient) {
+    this._client = client
+    this.recipePost = new AppFoodiosFeedRecipePostRecord(client)
+  }
+}
+
+export class AppFoodiosFeedRecipePostRecord {
+  _client: XrpcClient
+
+  constructor(client: XrpcClient) {
+    this._client = client
+  }
+
+  async list(
+    params: OmitKey<ComAtprotoRepoListRecords.QueryParams, 'collection'>,
+  ): Promise<{
+    cursor?: string
+    records: { uri: string; value: AppFoodiosFeedRecipePost.Record }[]
+  }> {
+    const res = await this._client.call('com.atproto.repo.listRecords', {
+      collection: 'app.foodios.feed.recipePost',
+      ...params,
+    })
+    return res.data
+  }
+
+  async get(
+    params: OmitKey<ComAtprotoRepoGetRecord.QueryParams, 'collection'>,
+  ): Promise<{
+    uri: string
+    cid: string
+    value: AppFoodiosFeedRecipePost.Record
+  }> {
+    const res = await this._client.call('com.atproto.repo.getRecord', {
+      collection: 'app.foodios.feed.recipePost',
+      ...params,
+    })
+    return res.data
+  }
+
+  async create(
+    params: OmitKey<
+      ComAtprotoRepoCreateRecord.InputSchema,
+      'collection' | 'record'
+    >,
+    record: Un$Typed<AppFoodiosFeedRecipePost.Record>,
+    headers?: Record<string, string>,
+  ): Promise<{ uri: string; cid: string }> {
+    const collection = 'app.foodios.feed.recipePost'
+    const res = await this._client.call(
+      'com.atproto.repo.createRecord',
+      undefined,
+      { collection, ...params, record: { ...record, $type: collection } },
+      { encoding: 'application/json', headers },
+    )
+    return res.data
+  }
+
+  async put(
+    params: OmitKey<
+      ComAtprotoRepoPutRecord.InputSchema,
+      'collection' | 'record'
+    >,
+    record: Un$Typed<AppFoodiosFeedRecipePost.Record>,
+    headers?: Record<string, string>,
+  ): Promise<{ uri: string; cid: string }> {
+    const collection = 'app.foodios.feed.recipePost'
+    const res = await this._client.call(
+      'com.atproto.repo.putRecord',
+      undefined,
+      { collection, ...params, record: { ...record, $type: collection } },
+      { encoding: 'application/json', headers },
+    )
+    return res.data
+  }
+
+  async delete(
+    params: OmitKey<ComAtprotoRepoDeleteRecord.InputSchema, 'collection'>,
+    headers?: Record<string, string>,
+  ): Promise<void> {
+    await this._client.call(
+      'com.atproto.repo.deleteRecord',
+      undefined,
+      { collection: 'app.foodios.feed.recipePost', ...params },
+      { headers },
+    )
   }
 }
 
