@@ -12093,6 +12093,107 @@ export const schemaDict = {
       },
     },
   },
+  AppFoodiosFeedRecipePost: {
+    lexicon: 1,
+    id: 'app.foodios.feed.recipePost',
+    defs: {
+      main: {
+        type: 'record',
+        description: 'Record containing a recipe post.',
+        key: 'tid',
+        record: {
+          type: 'object',
+          required: ['title', 'text', 'ingredients', 'steps', 'createdAt'],
+          properties: {
+            title: {
+              type: 'string',
+              maxLength: 3000,
+              maxGraphemes: 50,
+            },
+            text: {
+              type: 'string',
+              maxLength: 3000,
+              maxGraphemes: 300,
+            },
+            ingredients: {
+              type: 'array',
+              items: {
+                type: 'ref',
+                ref: 'lex:app.foodios.feed.recipePost#ingredient',
+              },
+            },
+            steps: {
+              type: 'array',
+              items: {
+                type: 'ref',
+                ref: 'lex:app.foodios.feed.recipePost#step',
+              },
+            },
+            images: {
+              type: 'union',
+              refs: ['lex:app.bsky.embed.images', 'lex:app.bsky.embed.video'],
+            },
+            labels: {
+              type: 'union',
+              description:
+                'Self-label values for this post. Effectively content warnings.',
+              refs: ['lex:com.atproto.label.defs#selfLabels'],
+            },
+            tags: {
+              type: 'array',
+              description:
+                'Additional hashtags, in addition to any included in post text and facets.',
+              maxLength: 8,
+              items: {
+                type: 'string',
+                maxLength: 640,
+                maxGraphemes: 64,
+              },
+            },
+            createdAt: {
+              type: 'string',
+              format: 'datetime',
+              description:
+                'Client-declared timestamp when this post was originally created.',
+            },
+          },
+        },
+      },
+      step: {
+        type: 'object',
+        properties: {
+          text: {
+            type: 'string',
+            maxLength: 3000,
+            maxGraphemes: 300,
+          },
+          images: {
+            type: 'union',
+            refs: ['lex:app.bsky.embed.images', 'lex:app.bsky.embed.video'],
+          },
+        },
+      },
+      ingredient: {
+        description: 'TODO add description/alternatives properties?',
+        type: 'object',
+        properties: {
+          name: {
+            type: 'string',
+            maxLength: 3000,
+            maxGraphemes: 300,
+          },
+          quantity: {
+            type: 'string',
+            maxGraphemes: 10,
+          },
+          unit: {
+            type: 'string',
+            maxGraphemes: 10,
+          },
+        },
+      },
+    },
+  },
   ChatBskyActorDeclaration: {
     lexicon: 1,
     id: 'chat.bsky.actor.declaration',
@@ -13669,6 +13770,7 @@ export const ids = {
   AppBskyVideoGetJobStatus: 'app.bsky.video.getJobStatus',
   AppBskyVideoGetUploadLimits: 'app.bsky.video.getUploadLimits',
   AppBskyVideoUploadVideo: 'app.bsky.video.uploadVideo',
+  AppFoodiosFeedRecipePost: 'app.foodios.feed.recipePost',
   ChatBskyActorDeclaration: 'chat.bsky.actor.declaration',
   ChatBskyActorDefs: 'chat.bsky.actor.defs',
   ChatBskyActorDeleteAccount: 'chat.bsky.actor.deleteAccount',

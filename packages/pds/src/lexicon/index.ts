@@ -1396,10 +1396,12 @@ export class ComAtprotoTempNS {
 export class AppNS {
   _server: Server
   bsky: AppBskyNS
+  foodios: AppFoodiosNS
 
   constructor(server: Server) {
     this._server = server
     this.bsky = new AppBskyNS(server)
+    this.foodios = new AppFoodiosNS(server)
   }
 }
 
@@ -2470,6 +2472,24 @@ export class AppBskyVideoNS {
   ) {
     const nsid = 'app.bsky.video.uploadVideo' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
+  }
+}
+
+export class AppFoodiosNS {
+  _server: Server
+  feed: AppFoodiosFeedNS
+
+  constructor(server: Server) {
+    this._server = server
+    this.feed = new AppFoodiosFeedNS(server)
+  }
+}
+
+export class AppFoodiosFeedNS {
+  _server: Server
+
+  constructor(server: Server) {
+    this._server = server
   }
 }
 
