@@ -24,14 +24,14 @@
               "type": "array",
               "items": {
                 "type": "ref",
-                "ref": "lex:app.bsky.feed.recipePost#ingredient"
+                "ref": "#ingredient"
               }
             },
             "steps": {
               "type": "array",
               "items": {
                 "type": "ref",
-                "ref": "lex:app.bsky.feed.recipePost#step"
+                "ref": "#step"
               }
             },
             "images": {
