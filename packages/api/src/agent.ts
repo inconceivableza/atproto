@@ -11,6 +11,7 @@ import {
   AppBskyActorDefs,
   AppBskyActorProfile,
   AppBskyFeedPost,
+  AppFoodiosFeedRecipePost,
   AppBskyLabelerDefs,
   AppNS,
   ChatNS,
@@ -372,6 +373,16 @@ export class Agent extends XrpcClient {
     return this.app.bsky.feed.post.create(
       { repo: this.accountDid },
       record as AppBskyFeedPost.Record,
+    )
+  }
+
+  async recipePost(record: AppFoodiosFeedRecipePost.Record
+  //   {
+  //   [K in keyof AppFoodiosFeedRecipePost.Record as K extends "createdAt" ? never : K]: AppFoodiosFeedRecipePost.Record[K] 
+  // } & Partial<Pick<AppFoodiosFeedRecipePost.Record, 'createdAt'>>
+  ){
+    return this.app.foodios.feed.recipePost.create({repo: this.assertDid},
+      record
     )
   }
 
