@@ -12161,6 +12161,7 @@ export const schemaDict = {
       },
       step: {
         type: 'object',
+        required: ['text'],
         properties: {
           text: {
             type: 'string',
@@ -12176,6 +12177,7 @@ export const schemaDict = {
       ingredient: {
         description: 'TODO add description/alternatives properties?',
         type: 'object',
+        required: ['name', 'quantity', 'unit'],
         properties: {
           name: {
             type: 'string',
