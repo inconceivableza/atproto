@@ -47,7 +47,7 @@ export function validateRecord<V>(v: V) {
 
 export interface Step {
   $type?: 'app.foodios.feed.recipePost#step'
-  text?: string
+  text: string
   images?:
     | $Typed<AppBskyEmbedImages.Main>
     | $Typed<AppBskyEmbedVideo.Main>
@@ -67,9 +67,9 @@ export function validateStep<V>(v: V) {
 /** TODO add description/alternatives properties? */
 export interface Ingredient {
   $type?: 'app.foodios.feed.recipePost#ingredient'
-  name?: string
-  quantity?: string
-  unit?: string
+  name: string
+  quantity: string
+  unit: string
 }
 
 const hashIngredient = 'ingredient'
