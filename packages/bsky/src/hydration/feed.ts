@@ -6,6 +6,8 @@ import { Record as PostRecord } from '../lexicon/types/app/bsky/feed/post'
 import { Record as PostgateRecord } from '../lexicon/types/app/bsky/feed/postgate'
 import { Record as RepostRecord } from '../lexicon/types/app/bsky/feed/repost'
 import { Record as ThreadgateRecord } from '../lexicon/types/app/bsky/feed/threadgate'
+import { Record as RecipeRecord } from '../lexicon/types/app/foodios/feed/recipePost'
+
 import {
   postUriToPostgateUri,
   postUriToThreadgateUri,
@@ -19,6 +21,7 @@ import {
   parseString,
   split,
 } from './util'
+import { FeedItemType } from '../proto/bsky_pb'
 
 export type Post = RecordInfo<PostRecord> & {
   violatesThreadGate: boolean
@@ -79,6 +82,9 @@ export type Threadgates = HydrationMap<Threadgate>
 export type Postgate = RecordInfo<PostgateRecord>
 export type Postgates = HydrationMap<Postgate>
 
+export type Recipe = RecordInfo<RecipeRecord>
+export type Recipes = HydrationMap<Recipe>
+
 export type ThreadRef = ItemRef & { threadRoot: string }
 
 // @NOTE the feed item types in the protos for author feeds and timelines
@@ -91,10 +97,22 @@ export type FeedItem = {
    * only in author feeds.
    */
   authorPinned?: boolean
+  itemType: FeedItemType
 }
 
 export class FeedHydrator {
-  constructor(public dataplane: DataPlaneClient) {}
+  constructor(public dataplane: DataPlaneClient) { }
+
+  async getRecipes(uris: string[], includeTakedowns = false): Promise<Recipes> {
+    // TODO: consider branding recipe URIs
+    const { records } = await this.dataplane.getRecipeRecords({ uris })
+    const result = new HydrationMap<Recipe>()
+    uris.forEach((uri, i) => {
+      const parsed = parseRecord<RecipeRecord>(records[i], includeTakedowns)
+      result.set(uri, parsed ?? null)
+    })
+    return result
+  }
 
   async getPosts(
     uris: string[],
@@ -119,13 +137,13 @@ export class FeedHydrator {
         uri,
         record
           ? {
-              ...record,
-              violatesThreadGate,
-              violatesEmbeddingRules,
-              hasThreadGate,
-              hasPostGate,
-              tags,
-            }
+            ...record,
+            violatesThreadGate,
+            violatesEmbeddingRules,
+            hasThreadGate,
+            hasPostGate,
+            tags,
+          }
           : null,
       )
     }, base)
