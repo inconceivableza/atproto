@@ -32,6 +32,7 @@ import {
   PostViewerStates,
   Postgates,
   Posts,
+  Recipes,
   Reposts,
   ThreadContexts,
   ThreadRef,
@@ -64,8 +65,10 @@ import {
   mergeManyMaps,
   mergeMaps,
   mergeNestedMaps,
+  parseRecord,
   urisByCollection,
 } from './util'
+import { Record as RecipeRecord } from "../lexicon/types/app/foodios/feed/recipePost"
 
 export class HydrateCtx {
   labelers = this.vals.labelers
@@ -73,7 +76,7 @@ export class HydrateCtx {
   includeTakedowns = this.vals.includeTakedowns
   includeActorTakedowns = this.vals.includeActorTakedowns
   include3pBlocks = this.vals.include3pBlocks
-  constructor(private vals: HydrateCtxVals) {}
+  constructor(private vals: HydrateCtxVals) { }
   // Convenience with use with dataplane.getActors cache control
   get skipCacheForViewer() {
     if (!this.viewer) return
@@ -98,6 +101,7 @@ export type HydrationState = {
   profileViewers?: ProfileViewerStates
   profileAggs?: ProfileAggs
   posts?: Posts
+  recipePosts?: Recipes
   postAggs?: PostAggs
   postViewers?: PostViewerStates
   threadContexts?: ThreadContexts
@@ -612,6 +616,8 @@ export class Hydrator {
       items.map((item) => item.post.uri),
       ctx.includeTakedowns,
     )
+
+    // TODO: handle case where post is reply to recipe
     const rootUris: string[] = []
     const parentUris: string[] = []
     const postAndReplyRefs: ItemRef[] = []
@@ -651,6 +657,15 @@ export class Hydrator {
       reposts,
       ctx,
     })
+  }
+
+  async hydrateRecipes(uris: string[], ctx: HydrateCtx,): Promise<HydrationState> {
+    // TODO: consider branding recipe URIs
+    const recipes = await this.feed.getRecipes(uris, ctx.includeTakedowns)
+
+    return {
+      recipePosts: recipes
+    }
   }
 
   // app.bsky.feed.defs#threadViewPost
@@ -1027,7 +1042,7 @@ export class Hydrator {
           blockUri: block?.blockUri,
           blockListUri:
             block?.blockListUri &&
-            listState.actors?.get(uriToDid(block.blockListUri))
+              listState.actors?.get(uriToDid(block.blockListUri))
               ? block.blockListUri
               : undefined,
         }
@@ -1335,8 +1350,8 @@ export const mergeStates = (
 ): HydrationState => {
   assert(
     !stateA.ctx?.viewer ||
-      !stateB.ctx?.viewer ||
-      stateA.ctx?.viewer === stateB.ctx?.viewer,
+    !stateB.ctx?.viewer ||
+    stateA.ctx?.viewer === stateB.ctx?.viewer,
     'incompatible viewers',
   )
   return {
@@ -1379,6 +1394,7 @@ export const mergeStates = (
       stateB.bidirectionalBlocks,
     ),
     verifications: mergeMaps(stateA.verifications, stateB.verifications),
+    recipePosts: mergeMaps(stateA.recipePosts, stateB.recipePosts)
   }
 }
 
