@@ -23,7 +23,7 @@ export default function (server: Server, ctx: AppContext) {
     noBlocksOrMutes,
     presentation,
   )
-  server.app.bsky.feed.getListFeed({
+  server.app.foodios.feed.getListFeed({
     auth: ctx.authVerifier.standardOptional,
     handler: async ({ params, auth, req }) => {
       const viewer = auth.credentials.iss
@@ -62,6 +62,7 @@ export const skeleton = async (inputs: {
       repost: item.repost
         ? { uri: item.repost, cid: item.repostCid || undefined }
         : undefined,
+      itemType: item.itemType
     })),
     cursor: parseString(res.cursor),
   }
@@ -113,7 +114,7 @@ const presentation = (inputs: {
 }) => {
   const { ctx, skeleton, hydration } = inputs
   const feed = mapDefined(skeleton.items, (item) =>
-    ctx.views.feedViewPost(item, hydration),
+    ctx.views.feedViewPostUnion(item, hydration),
   )
   return { feed, cursor: skeleton.cursor }
 }

@@ -21,7 +21,7 @@ export default function (server: Server, ctx: AppContext) {
     noBlocksOrMutes,
     presentation,
   )
-  server.app.bsky.feed.getTimeline({
+  server.app.foodios.feed.getTimeline({
     auth: ctx.authVerifier.standard,
     handler: async ({ params, auth, req }) => {
       const viewer = auth.credentials.iss
@@ -59,6 +59,7 @@ export const skeleton = async (inputs: {
   })
   return {
     items: res.items.map((item) => ({
+      itemType: item.itemType,
       post: { uri: item.uri, cid: item.cid || undefined },
       repost: item.repost
         ? { uri: item.repost, cid: item.repostCid || undefined }
@@ -103,7 +104,7 @@ const presentation = (inputs: {
 }) => {
   const { ctx, skeleton, hydration } = inputs
   const feed = mapDefined(skeleton.items, (item) =>
-    ctx.views.feedViewPost(item, hydration),
+    ctx.views.feedViewPostUnion(item, hydration),
   )
   return { feed, cursor: skeleton.cursor }
 }

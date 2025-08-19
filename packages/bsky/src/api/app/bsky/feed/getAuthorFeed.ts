@@ -26,7 +26,7 @@ export default function (server: Server, ctx: AppContext) {
     noBlocksOrMutedReposts,
     presentation,
   )
-  server.app.bsky.feed.getAuthorFeed({
+  server.app.foodios.feed.getAuthorFeed({
     auth: ctx.authVerifier.optionalStandardOrRole,
     handler: async ({ params, auth, req }) => {
       const { viewer, includeTakedowns } = ctx.authVerifier.parseCreds(auth)
@@ -215,7 +215,7 @@ const presentation = (inputs: {
 }) => {
   const { ctx, skeleton, hydration } = inputs
   const feed = mapDefined(skeleton.items, (item) =>
-    ctx.views.feedViewPost(item, hydration),
+    ctx.views.feedViewPostUnion(item, hydration),
   )
   return { feed, cursor: skeleton.cursor }
 }

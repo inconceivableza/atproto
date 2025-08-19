@@ -12,10 +12,11 @@ import { createPipeline } from '../../../../pipeline'
 import { uriToDid as creatorFromUri } from '../../../../util/uris'
 import { Views } from '../../../../views'
 import { resHeaders } from '../../../util'
+import { FeedItemType } from '../../../../proto/bsky_pb'
 
 export default function (server: Server, ctx: AppContext) {
   const getPosts = createPipeline(skeleton, hydration, noBlocks, presentation)
-  server.app.bsky.feed.getPosts({
+  server.app.foodios.feed.getPosts({
     auth: ctx.authVerifier.standardOptionalParameterized({
       lxmCheck: (method) => {
         if (!method) return false
@@ -50,6 +51,7 @@ const hydration = async (inputs: {
   skeleton: Skeleton
 }) => {
   const { ctx, params, skeleton } = inputs
+  // TODO: Also hydrate recipes
   return ctx.hydrator.hydratePosts(
     skeleton.posts.map((uri) => ({ uri })),
     params.hydrateCtx,
@@ -77,7 +79,7 @@ const presentation = (inputs: {
 }) => {
   const { ctx, skeleton, hydration } = inputs
   const posts = mapDefined(skeleton.posts, (uri) =>
-    ctx.views.post(uri, hydration),
+    ctx.views.postUnion({post: {uri}, itemType: FeedItemType.POST}, hydration),
   )
   return { posts }
 }
