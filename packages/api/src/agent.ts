@@ -274,14 +274,14 @@ export class Agent extends XrpcClient {
 
   //#region "app.bsky" lexicon short hand methods
 
-  getTimeline: typeof this.app.bsky.feed.getTimeline = (params, opts) =>
-    this.app.bsky.feed.getTimeline(params, opts)
+  getTimeline: typeof this.app.foodios.feed.getTimeline = (params, opts) =>
+    this.app.foodios.feed.getTimeline(params, opts)
 
-  getAuthorFeed: typeof this.app.bsky.feed.getAuthorFeed = (params, opts) =>
-    this.app.bsky.feed.getAuthorFeed(params, opts)
+  getAuthorFeed: typeof this.app.foodios.feed.getAuthorFeed = (params, opts) =>
+    this.app.foodios.feed.getAuthorFeed(params, opts)
 
-  getActorLikes: typeof this.app.bsky.feed.getActorLikes = (params, opts) =>
-    this.app.bsky.feed.getActorLikes(params, opts)
+  getActorLikes: typeof this.app.foodios.feed.getActorLikes = (params, opts) =>
+    this.app.foodios.feed.getActorLikes(params, opts)
 
   getPostThread: typeof this.app.bsky.feed.getPostThread = (params, opts) =>
     this.app.bsky.feed.getPostThread(params, opts)

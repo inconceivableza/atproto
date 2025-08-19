@@ -8,7 +8,7 @@ import { isMain as isEmbedRecord } from '../lexicon/types/app/bsky/embed/record'
 import { isMain as isEmbedRecordWithMedia } from '../lexicon/types/app/bsky/embed/recordWithMedia'
 import { isListRule as isThreadgateListRule } from '../lexicon/types/app/bsky/feed/threadgate'
 import { hydrationLogger } from '../logger'
-import { Notification } from '../proto/bsky_pb'
+import { FeedItemType, Notification } from '../proto/bsky_pb'
 import { ParsedLabelers } from '../util'
 import { uriToDid, uriToDid as didFromUri } from '../util/uris'
 import {
@@ -611,9 +611,21 @@ export class Hydrator {
     items: FeedItem[],
     ctx: HydrateCtx,
   ): Promise<HydrationState> {
+    const recipeUris: string[] = []
+    const otherItems: FeedItem[] = []
+    items.forEach((item)=> {
+      if (item.itemType === FeedItemType.RECIPE) {
+        recipeUris.push(item.post.uri)
+      } else {
+        otherItems.push(item)
+      }
+    })
+
+    const recipesState = await this.hydrateRecipes(recipeUris, ctx)
+
     // get posts, collect reply refs
     const posts = await this.feed.getPosts(
-      items.map((item) => item.post.uri),
+      otherItems.map((item) => item.post.uri),
       ctx.includeTakedowns,
     )
 
@@ -642,7 +654,7 @@ export class Hydrator {
       replyParentAuthors.push(didFromUri(parent.record.reply.parent.uri))
     })
     // hydrate state for all posts, reposts, authors of reposts + reply parent authors
-    const repostUris = mapDefined(items, (item) => item.repost?.uri)
+    const repostUris = mapDefined(otherItems, (item) => item.repost?.uri)
     const [postState, repostProfileState, reposts] = await Promise.all([
       this.hydratePosts(postAndReplyRefs, ctx, {
         posts: posts.merge(replies), // avoids refetches of posts
@@ -653,7 +665,7 @@ export class Hydrator {
       ),
       this.feed.getReposts(repostUris, ctx.includeTakedowns),
     ])
-    return mergeManyStates(postState, repostProfileState, {
+    return mergeManyStates(recipesState, postState, repostProfileState, {
       reposts,
       ctx,
     })

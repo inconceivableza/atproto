@@ -36,6 +36,7 @@ import {
   ThreadgateView,
   isPostView,
 } from '../lexicon/types/app/bsky/feed/defs'
+import { FeedViewPost as FeedViewPostUnion, RecipePostView } from "../lexicon/types/app/foodios/feed/defs"
 import { Record as LikeRecord } from '../lexicon/types/app/bsky/feed/like'
 import {
   Record as PostRecord,
@@ -70,7 +71,7 @@ import {
 } from '../lexicon/types/app/bsky/unspecced/getPostThreadV2'
 import { isSelfLabels } from '../lexicon/types/com/atproto/label/defs'
 import { $Typed, Un$Typed } from '../lexicon/util'
-import { Notification } from '../proto/bsky_pb'
+import { FeedItemType, Notification } from '../proto/bsky_pb'
 import {
   postUriToPostgateUri,
   postUriToThreadgateUri,
@@ -145,7 +146,7 @@ export class Views {
       threadTagsBumpDown: readonly string[]
       threadTagsHide: readonly string[]
     },
-  ) {}
+  ) { }
 
   // Actor
   // ------------
@@ -385,9 +386,9 @@ export class Views {
       ...baseView,
       viewer: baseView.viewer
         ? {
-            ...baseView.viewer,
-            knownFollowers,
-          }
+          ...baseView.viewer,
+          knownFollowers,
+        }
         : undefined,
     }
   }
@@ -868,11 +869,39 @@ export class Views {
     }
   }
 
+  postUnion(item:FeedItem, state: HydrationState) {
+    if (item.itemType === FeedItemType.RECIPE) {
+      return this.recipePost(item.post.uri, state)
+    }
+    return this.post(item.post.uri, state)
+  }
+
+  recipePost(uri: string, state: HydrationState): $Typed<RecipePostView> | undefined {
+    const recipePost = state.recipePosts?.get(uri)
+    if (!recipePost) return;
+
+    const parsedUri = new AtUri(uri)
+    const authorDid = parsedUri.hostname
+    const author = this.profileBasic(authorDid, state)
+    if (!author) return
+
+    return {
+      "$type": "app.foodios.feed.defs#recipePostView",
+      author,
+      uri,
+      cid: recipePost.cid,
+      title: recipePost.record.title,
+      text: recipePost.record.text,
+      indexedAt: recipePost.indexedAt.toISOString()
+    }
+
+  }
+
   post(
     uri: string,
     state: HydrationState,
     depth = 0,
-  ): Un$Typed<PostView> | undefined {
+  ): $Typed<PostView> | undefined {
     const post = state.posts?.get(uri)
     if (!post) return
     const parsedUri = new AtUri(uri)
@@ -891,6 +920,7 @@ export class Views {
       }),
     ]
     return {
+      "$type": "app.bsky.feed.defs#postView",
       uri,
       cid: post.cid,
       author,
@@ -919,6 +949,23 @@ export class Views {
         ? this.threadgate(threadgateUri, state)
         : undefined,
     }
+  }
+
+  feedViewPostUnion(
+    item: FeedItem,
+    state: HydrationState,
+  ): Un$Typed<FeedViewPostUnion> | undefined {
+    if (item.itemType === FeedItemType.RECIPE) {
+      const recipePostView = this.recipePost(item.post.uri, state)
+      if (!recipePostView) return;
+      return {
+        post: recipePostView
+      }
+    }
+    
+    const postView =  this.feedViewPost(item, state)
+    if (!postView) return
+    return postView as Un$Typed<FeedViewPostUnion>
   }
 
   feedViewPost(
@@ -2004,10 +2051,10 @@ export class Views {
         description,
         thumb: thumb
           ? this.imgUriBuilder.getPresetUri(
-              'feed_thumbnail',
-              did,
-              cidFromBlobJson(thumb),
-            )
+            'feed_thumbnail',
+            did,
+            cidFromBlobJson(thumb),
+          )
           : undefined,
       },
     }

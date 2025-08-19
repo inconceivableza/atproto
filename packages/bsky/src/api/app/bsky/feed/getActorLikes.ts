@@ -15,6 +15,7 @@ import { createPipeline } from '../../../../pipeline'
 import { uriToDid as creatorFromUri } from '../../../../util/uris'
 import { Views } from '../../../../views'
 import { clearlyBadCursor, resHeaders } from '../../../util'
+import { FeedItemType } from '../../../../proto/bsky_pb'
 
 export default function (server: Server, ctx: AppContext) {
   const getActorLikes = createPipeline(
@@ -23,7 +24,7 @@ export default function (server: Server, ctx: AppContext) {
     noPostBlocks,
     presentation,
   )
-  server.app.bsky.feed.getActorLikes({
+  server.app.foodios.feed.getActorLikes({
     auth: ctx.authVerifier.standardOptional,
     handler: async ({ params, auth, req }) => {
       const viewer = auth.credentials.iss
@@ -67,7 +68,8 @@ const skeleton = async (inputs: {
     cursor,
   })
 
-  const items = likesRes.likes.map((l) => ({ post: { uri: l.subject } }))
+  // TODO: fix item type
+  const items: FeedItem[] = likesRes.likes.map((l) => ({ post: { uri: l.subject, }, itemType: FeedItemType.POST }))
 
   return {
     items,
@@ -104,7 +106,7 @@ const presentation = (inputs: {
 }) => {
   const { ctx, skeleton, hydration } = inputs
   const feed = mapDefined(skeleton.items, (item) =>
-    ctx.views.feedViewPost(item, hydration),
+    ctx.views.feedViewPostUnion(item, hydration),
   )
   return {
     feed,
