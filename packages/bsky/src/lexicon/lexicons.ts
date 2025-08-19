@@ -12093,6 +12093,414 @@ export const schemaDict = {
       },
     },
   },
+  AppFoodiosFeedDefs: {
+    lexicon: 1,
+    id: 'app.foodios.feed.defs',
+    defs: {
+      feedViewPost: {
+        type: 'object',
+        required: ['post'],
+        properties: {
+          post: {
+            type: 'union',
+            refs: [
+              'lex:app.bsky.feed.defs#postView',
+              'lex:app.foodios.feed.defs#recipePostView',
+            ],
+          },
+          reply: {
+            type: 'ref',
+            ref: 'lex:app.bsky.feed.defs#replyRef',
+          },
+          reason: {
+            type: 'union',
+            refs: [
+              'lex:app.bsky.feed.defs#reasonRepost',
+              'lex:app.bsky.feed.defs#reasonPin',
+            ],
+          },
+          feedContext: {
+            type: 'string',
+            description:
+              'Context provided by feed generator that may be passed back alongside interactions.',
+            maxLength: 2000,
+          },
+          reqId: {
+            type: 'string',
+            description:
+              'Unique identifier per request that may be passed back alongside interactions.',
+            maxLength: 100,
+          },
+        },
+      },
+      recipePostView: {
+        type: 'object',
+        required: ['uri', 'cid', 'author', 'title', 'text', 'indexedAt'],
+        properties: {
+          uri: {
+            type: 'string',
+            format: 'at-uri',
+          },
+          cid: {
+            type: 'string',
+            format: 'cid',
+          },
+          author: {
+            type: 'ref',
+            ref: 'lex:app.bsky.actor.defs#profileViewBasic',
+          },
+          title: {
+            type: 'string',
+            maxLength: 3000,
+            maxGraphemes: 50,
+          },
+          text: {
+            type: 'string',
+            maxLength: 3000,
+            maxGraphemes: 300,
+          },
+          indexedAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+        },
+      },
+    },
+  },
+  AppFoodiosFeedGetActorLikes: {
+    lexicon: 1,
+    id: 'app.foodios.feed.getActorLikes',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Get a list of posts liked by an actor. Requires auth, actor must be the requesting account.',
+        parameters: {
+          type: 'params',
+          required: ['actor'],
+          properties: {
+            actor: {
+              type: 'string',
+              format: 'at-identifier',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['feed'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              feed: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.foodios.feed.defs#feedViewPost',
+                },
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'BlockedActor',
+          },
+          {
+            name: 'BlockedByActor',
+          },
+        ],
+      },
+    },
+  },
+  AppFoodiosFeedGetAuthorFeed: {
+    lexicon: 1,
+    id: 'app.foodios.feed.getAuthorFeed',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          "Get a view of an actor's 'author feed' (post and reposts by the author). Does not require auth.",
+        parameters: {
+          type: 'params',
+          required: ['actor'],
+          properties: {
+            actor: {
+              type: 'string',
+              format: 'at-identifier',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            cursor: {
+              type: 'string',
+            },
+            filter: {
+              type: 'string',
+              description:
+                'Combinations of post/repost types to include in response.',
+              knownValues: [
+                'posts_with_replies',
+                'posts_no_replies',
+                'posts_with_media',
+                'posts_and_author_threads',
+                'posts_with_video',
+              ],
+              default: 'posts_with_replies',
+            },
+            includePins: {
+              type: 'boolean',
+              default: false,
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['feed'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              feed: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.foodios.feed.defs#feedViewPost',
+                },
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'BlockedActor',
+          },
+          {
+            name: 'BlockedByActor',
+          },
+        ],
+      },
+    },
+  },
+  AppFoodiosFeedGetFeed: {
+    lexicon: 1,
+    id: 'app.foodios.feed.getFeed',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          "Get a hydrated feed from an actor's selected feed generator. Implemented by App View.",
+        parameters: {
+          type: 'params',
+          required: ['feed'],
+          properties: {
+            feed: {
+              type: 'string',
+              format: 'at-uri',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['feed'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              feed: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.foodios.feed.defs#feedViewPost',
+                },
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'UnknownFeed',
+          },
+        ],
+      },
+    },
+  },
+  AppFoodiosFeedGetListFeed: {
+    lexicon: 1,
+    id: 'app.foodios.feed.getListFeed',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Get a feed of recent posts from a list (posts and reposts from any actors on the list). Does not require auth.',
+        parameters: {
+          type: 'params',
+          required: ['list'],
+          properties: {
+            list: {
+              type: 'string',
+              format: 'at-uri',
+              description: 'Reference (AT-URI) to the list record.',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['feed'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              feed: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.foodios.feed.defs#feedViewPost',
+                },
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'UnknownList',
+          },
+        ],
+      },
+    },
+  },
+  AppFoodiosFeedGetPosts: {
+    lexicon: 1,
+    id: 'app.foodios.feed.getPosts',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          "Gets post views for a specified list of posts (by AT-URI). This is sometimes referred to as 'hydrating' a 'feed skeleton'.",
+        parameters: {
+          type: 'params',
+          required: ['uris'],
+          properties: {
+            uris: {
+              type: 'array',
+              description: 'List of post AT-URIs to return hydrated views for.',
+              items: {
+                type: 'string',
+                format: 'at-uri',
+              },
+              maxLength: 25,
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['posts'],
+            properties: {
+              posts: {
+                type: 'array',
+                items: {
+                  type: 'union',
+                  refs: [
+                    'lex:app.bsky.feed.defs#postView',
+                    'lex:app.foodios.feed.defs#recipePostView',
+                  ],
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  AppFoodiosFeedGetTimeline: {
+    lexicon: 1,
+    id: 'app.foodios.feed.getTimeline',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          "Get a view of the requesting account's home timeline. This is expected to be some form of reverse-chronological feed.",
+        parameters: {
+          type: 'params',
+          properties: {
+            algorithm: {
+              type: 'string',
+              description:
+                "Variant 'algorithm' for timeline. Implementation-specific. NOTE: most feed flexibility has been moved to feed generator mechanism.",
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['feed'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              feed: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.foodios.feed.defs#feedViewPost',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   AppFoodiosFeedRecipePost: {
     lexicon: 1,
     id: 'app.foodios.feed.recipePost',
@@ -13772,6 +14180,13 @@ export const ids = {
   AppBskyVideoGetJobStatus: 'app.bsky.video.getJobStatus',
   AppBskyVideoGetUploadLimits: 'app.bsky.video.getUploadLimits',
   AppBskyVideoUploadVideo: 'app.bsky.video.uploadVideo',
+  AppFoodiosFeedDefs: 'app.foodios.feed.defs',
+  AppFoodiosFeedGetActorLikes: 'app.foodios.feed.getActorLikes',
+  AppFoodiosFeedGetAuthorFeed: 'app.foodios.feed.getAuthorFeed',
+  AppFoodiosFeedGetFeed: 'app.foodios.feed.getFeed',
+  AppFoodiosFeedGetListFeed: 'app.foodios.feed.getListFeed',
+  AppFoodiosFeedGetPosts: 'app.foodios.feed.getPosts',
+  AppFoodiosFeedGetTimeline: 'app.foodios.feed.getTimeline',
   AppFoodiosFeedRecipePost: 'app.foodios.feed.recipePost',
   ChatBskyActorDeclaration: 'chat.bsky.actor.declaration',
   ChatBskyActorDefs: 'chat.bsky.actor.defs',
