@@ -1,0 +1,78 @@
+{
+    "lexicon": 1,
+    "id": "app.foodios.feed.defs",
+    "defs": {
+        "feedViewPost": {
+            "type": "object",
+            "required": [
+                "post"
+            ],
+            "properties": {
+                "post": {
+                    "type": "union",
+                    "refs": [
+                        "app.bsky.feed.defs#postView",
+                        "#recipePostView"
+                    ]
+                },
+                "reply": {
+                    "type": "ref",
+                    "ref": "app.bsky.feed.defs#replyRef"
+                },
+                "reason": {
+                    "type": "union",
+                    "refs": [
+                        "app.bsky.feed.defs#reasonRepost",
+                        "app.bsky.feed.defs#reasonPin"
+                    ]
+                },
+                "feedContext": {
+                    "type": "string",
+                    "description": "Context provided by feed generator that may be passed back alongside interactions.",
+                    "maxLength": 2000
+                },
+                "reqId": {
+                    "type": "string",
+                    "description": "Unique identifier per request that may be passed back alongside interactions.",
+                    "maxLength": 100
+                }
+            }
+        },
+        "recipePostView": {
+            "type": "object",
+            "required": [
+                "uri",
+                "cid",
+                "author",
+                "title",
+                "text",
+                "indexedAt"
+            ],
+            "properties": {
+                "uri": {
+                    "type": "string",
+                    "format": "at-uri"
+                },
+                "cid": {
+                    "type": "string",
+                    "format": "cid"
+                },
+                "author": {
+                    "type": "ref",
+                    "ref": "app.bsky.actor.defs#profileViewBasic"
+                },
+                "title": {
+                    "type": "string",
+                    "maxLength": 3000,
+                    "maxGraphemes": 50
+                },
+                "text": {
+                    "type": "string",
+                    "maxLength": 3000,
+                    "maxGraphemes": 300
+                },
+                "indexedAt": { "type": "string", "format": "datetime" }
+            }
+        }
+    }
+}
