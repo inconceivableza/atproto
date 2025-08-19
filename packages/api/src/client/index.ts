@@ -212,6 +212,13 @@ import * as AppBskyVideoDefs from './types/app/bsky/video/defs.js'
 import * as AppBskyVideoGetJobStatus from './types/app/bsky/video/getJobStatus.js'
 import * as AppBskyVideoGetUploadLimits from './types/app/bsky/video/getUploadLimits.js'
 import * as AppBskyVideoUploadVideo from './types/app/bsky/video/uploadVideo.js'
+import * as AppFoodiosFeedDefs from './types/app/foodios/feed/defs.js'
+import * as AppFoodiosFeedGetActorLikes from './types/app/foodios/feed/getActorLikes.js'
+import * as AppFoodiosFeedGetAuthorFeed from './types/app/foodios/feed/getAuthorFeed.js'
+import * as AppFoodiosFeedGetFeed from './types/app/foodios/feed/getFeed.js'
+import * as AppFoodiosFeedGetListFeed from './types/app/foodios/feed/getListFeed.js'
+import * as AppFoodiosFeedGetPosts from './types/app/foodios/feed/getPosts.js'
+import * as AppFoodiosFeedGetTimeline from './types/app/foodios/feed/getTimeline.js'
 import * as AppFoodiosFeedRecipePost from './types/app/foodios/feed/recipePost.js'
 import * as ChatBskyActorDeclaration from './types/chat/bsky/actor/declaration.js'
 import * as ChatBskyActorDefs from './types/chat/bsky/actor/defs.js'
@@ -491,6 +498,13 @@ export * as AppBskyVideoDefs from './types/app/bsky/video/defs.js'
 export * as AppBskyVideoGetJobStatus from './types/app/bsky/video/getJobStatus.js'
 export * as AppBskyVideoGetUploadLimits from './types/app/bsky/video/getUploadLimits.js'
 export * as AppBskyVideoUploadVideo from './types/app/bsky/video/uploadVideo.js'
+export * as AppFoodiosFeedDefs from './types/app/foodios/feed/defs.js'
+export * as AppFoodiosFeedGetActorLikes from './types/app/foodios/feed/getActorLikes.js'
+export * as AppFoodiosFeedGetAuthorFeed from './types/app/foodios/feed/getAuthorFeed.js'
+export * as AppFoodiosFeedGetFeed from './types/app/foodios/feed/getFeed.js'
+export * as AppFoodiosFeedGetListFeed from './types/app/foodios/feed/getListFeed.js'
+export * as AppFoodiosFeedGetPosts from './types/app/foodios/feed/getPosts.js'
+export * as AppFoodiosFeedGetTimeline from './types/app/foodios/feed/getTimeline.js'
 export * as AppFoodiosFeedRecipePost from './types/app/foodios/feed/recipePost.js'
 export * as ChatBskyActorDeclaration from './types/chat/bsky/actor/declaration.js'
 export * as ChatBskyActorDefs from './types/chat/bsky/actor/defs.js'
@@ -4223,6 +4237,74 @@ export class AppFoodiosFeedNS {
   constructor(client: XrpcClient) {
     this._client = client
     this.recipePost = new AppFoodiosFeedRecipePostRecord(client)
+  }
+
+  getActorLikes(
+    params?: AppFoodiosFeedGetActorLikes.QueryParams,
+    opts?: AppFoodiosFeedGetActorLikes.CallOptions,
+  ): Promise<AppFoodiosFeedGetActorLikes.Response> {
+    return this._client
+      .call('app.foodios.feed.getActorLikes', params, undefined, opts)
+      .catch((e) => {
+        throw AppFoodiosFeedGetActorLikes.toKnownErr(e)
+      })
+  }
+
+  getAuthorFeed(
+    params?: AppFoodiosFeedGetAuthorFeed.QueryParams,
+    opts?: AppFoodiosFeedGetAuthorFeed.CallOptions,
+  ): Promise<AppFoodiosFeedGetAuthorFeed.Response> {
+    return this._client
+      .call('app.foodios.feed.getAuthorFeed', params, undefined, opts)
+      .catch((e) => {
+        throw AppFoodiosFeedGetAuthorFeed.toKnownErr(e)
+      })
+  }
+
+  getFeed(
+    params?: AppFoodiosFeedGetFeed.QueryParams,
+    opts?: AppFoodiosFeedGetFeed.CallOptions,
+  ): Promise<AppFoodiosFeedGetFeed.Response> {
+    return this._client
+      .call('app.foodios.feed.getFeed', params, undefined, opts)
+      .catch((e) => {
+        throw AppFoodiosFeedGetFeed.toKnownErr(e)
+      })
+  }
+
+  getListFeed(
+    params?: AppFoodiosFeedGetListFeed.QueryParams,
+    opts?: AppFoodiosFeedGetListFeed.CallOptions,
+  ): Promise<AppFoodiosFeedGetListFeed.Response> {
+    return this._client
+      .call('app.foodios.feed.getListFeed', params, undefined, opts)
+      .catch((e) => {
+        throw AppFoodiosFeedGetListFeed.toKnownErr(e)
+      })
+  }
+
+  getPosts(
+    params?: AppFoodiosFeedGetPosts.QueryParams,
+    opts?: AppFoodiosFeedGetPosts.CallOptions,
+  ): Promise<AppFoodiosFeedGetPosts.Response> {
+    return this._client.call(
+      'app.foodios.feed.getPosts',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  getTimeline(
+    params?: AppFoodiosFeedGetTimeline.QueryParams,
+    opts?: AppFoodiosFeedGetTimeline.CallOptions,
+  ): Promise<AppFoodiosFeedGetTimeline.Response> {
+    return this._client.call(
+      'app.foodios.feed.getTimeline',
+      params,
+      undefined,
+      opts,
+    )
   }
 }
 
