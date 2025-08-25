@@ -386,6 +386,10 @@ export class Agent extends XrpcClient {
     )
   }
 
+  getRecipePost: typeof this.app.foodios.feed.recipePost.get = (params) => {
+    return this.app.foodios.feed.recipePost.get(params)
+  }
+
   async deletePost(postUri: string) {
     this.assertAuthenticated()
 
