@@ -12110,7 +12110,7 @@ export const schemaDict = {
           },
           reply: {
             type: 'ref',
-            ref: 'lex:app.bsky.feed.defs#replyRef',
+            ref: 'lex:app.foodios.feed.defs#replyRef',
           },
           reason: {
             type: 'union',
@@ -12162,6 +12162,36 @@ export const schemaDict = {
           indexedAt: {
             type: 'string',
             format: 'datetime',
+          },
+        },
+      },
+      replyRef: {
+        type: 'object',
+        required: ['root', 'parent'],
+        properties: {
+          root: {
+            type: 'union',
+            refs: [
+              'lex:app.bsky.feed.defs#postView',
+              'lex:app.bsky.feed.defs#notFoundPost',
+              'lex:app.bsky.feed.defs#blockedPost',
+              'lex:app.foodios.feed.defs#recipePostView',
+            ],
+          },
+          parent: {
+            type: 'union',
+            refs: [
+              'lex:app.bsky.feed.defs#postView',
+              'lex:app.bsky.feed.defs#notFoundPost',
+              'lex:app.bsky.feed.defs#blockedPost',
+              'lex:app.foodios.feed.defs#recipePostView',
+            ],
+          },
+          grandparentAuthor: {
+            type: 'ref',
+            ref: 'lex:app.bsky.actor.defs#profileViewBasic',
+            description:
+              'When parent is a reply to another post, this is the author of that post.',
           },
         },
       },
