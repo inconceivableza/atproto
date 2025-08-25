@@ -71,7 +71,19 @@
                     "maxLength": 3000,
                     "maxGraphemes": 300
                 },
-                "indexedAt": { "type": "string", "format": "datetime" }
+                "indexedAt": {
+                    "type": "string",
+                    "format": "datetime"
+                },
+                "replyCount": {
+                    "type": "integer"
+                },
+                "repostCount": {
+                    "type": "integer"
+                },
+                "likeCount": {
+                    "type": "integer"
+                }
             }
         },
         "replyRef": {
