@@ -83,6 +83,10 @@
                 },
                 "likeCount": {
                     "type": "integer"
+                },
+                "viewer": {
+                    "type": "ref",
+                    "ref": "app.bsky.feed.defs#viewerState"
                 }
             }
         },
