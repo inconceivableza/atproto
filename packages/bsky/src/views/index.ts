@@ -887,6 +887,8 @@ export class Views {
     if (!author) return
 
     const aggs = state.postAggs?.get(uri)
+    const viewer = state.postViewers?.get(uri) ?? undefined
+
     return {
       "$type": "app.foodios.feed.defs#recipePostView",
       author,
@@ -897,7 +899,8 @@ export class Views {
       indexedAt: recipePost.indexedAt.toISOString(),
       replyCount: aggs?.replies,
       likeCount: aggs?.likes,
-      repostCount: aggs?.reposts
+      repostCount: aggs?.reposts,
+      viewer
     }
 
   }

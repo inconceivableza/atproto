@@ -682,9 +682,13 @@ export class Hydrator {
     // TODO: consider branding recipe URIs
     const recipes = await this.feed.getRecipes(uris, ctx.includeTakedowns)
     const postAggs = await this.feed.getPostAggregates(uris.map(uri => ({ uri })), ctx.viewer)
+    const postViewers = ctx.viewer ?
+      await this.feed.getPostViewerStates(uris.map(uri => ({ uri, threadRoot: uri })), ctx.viewer)
+      : undefined
     return {
       recipePosts: recipes,
-      postAggs
+      postAggs,
+      postViewers
     }
   }
 
