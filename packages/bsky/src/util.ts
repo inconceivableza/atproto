@@ -1,3 +1,4 @@
+import { AtUri } from '@atproto/syntax'
 import { parseList } from 'structured-headers'
 
 export type ParsedLabelers = {
@@ -41,4 +42,8 @@ export const formatLabelerHeader = (parsed: ParsedLabelers): string => {
     parsed.redact.has(did) ? `${did};redact` : did,
   )
   return parts.join(',')
+}
+
+export function isRecipeURI(uri:string) {
+  return new AtUri(uri).collection === "app.foodios.feed.recipePost"
 }
