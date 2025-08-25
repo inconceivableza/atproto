@@ -66,6 +66,7 @@ import {
   mergeMaps,
   mergeNestedMaps,
   parseRecord,
+  partition,
   urisByCollection,
 } from './util'
 import { Record as RecipeRecord } from "../lexicon/types/app/foodios/feed/recipePost"
@@ -431,13 +432,19 @@ export class Hydrator {
     const urisLayer1ByCollection = urisByCollection(urisLayer1)
     const embedPostUrisLayer1 =
       urisLayer1ByCollection.get(ids.AppBskyFeedPost) ?? []
+    const [recipeURIs, postURIs] = partition([...embedPostUrisLayer1, ...additionalRootUris], 
+      uri => new AtUri(uri).collection === "app.foodios.feed.recipePost")
     const postsLayer1 = await this.feed.getPosts(
-      [...embedPostUrisLayer1, ...additionalRootUris],
+      postURIs,
       ctx.includeTakedowns,
       state.posts,
     )
     addPostsToHydrationState(postsLayer1)
 
+    const recipesLayer1 = await this.feed.getRecipes(recipeURIs, ctx.includeTakedowns)
+    state.recipePosts = mergeMaps(state.recipePosts,  recipesLayer1)
+    
+    // TODO: determine if recipes needed for layer 2.
     // layer 2: second level embeds, ignoring any additional root uris we mixed-in to the previous layer
     const urisLayer2 = nestedRecordUrisFromPosts(
       postsLayer1,
