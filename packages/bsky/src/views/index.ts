@@ -123,6 +123,7 @@ import {
   parsePostgate,
   parseThreadGate,
 } from './util'
+import { isRecipeURI } from '../util'
 
 const notificationDeletedRecord = {
   $type: 'app.bsky.notification.defs#recordDeleted' as const,
@@ -1013,6 +1014,7 @@ export class Views {
       }
     }
     let grandparentAuthor: ProfileViewBasic | undefined
+    // TODO: recipe may be grandparent
     if (
       isPostView(parent) &&
       isPostRecord(parent.record) &&
@@ -1032,7 +1034,14 @@ export class Views {
   }
 
   maybePost(uri: string, state: HydrationState): $Typed<MaybePostView> {
+    if (isRecipeURI(uri)) {
+      const recipe = this.recipePost(uri, state)
+      if (recipe) {
+        return recipe
+      }
+    }
     const post = this.post(uri, state)
+    
     if (!post) {
       return this.notFoundPost(uri)
     }
