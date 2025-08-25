@@ -886,6 +886,7 @@ export class Views {
     const author = this.profileBasic(authorDid, state)
     if (!author) return
 
+    const aggs = state.postAggs?.get(uri)
     return {
       "$type": "app.foodios.feed.defs#recipePostView",
       author,
@@ -893,7 +894,10 @@ export class Views {
       cid: recipePost.cid,
       title: recipePost.record.title,
       text: recipePost.record.text,
-      indexedAt: recipePost.indexedAt.toISOString()
+      indexedAt: recipePost.indexedAt.toISOString(),
+      replyCount: aggs?.replies,
+      likeCount: aggs?.likes,
+      repostCount: aggs?.reposts
     }
 
   }

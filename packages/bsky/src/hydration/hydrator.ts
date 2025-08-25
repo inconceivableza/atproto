@@ -678,12 +678,13 @@ export class Hydrator {
     })
   }
 
-  async hydrateRecipes(uris: string[], ctx: HydrateCtx,): Promise<HydrationState> {
+  async hydrateRecipes(uris: string[], ctx: HydrateCtx): Promise<HydrationState> {
     // TODO: consider branding recipe URIs
     const recipes = await this.feed.getRecipes(uris, ctx.includeTakedowns)
-
+    const postAggs = await this.feed.getPostAggregates(uris.map(uri => ({ uri })), ctx.viewer)
     return {
-      recipePosts: recipes
+      recipePosts: recipes,
+      postAggs
     }
   }
 
@@ -1019,7 +1020,7 @@ export class Hydrator {
         pairs.push([source, target])
       }
     }
-
+    // TODO: determine if recipe is blocked
     const blocks = await this.graph.getBidirectionalBlocks(pairs)
     const listUrisSet = new Set<string>()
     for (const [source, targets] of didMap) {
