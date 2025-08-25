@@ -51,6 +51,9 @@ export interface RecipePostView {
   title: string
   text: string
   indexedAt: string
+  replyCount?: number
+  repostCount?: number
+  likeCount?: number
 }
 
 const hashRecipePostView = 'recipePostView'

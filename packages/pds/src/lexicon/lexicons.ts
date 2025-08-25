@@ -12163,6 +12163,15 @@ export const schemaDict = {
             type: 'string',
             format: 'datetime',
           },
+          replyCount: {
+            type: 'integer',
+          },
+          repostCount: {
+            type: 'integer',
+          },
+          likeCount: {
+            type: 'integer',
+          },
         },
       },
       replyRef: {
