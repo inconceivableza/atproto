@@ -3,7 +3,7 @@ import * as ui8 from 'uint8arrays'
 import { jsonToLex } from '@atproto/lexicon'
 import { AtUri } from '@atproto/syntax'
 import { lexicons } from '../lexicon/lexicons'
-import { Record } from '../proto/bsky_pb'
+import { Record as BskyRecord } from '../proto/bsky_pb'
 
 export class HydrationMap<T> extends Map<string, T | null> implements Merges {
   merge(map: HydrationMap<T>): this {
@@ -59,7 +59,7 @@ export const mergeManyMaps = <T>(...maps: HydrationMap<T>[]) => {
 export type ItemRef = { uri: string; cid?: string }
 
 export const parseRecord = <T extends UnknownRecord>(
-  entry: Record,
+  entry: BskyRecord,
   includeTakedowns: boolean,
 ): RecordInfo<T> | undefined => {
   if (!includeTakedowns && entry.takenDown) {
@@ -164,3 +164,15 @@ export const isActivitySubscriptionEnabled = ({
   post: boolean
   reply: boolean
 }): boolean => post || reply
+
+export function partition<T>(arr: T[], filter: (val:T) => boolean) {
+  const result: [T[], T[]] = [[], []]
+  arr.forEach(v => {
+    if (filter(v)) {
+      result[0].push(v)
+    } else {
+      result[1].push(v)
+    }
+  })
+  return result
+}
