@@ -12172,6 +12172,10 @@ export const schemaDict = {
           likeCount: {
             type: 'integer',
           },
+          viewer: {
+            type: 'ref',
+            ref: 'lex:app.bsky.feed.defs#viewerState',
+          },
         },
       },
       replyRef: {

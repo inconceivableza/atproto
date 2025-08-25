@@ -54,6 +54,7 @@ export interface RecipePostView {
   replyCount?: number
   repostCount?: number
   likeCount?: number
+  viewer?: AppBskyFeedDefs.ViewerState
 }
 
 const hashRecipePostView = 'recipePostView'
