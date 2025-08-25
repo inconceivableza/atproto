@@ -22,7 +22,7 @@ export interface FeedViewPost {
     | $Typed<AppBskyFeedDefs.PostView>
     | $Typed<RecipePostView>
     | { $type: string }
-  reply?: AppBskyFeedDefs.ReplyRef
+  reply?: ReplyRef
   reason?:
     | $Typed<AppBskyFeedDefs.ReasonRepost>
     | $Typed<AppBskyFeedDefs.ReasonPin>
@@ -61,4 +61,31 @@ export function isRecipePostView<V>(v: V) {
 
 export function validateRecipePostView<V>(v: V) {
   return validate<RecipePostView & V>(v, id, hashRecipePostView)
+}
+
+export interface ReplyRef {
+  $type?: 'app.foodios.feed.defs#replyRef'
+  root:
+    | $Typed<AppBskyFeedDefs.PostView>
+    | $Typed<AppBskyFeedDefs.NotFoundPost>
+    | $Typed<AppBskyFeedDefs.BlockedPost>
+    | $Typed<RecipePostView>
+    | { $type: string }
+  parent:
+    | $Typed<AppBskyFeedDefs.PostView>
+    | $Typed<AppBskyFeedDefs.NotFoundPost>
+    | $Typed<AppBskyFeedDefs.BlockedPost>
+    | $Typed<RecipePostView>
+    | { $type: string }
+  grandparentAuthor?: AppBskyActorDefs.ProfileViewBasic
+}
+
+const hashReplyRef = 'replyRef'
+
+export function isReplyRef<V>(v: V) {
+  return is$typed(v, id, hashReplyRef)
+}
+
+export function validateReplyRef<V>(v: V) {
+  return validate<ReplyRef & V>(v, id, hashReplyRef)
 }
