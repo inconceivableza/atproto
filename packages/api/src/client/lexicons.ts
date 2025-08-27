@@ -12218,6 +12218,42 @@ export const schemaDict = {
           },
         },
       },
+      threadViewPost: {
+        type: 'object',
+        required: ['post'],
+        properties: {
+          post: {
+            type: 'union',
+            refs: [
+              'lex:app.bsky.feed.defs#postView',
+              'lex:app.foodios.feed.defs#recipePostView',
+            ],
+          },
+          parent: {
+            type: 'union',
+            refs: [
+              'lex:app.bsky.feed.defs#threadViewPost',
+              'lex:app.bsky.feed.defs#notFoundPost',
+              'lex:app.bsky.feed.defs#blockedPost',
+            ],
+          },
+          replies: {
+            type: 'array',
+            items: {
+              type: 'union',
+              refs: [
+                'lex:app.bsky.feed.defs#threadViewPost',
+                'lex:app.bsky.feed.defs#notFoundPost',
+                'lex:app.bsky.feed.defs#blockedPost',
+              ],
+            },
+          },
+          threadContext: {
+            type: 'ref',
+            ref: 'lex:app.bsky.feed.defs#threadContext',
+          },
+        },
+      },
     },
   },
   AppFoodiosFeedGetActorLikes: {
@@ -12502,6 +12538,70 @@ export const schemaDict = {
             },
           },
         },
+      },
+    },
+  },
+  AppFoodiosFeedGetPostThread: {
+    lexicon: 1,
+    id: 'app.foodios.feed.getPostThread',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Get posts in a thread. Does not require auth, but additional metadata and filtering will be applied for authed requests.',
+        parameters: {
+          type: 'params',
+          required: ['uri'],
+          properties: {
+            uri: {
+              type: 'string',
+              format: 'at-uri',
+              description: 'Reference (AT-URI) to post record.',
+            },
+            depth: {
+              type: 'integer',
+              description:
+                'How many levels of reply depth should be included in response.',
+              default: 6,
+              minimum: 0,
+              maximum: 1000,
+            },
+            parentHeight: {
+              type: 'integer',
+              description:
+                'How many levels of parent (and grandparent, etc) post to include.',
+              default: 80,
+              minimum: 0,
+              maximum: 1000,
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['thread'],
+            properties: {
+              thread: {
+                type: 'union',
+                refs: [
+                  'lex:app.foodios.feed.defs#threadViewPost',
+                  'lex:app.bsky.feed.defs#notFoundPost',
+                  'lex:app.bsky.feed.defs#blockedPost',
+                ],
+              },
+              threadgate: {
+                type: 'ref',
+                ref: 'lex:app.bsky.feed.defs#threadgateView',
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'NotFound',
+          },
+        ],
       },
     },
   },
@@ -18447,6 +18547,7 @@ export const ids = {
   AppFoodiosFeedGetFeed: 'app.foodios.feed.getFeed',
   AppFoodiosFeedGetListFeed: 'app.foodios.feed.getListFeed',
   AppFoodiosFeedGetPosts: 'app.foodios.feed.getPosts',
+  AppFoodiosFeedGetPostThread: 'app.foodios.feed.getPostThread',
   AppFoodiosFeedGetTimeline: 'app.foodios.feed.getTimeline',
   AppFoodiosFeedRecipePost: 'app.foodios.feed.recipePost',
   ChatBskyActorDeclaration: 'chat.bsky.actor.declaration',

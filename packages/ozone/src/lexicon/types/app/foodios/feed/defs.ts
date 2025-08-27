@@ -96,3 +96,33 @@ export function isReplyRef<V>(v: V) {
 export function validateReplyRef<V>(v: V) {
   return validate<ReplyRef & V>(v, id, hashReplyRef)
 }
+
+export interface ThreadViewPost {
+  $type?: 'app.foodios.feed.defs#threadViewPost'
+  post:
+    | $Typed<AppBskyFeedDefs.PostView>
+    | $Typed<RecipePostView>
+    | { $type: string }
+  parent?:
+    | $Typed<AppBskyFeedDefs.ThreadViewPost>
+    | $Typed<AppBskyFeedDefs.NotFoundPost>
+    | $Typed<AppBskyFeedDefs.BlockedPost>
+    | { $type: string }
+  replies?: (
+    | $Typed<AppBskyFeedDefs.ThreadViewPost>
+    | $Typed<AppBskyFeedDefs.NotFoundPost>
+    | $Typed<AppBskyFeedDefs.BlockedPost>
+    | { $type: string }
+  )[]
+  threadContext?: AppBskyFeedDefs.ThreadContext
+}
+
+const hashThreadViewPost = 'threadViewPost'
+
+export function isThreadViewPost<V>(v: V) {
+  return is$typed(v, id, hashThreadViewPost)
+}
+
+export function validateThreadViewPost<V>(v: V) {
+  return validate<ThreadViewPost & V>(v, id, hashThreadViewPost)
+}

@@ -128,6 +128,44 @@
                 "description": "When parent is a reply to another post, this is the author of that post."
               }
             }
+        },
+        "threadViewPost": {
+            "type": "object",
+            "required": [
+                "post"
+            ],
+            "properties": {
+                "post": {
+                    "type": "union",
+                    "refs": [
+                        "app.bsky.feed.defs#postView",
+                        "#recipePostView"
+                    ]
+                },
+                "parent": {
+                    "type": "union",
+                    "refs": [
+                        "app.bsky.feed.defs#threadViewPost",
+                        "app.bsky.feed.defs#notFoundPost",
+                        "app.bsky.feed.defs#blockedPost"
+                    ]
+                },
+                "replies": {
+                    "type": "array",
+                    "items": {
+                        "type": "union",
+                        "refs": [
+                            "app.bsky.feed.defs#threadViewPost",
+                            "app.bsky.feed.defs#notFoundPost",
+                            "app.bsky.feed.defs#blockedPost"
+                        ]
+                    }
+                },
+                "threadContext": {
+                    "type": "ref",
+                    "ref": "app.bsky.feed.defs#threadContext"
+                }
+            }
           }
     }
 }

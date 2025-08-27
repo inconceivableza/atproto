@@ -218,6 +218,7 @@ import * as AppFoodiosFeedGetAuthorFeed from './types/app/foodios/feed/getAuthor
 import * as AppFoodiosFeedGetFeed from './types/app/foodios/feed/getFeed.js'
 import * as AppFoodiosFeedGetListFeed from './types/app/foodios/feed/getListFeed.js'
 import * as AppFoodiosFeedGetPosts from './types/app/foodios/feed/getPosts.js'
+import * as AppFoodiosFeedGetPostThread from './types/app/foodios/feed/getPostThread.js'
 import * as AppFoodiosFeedGetTimeline from './types/app/foodios/feed/getTimeline.js'
 import * as AppFoodiosFeedRecipePost from './types/app/foodios/feed/recipePost.js'
 import * as ChatBskyActorDeclaration from './types/chat/bsky/actor/declaration.js'
@@ -504,6 +505,7 @@ export * as AppFoodiosFeedGetAuthorFeed from './types/app/foodios/feed/getAuthor
 export * as AppFoodiosFeedGetFeed from './types/app/foodios/feed/getFeed.js'
 export * as AppFoodiosFeedGetListFeed from './types/app/foodios/feed/getListFeed.js'
 export * as AppFoodiosFeedGetPosts from './types/app/foodios/feed/getPosts.js'
+export * as AppFoodiosFeedGetPostThread from './types/app/foodios/feed/getPostThread.js'
 export * as AppFoodiosFeedGetTimeline from './types/app/foodios/feed/getTimeline.js'
 export * as AppFoodiosFeedRecipePost from './types/app/foodios/feed/recipePost.js'
 export * as ChatBskyActorDeclaration from './types/chat/bsky/actor/declaration.js'
@@ -4293,6 +4295,17 @@ export class AppFoodiosFeedNS {
       undefined,
       opts,
     )
+  }
+
+  getPostThread(
+    params?: AppFoodiosFeedGetPostThread.QueryParams,
+    opts?: AppFoodiosFeedGetPostThread.CallOptions,
+  ): Promise<AppFoodiosFeedGetPostThread.Response> {
+    return this._client
+      .call('app.foodios.feed.getPostThread', params, undefined, opts)
+      .catch((e) => {
+        throw AppFoodiosFeedGetPostThread.toKnownErr(e)
+      })
   }
 
   getTimeline(
