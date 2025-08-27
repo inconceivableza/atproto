@@ -4,6 +4,7 @@ import {
   HydrateCtx,
   HydrationState,
   Hydrator,
+  mergeStates,
 } from '../../../../hydration/hydrator'
 import { Server } from '../../../../lexicon'
 import { ids } from '../../../../lexicon/lexicons'
@@ -13,6 +14,8 @@ import { uriToDid as creatorFromUri } from '../../../../util/uris'
 import { Views } from '../../../../views'
 import { resHeaders } from '../../../util'
 import { FeedItemType } from '../../../../proto/bsky_pb'
+import { partition } from '../../../../hydration/util'
+import { isRecipeURI } from '../../../../util'
 
 export default function (server: Server, ctx: AppContext) {
   const getPosts = createPipeline(skeleton, hydration, noBlocks, presentation)
@@ -21,7 +24,7 @@ export default function (server: Server, ctx: AppContext) {
       lxmCheck: (method) => {
         if (!method) return false
         return (
-          method === ids.AppBskyFeedGetPosts || method.startsWith('chat.bsky.')
+          method === ids.AppFoodiosFeedGetPosts || method.startsWith('chat.bsky.')
         )
       },
     }),
@@ -52,10 +55,13 @@ const hydration = async (inputs: {
 }) => {
   const { ctx, params, skeleton } = inputs
   // TODO: Also hydrate recipes
-  return ctx.hydrator.hydratePosts(
-    skeleton.posts.map((uri) => ({ uri })),
+  const [recipeUris, postUris] = partition(skeleton.posts, isRecipeURI)
+  const [postsState, recipesState] = await Promise.all([ctx.hydrator.hydratePosts(
+    postUris.map((uri) => ({ uri })),
     params.hydrateCtx,
-  )
+  ), ctx.hydrator.hydrateRecipes(recipeUris, params.hydrateCtx)
+  ])
+  return mergeStates(postsState, recipesState)
 }
 
 const noBlocks = (inputs: {
@@ -79,7 +85,7 @@ const presentation = (inputs: {
 }) => {
   const { ctx, skeleton, hydration } = inputs
   const posts = mapDefined(skeleton.posts, (uri) =>
-    ctx.views.postUnion({post: {uri}, itemType: FeedItemType.POST}, hydration),
+    ctx.views.postUnion(uri, hydration),
   )
   return { posts }
 }
