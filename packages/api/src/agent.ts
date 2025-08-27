@@ -289,8 +289,8 @@ export class Agent extends XrpcClient {
   getPost: typeof this.app.bsky.feed.post.get = (params) =>
     this.app.bsky.feed.post.get(params)
 
-  getPosts: typeof this.app.bsky.feed.getPosts = (params, opts) =>
-    this.app.bsky.feed.getPosts(params, opts)
+  getPosts: typeof this.app.foodios.feed.getPosts = (params, opts) =>
+    this.app.foodios.feed.getPosts(params, opts)
 
   getLikes: typeof this.app.bsky.feed.getLikes = (params, opts) =>
     this.app.bsky.feed.getLikes(params, opts)

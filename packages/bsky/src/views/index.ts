@@ -1,7 +1,7 @@
 import { HOUR, MINUTE, mapDefined } from '@atproto/common'
 import { AtUri, INVALID_HANDLE, normalizeDatetimeAlways } from '@atproto/syntax'
 import { Actor, ProfileViewerState } from '../hydration/actor'
-import { FeedItem, Like, Post, Repost } from '../hydration/feed'
+import { FeedItem, Like, Post, Recipe, Repost } from '../hydration/feed'
 import { Follow, Verification } from '../hydration/graph'
 import { HydrationState } from '../hydration/hydrator'
 import { Label } from '../hydration/label'
@@ -60,6 +60,7 @@ import {
   Record as LabelerRecord,
   isRecord as isLabelerRecord,
 } from '../lexicon/types/app/bsky/labeler/service'
+import { Record as RecipeRecord, isRecord as isRecipeRecord } from "../lexicon/types/app/foodios/feed/recipePost"
 import {
   ActivitySubscription,
   RecordDeleted as NotificationRecordDeleted,
@@ -124,6 +125,7 @@ import {
   parseThreadGate,
 } from './util'
 import { isRecipeURI } from '../util'
+import { AppBskyFeedPost } from '@atproto/api'
 
 const notificationDeletedRecord = {
   $type: 'app.bsky.notification.defs#recordDeleted' as const,
@@ -696,6 +698,7 @@ export class Views {
       | LabelerRecord
       | VerificationRecord
       | NotificationRecordDeleted
+    | RecipeRecord
   }): Label[] {
     if (!uri || !cid || !record) return []
 
@@ -703,7 +706,8 @@ export class Views {
     if (
       !isPostRecord(record) &&
       !isProfileRecord(record) &&
-      !isLabelerRecord(record)
+      !isLabelerRecord(record) &&
+      !isRecipeRecord(record)
     ) {
       return []
     }
@@ -870,11 +874,11 @@ export class Views {
     }
   }
 
-  postUnion(item:FeedItem, state: HydrationState) {
-    if (item.itemType === FeedItemType.RECIPE) {
-      return this.recipePost(item.post.uri, state)
+  postUnion(uri: string, state: HydrationState) {
+    if (isRecipeURI(uri)) {
+      return this.recipePost(uri, state)
     }
-    return this.post(item.post.uri, state)
+    return this.post(uri, state)
   }
 
   recipePost(uri: string, state: HydrationState): $Typed<RecipePostView> | undefined {
@@ -900,7 +904,13 @@ export class Views {
       replyCount: aggs?.replies,
       likeCount: aggs?.likes,
       repostCount: aggs?.reposts,
-      viewer
+      quoteCount: aggs?.quotes,
+      viewer,
+      labels: this.selfLabels({
+        cid: recipePost.cid,
+        uri,
+        record: recipePost.record
+      }),
     }
 
   }
@@ -968,6 +978,18 @@ export class Views {
       if (!recipePostView) return;
       return {
         post: recipePostView
+      }
+    }
+    if (item.repost && isRecipeURI(item.post.uri)) {
+      const repost = state.reposts?.get(item.repost.uri)
+      if (!repost) return
+      const recipePostView = this.recipePost(item.post.uri, state)
+      const reason = this.reasonRepost(item.repost.uri, repost, state)
+      if (!(reason && recipePostView)) return
+
+      return {
+        post: recipePostView,
+        reason
       }
     }
     
@@ -1117,8 +1139,10 @@ export class Views {
     opts: { height: number; depth: number },
   ): $Typed<ThreadViewPost> | $Typed<NotFoundPost> | $Typed<BlockedPost> {
     const { anchor, uris } = skele
-    const post = this.post(anchor, state)
-    const postInfo = state.posts?.get(anchor)
+
+    const post = this.post(anchor, state)// this.postUnion(anchor, state)
+    const postInfo = //isRecipeURI(anchor) ? state.recipePosts?.get(anchor) :
+      state.posts?.get(anchor)
     if (!postInfo || !post) return this.notFoundPost(anchor)
     if (this.viewerBlockExists(post.author.did, state)) {
       return this.blockedPost(anchor, post.author.did, state)
@@ -1134,8 +1158,9 @@ export class Views {
       childrenByParentUri[parentUri] ??= []
       childrenByParentUri[parentUri].push(uri)
     })
+    // postInfo.record.$type
     const rootUri = getRootUri(anchor, postInfo)
-    const violatesThreadGate = postInfo.violatesThreadGate
+    const violatesThreadGate = "violatesThreadGate" in postInfo && postInfo.violatesThreadGate
 
     return {
       $type: 'app.bsky.feed.defs#threadViewPost',
@@ -1169,6 +1194,8 @@ export class Views {
     | $Typed<BlockedPost>
     | undefined {
     if (height < 1) return undefined
+    // TODO: maybe state.posts should contain a union?
+    // TODO: brand recipe, post uris
     const parentUri = state.posts?.get(childUri)?.record.reply?.parent.uri
     if (!parentUri) return undefined
     if (
@@ -2221,6 +2248,23 @@ export class Views {
         { ...view, $type: 'app.bsky.graph.defs#starterPackViewBasic' },
         withTypeTag,
       )
+    } else if (parsedUri.collection === ids.AppFoodiosFeedRecipePost) {
+      const view = this.recipePost(uri, state)
+      if (!view) return this.embedNotFound(uri)
+      return this.recordEmbedWrapper({
+        $type: 'app.bsky.embed.record#viewRecord',
+        uri: view.uri,
+        cid: view.cid,
+        author: view.author,
+        value: view as any, // TODO: consider if this is the right option
+        labels: view.labels,
+        likeCount: view.likeCount,
+        replyCount: view.replyCount,
+        repostCount: view.repostCount,
+        quoteCount: view.quoteCount,
+        indexedAt: view.indexedAt,
+        embeds: undefined//depth > 1 ? undefined : postView.embed ? [postView.embed] : [],
+      }, withTypeTag)
     }
     return this.embedNotFound(uri)
   }
