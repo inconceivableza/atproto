@@ -178,6 +178,7 @@ import * as AppFoodiosFeedGetAuthorFeed from './types/app/foodios/feed/getAuthor
 import * as AppFoodiosFeedGetFeed from './types/app/foodios/feed/getFeed.js'
 import * as AppFoodiosFeedGetListFeed from './types/app/foodios/feed/getListFeed.js'
 import * as AppFoodiosFeedGetPosts from './types/app/foodios/feed/getPosts.js'
+import * as AppFoodiosFeedGetPostThread from './types/app/foodios/feed/getPostThread.js'
 import * as AppFoodiosFeedGetTimeline from './types/app/foodios/feed/getTimeline.js'
 import * as ChatBskyActorDeleteAccount from './types/chat/bsky/actor/deleteAccount.js'
 import * as ChatBskyActorExportAccountData from './types/chat/bsky/actor/exportAccountData.js'
@@ -2555,6 +2556,18 @@ export class AppFoodiosFeedNS {
     >,
   ) {
     const nsid = 'app.foodios.feed.getPosts' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getPostThread<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppFoodiosFeedGetPostThread.QueryParams,
+      AppFoodiosFeedGetPostThread.HandlerInput,
+      AppFoodiosFeedGetPostThread.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.foodios.feed.getPostThread' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 
