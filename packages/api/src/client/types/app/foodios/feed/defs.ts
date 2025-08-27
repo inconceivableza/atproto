@@ -11,6 +11,7 @@ import {
 } from '../../../../util'
 import type * as AppBskyFeedDefs from '../../bsky/feed/defs.js'
 import type * as AppBskyActorDefs from '../../bsky/actor/defs.js'
+import type * as ComAtprotoLabelDefs from '../../../com/atproto/label/defs.js'
 
 const is$typed = _is$typed,
   validate = _validate
@@ -54,7 +55,9 @@ export interface RecipePostView {
   replyCount?: number
   repostCount?: number
   likeCount?: number
+  quoteCount?: number
   viewer?: AppBskyFeedDefs.ViewerState
+  labels?: ComAtprotoLabelDefs.Label[]
 }
 
 const hashRecipePostView = 'recipePostView'

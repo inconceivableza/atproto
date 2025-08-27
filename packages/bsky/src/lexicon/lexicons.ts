@@ -12172,9 +12172,19 @@ export const schemaDict = {
           likeCount: {
             type: 'integer',
           },
+          quoteCount: {
+            type: 'integer',
+          },
           viewer: {
             type: 'ref',
             ref: 'lex:app.bsky.feed.defs#viewerState',
+          },
+          labels: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:com.atproto.label.defs#label',
+            },
           },
         },
       },
