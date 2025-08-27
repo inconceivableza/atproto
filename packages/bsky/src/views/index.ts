@@ -36,7 +36,7 @@ import {
   ThreadgateView,
   isPostView,
 } from '../lexicon/types/app/bsky/feed/defs'
-import { FeedViewPost as FeedViewPostUnion, RecipePostView } from "../lexicon/types/app/foodios/feed/defs"
+import { FeedViewPost as FeedViewPostUnion, RecipePostView, ThreadViewPost as ThreadViewPostUnion } from "../lexicon/types/app/foodios/feed/defs"
 import { Record as LikeRecord } from '../lexicon/types/app/bsky/feed/like'
 import {
   Record as PostRecord,
@@ -60,7 +60,9 @@ import {
   Record as LabelerRecord,
   isRecord as isLabelerRecord,
 } from '../lexicon/types/app/bsky/labeler/service'
-import { Record as RecipeRecord, isRecord as isRecipeRecord } from "../lexicon/types/app/foodios/feed/recipePost"
+import {
+  Record as RecipeRecord, isRecord as isRecipeRecord,
+} from "../lexicon/types/app/foodios/feed/recipePost"
 import {
   ActivitySubscription,
   RecordDeleted as NotificationRecordDeleted,
@@ -125,7 +127,6 @@ import {
   parseThreadGate,
 } from './util'
 import { isRecipeURI } from '../util'
-import { AppBskyFeedPost } from '@atproto/api'
 
 const notificationDeletedRecord = {
   $type: 'app.bsky.notification.defs#recordDeleted' as const,
@@ -1137,13 +1138,11 @@ export class Views {
     skele: { anchor: string; uris: string[] },
     state: HydrationState,
     opts: { height: number; depth: number },
-  ): $Typed<ThreadViewPost> | $Typed<NotFoundPost> | $Typed<BlockedPost> {
+  ): $Typed<ThreadViewPostUnion> | $Typed<NotFoundPost> | $Typed<BlockedPost> {
     const { anchor, uris } = skele
 
-    const post = this.post(anchor, state)// this.postUnion(anchor, state)
-    const postInfo = //isRecipeURI(anchor) ? state.recipePosts?.get(anchor) :
-      state.posts?.get(anchor)
-    if (!postInfo || !post) return this.notFoundPost(anchor)
+    const post = this.postUnion(anchor, state)
+    if (!post) return this.notFoundPost(anchor)
     if (this.viewerBlockExists(post.author.did, state)) {
       return this.blockedPost(anchor, post.author.did, state)
     }
@@ -1158,12 +1157,17 @@ export class Views {
       childrenByParentUri[parentUri] ??= []
       childrenByParentUri[parentUri].push(uri)
     })
-    // postInfo.record.$type
-    const rootUri = getRootUri(anchor, postInfo)
-    const violatesThreadGate = "violatesThreadGate" in postInfo && postInfo.violatesThreadGate
+    let rootUri = anchor
+    let violatesThreadGate = false // TODO: fix
+    if (post.$type === "app.bsky.feed.defs#postView") {
+      const postInfo = state.posts?.get(anchor)
+      if (!postInfo) return this.notFoundPost(anchor)
+      rootUri = getRootUri(anchor, postInfo)
+      violatesThreadGate = postInfo.violatesThreadGate
+    }
 
     return {
-      $type: 'app.bsky.feed.defs#threadViewPost',
+      $type: 'app.foodios.feed.defs#threadViewPost',
       post,
       parent: !violatesThreadGate
         ? this.threadParent(anchor, rootUri, state, opts.height)
