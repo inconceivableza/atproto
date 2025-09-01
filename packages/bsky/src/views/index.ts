@@ -921,7 +921,7 @@ export class Views {
     state: HydrationState,
     depth = 0,
   ): $Typed<PostView> | undefined {
-    const post = state.posts?.get(uri)
+    const post = isRecipeURI(uri) ? state.recipePosts?.get(uri) : state.posts?.get(uri)
     if (!post) return
     const parsedUri = new AtUri(uri)
     const authorDid = parsedUri.hostname
@@ -944,9 +944,9 @@ export class Views {
       cid: post.cid,
       author,
       record: post.record,
-      embed:
+      embed: 
         depth < 2 && post.record.embed
-          ? this.embed(uri, post.record.embed, state, depth + 1)
+          ? this.embed(uri, post.record.embed as any, state, depth + 1)
           : undefined,
       replyCount: aggs?.replies ?? 0,
       repostCount: aggs?.reposts ?? 0,
@@ -1141,7 +1141,7 @@ export class Views {
   ): $Typed<ThreadViewPostUnion> | $Typed<NotFoundPost> | $Typed<BlockedPost> {
     const { anchor, uris } = skele
 
-    const post = this.postUnion(anchor, state)
+    const post = this.post(anchor, state)
     if (!post) return this.notFoundPost(anchor)
     if (this.viewerBlockExists(post.author.did, state)) {
       return this.blockedPost(anchor, post.author.did, state)
@@ -1159,7 +1159,7 @@ export class Views {
     })
     let rootUri = anchor
     let violatesThreadGate = false // TODO: fix
-    if (post.$type === "app.bsky.feed.defs#postView") {
+    if (!isRecipeURI(post.uri)) {
       const postInfo = state.posts?.get(anchor)
       if (!postInfo) return this.notFoundPost(anchor)
       rootUri = getRootUri(anchor, postInfo)
