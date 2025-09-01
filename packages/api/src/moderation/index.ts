@@ -1,3 +1,4 @@
+import { AppFoodiosFeedDefs } from '../client'
 import { ModerationDecision } from './decision'
 import { decideAccount } from './subjects/account'
 import { decideFeedGenerator } from './subjects/feed-generator'
@@ -37,6 +38,10 @@ export function moderatePost(
   opts: ModerationOpts,
 ): ModerationDecision {
   return decidePost(subject, opts)
+}
+
+export function moderateRecipe(subject: AppFoodiosFeedDefs.RecipePostView,  opts: ModerationOpts) {
+  return new ModerationDecision()
 }
 
 export function moderateNotification(
