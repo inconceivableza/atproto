@@ -720,7 +720,7 @@ export class Hydrator {
     const [recipeRefs, postRefs] = partition(refs, ({ uri }) => isRecipeURI(uri))
     const postsState = await this.hydratePosts(postRefs, ctx)
     const recipesState = await this.hydrateRecipes(
-      recipeRefs.map((ref) => ref.uri).filter(isRecipeURI), ctx)
+      recipeRefs.map((ref) => ref.uri), ctx)
 
     const { posts } = postsState
     const postsList = posts ? Array.from(posts.entries()) : []
