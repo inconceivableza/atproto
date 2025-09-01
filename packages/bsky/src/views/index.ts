@@ -1193,7 +1193,7 @@ export class Views {
     state: HydrationState,
     height: number,
   ):
-    | $Typed<ThreadViewPost>
+    | $Typed<ThreadViewPostUnion>
     | $Typed<NotFoundPost>
     | $Typed<BlockedPost>
     | undefined {
@@ -1216,7 +1216,7 @@ export class Views {
       return this.blockedPost(parentUri, post.author.did, state)
     }
     return {
-      $type: 'app.bsky.feed.defs#threadViewPost',
+      $type: 'app.foodios.feed.defs#threadViewPost',
       post,
       parent: this.threadParent(parentUri, rootUri, state, height - 1),
       threadContext: {
@@ -1231,7 +1231,7 @@ export class Views {
     childrenByParentUri: Record<string, string[]>,
     state: HydrationState,
     depth: number,
-  ): ($Typed<ThreadViewPost> | $Typed<BlockedPost>)[] | undefined {
+  ): ($Typed<ThreadViewPostUnion> | $Typed<BlockedPost>)[] | undefined {
     if (depth < 1) return undefined
     const childrenUris = childrenByParentUri[parentUri] ?? []
     return mapDefined(childrenUris, (uri) => {
@@ -1257,7 +1257,7 @@ export class Views {
         return undefined
       }
       return {
-        $type: 'app.bsky.feed.defs#threadViewPost',
+        $type: 'app.foodios.feed.defs#threadViewPost',
         post,
         replies: this.threadReplies(
           uri,
