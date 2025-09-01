@@ -198,7 +198,7 @@ const insertFn = async (
       embeds.push(recordEmbed)
       await db.insertInto('post_embed_record').values(recordEmbed).execute()
 
-      if (embedUri.collection === lex.ids.AppBskyFeedPost) {
+      if (embedUri.collection === lex.ids.AppBskyFeedPost || embedUri.collection === lex.ids.AppFoodiosFeedRecipePost) {
         const quote = {
           uri: uri.toString(),
           cid: cid.toString(),
@@ -428,7 +428,7 @@ const deleteFn = async (
     const embedUri = new AtUri(deletedPosts.embedUri)
     deletedEmbeds.push(deletedPosts)
 
-    if (embedUri.collection === lex.ids.AppBskyFeedPost) {
+    if (embedUri.collection === lex.ids.AppBskyFeedPost || embedUri.collection === lex.ids.AppFoodiosFeedRecipePost) {
       await db.deleteFrom('quote').where('uri', '=', uriStr).execute()
       await db
         .insertInto('post_agg')
