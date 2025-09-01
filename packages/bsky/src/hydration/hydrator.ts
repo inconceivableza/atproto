@@ -386,6 +386,7 @@ export class Hydrator {
     ctx: HydrateCtx,
     state: HydrationState = {},
   ): Promise<HydrationState> {
+    // TODO: maybe filter out any recipe records that got in here
     const uris = refs.map((ref) => ref.uri)
 
     state.posts ??= new HydrationMap<Post>()
@@ -718,7 +719,8 @@ export class Hydrator {
   ): Promise<HydrationState> {
     const [recipeRefs, postRefs] = partition(refs, ({ uri }) => isRecipeURI(uri))
     const postsState = await this.hydratePosts(postRefs, ctx)
-    const recipesState = await this.hydrateRecipes(recipeRefs.map((ref) => ref.uri), ctx)
+    const recipesState = await this.hydrateRecipes(
+      recipeRefs.map((ref) => ref.uri).filter(isRecipeURI), ctx)
 
     const { posts } = postsState
     const postsList = posts ? Array.from(posts.entries()) : []
