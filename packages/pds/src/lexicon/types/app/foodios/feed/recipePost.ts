@@ -12,6 +12,9 @@ import {
 import type * as AppBskyEmbedImages from '../../bsky/embed/images.js'
 import type * as AppBskyEmbedVideo from '../../bsky/embed/video.js'
 import type * as ComAtprotoLabelDefs from '../../../com/atproto/label/defs.js'
+import type * as AppBskyEmbedExternal from '../../bsky/embed/external.js'
+import type * as AppBskyEmbedRecord from '../../bsky/embed/record.js'
+import type * as AppBskyEmbedRecordWithMedia from '../../bsky/embed/recordWithMedia.js'
 
 const is$typed = _is$typed,
   validate = _validate
@@ -32,6 +35,13 @@ export interface Record {
   tags?: string[]
   /** Client-declared timestamp when this post was originally created. */
   createdAt: string
+  embed?:
+    | $Typed<AppBskyEmbedImages.Main>
+    | $Typed<AppBskyEmbedVideo.Main>
+    | $Typed<AppBskyEmbedExternal.Main>
+    | $Typed<AppBskyEmbedRecord.Main>
+    | $Typed<AppBskyEmbedRecordWithMedia.Main>
+    | { $type: string }
   [k: string]: unknown
 }
 

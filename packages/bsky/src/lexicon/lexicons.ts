@@ -12156,6 +12156,16 @@ export const schemaDict = {
               description:
                 'Client-declared timestamp when this post was originally created.',
             },
+            embed: {
+              type: 'union',
+              refs: [
+                'lex:app.bsky.embed.images',
+                'lex:app.bsky.embed.video',
+                'lex:app.bsky.embed.external',
+                'lex:app.bsky.embed.record',
+                'lex:app.bsky.embed.recordWithMedia',
+              ],
+            },
           },
         },
       },
