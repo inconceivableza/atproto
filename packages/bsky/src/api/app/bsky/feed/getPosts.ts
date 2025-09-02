@@ -19,12 +19,12 @@ import { isRecipeURI } from '../../../../util'
 
 export default function (server: Server, ctx: AppContext) {
   const getPosts = createPipeline(skeleton, hydration, noBlocks, presentation)
-  server.app.foodios.feed.getPosts({
+  server.app.bsky.feed.getPosts({
     auth: ctx.authVerifier.standardOptionalParameterized({
       lxmCheck: (method) => {
         if (!method) return false
         return (
-          method === ids.AppFoodiosFeedGetPosts || method.startsWith('chat.bsky.')
+          method === ids.AppBskyFeedGetPosts || method.startsWith('chat.bsky.')
         )
       },
     }),
