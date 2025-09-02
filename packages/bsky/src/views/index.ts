@@ -2231,7 +2231,7 @@ export class Views {
         uri: view.uri,
         cid: view.cid,
         author: view.author,
-        value: view as any, // TODO: consider if this is the right option
+        value: view.record,
         labels: view.labels,
         likeCount: view.likeCount,
         replyCount: view.replyCount,
