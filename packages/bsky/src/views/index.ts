@@ -1265,11 +1265,11 @@ export class Views {
     },
   ): { hasOtherReplies: boolean; thread: ThreadItem[] } {
     const { anchor: anchorUri, uris } = skeleton
-
+    //
     // Not found.
     const postView = this.post(anchorUri, state)
-    const post = state.posts?.get(anchorUri)
-    if (!post || !postView) {
+    const post = isRecipeURI(anchorUri) ? state.recipePosts?.get(anchorUri) : state.posts?.get(anchorUri)
+    if (!(post && postView)) {
       return {
         hasOtherReplies: false,
         thread: [
@@ -1301,11 +1301,14 @@ export class Views {
       uris,
       state,
     )
-    const rootUri = getRootUri(anchorUri, post)
+
+    const record = postView.record
+    //@ts-ignore // TODO: clean up
+    const rootUri = record?.reply?.root.uri ?? anchorUri 
     const opDid = uriToDid(rootUri)
     const authorDid = postView.author.did
     const isOPPost = authorDid === opDid
-    const anchorViolatesThreadGate = post.violatesThreadGate
+    const anchorViolatesThreadGate = state.posts?.get(anchorUri)?.violatesThreadGate
 
     // Builds the parent tree, and whether it is a contiguous OP thread.
     const parentTree = !anchorViolatesThreadGate
@@ -1371,7 +1374,7 @@ export class Views {
           repliesAllowance: Infinity, // While we don't have pagination.
           uri: anchorUri,
         }),
-        tags: post.tags,
+        tags: 'tags' in post ? post.tags : new Set(post.record.tags ?? []), // TODO: clean up
         hasOPLike: !!state.threadContexts?.get(postView.uri)?.like,
         parent,
         replies,
