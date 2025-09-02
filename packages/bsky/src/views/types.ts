@@ -1,4 +1,3 @@
-import { RecipePostView } from '../lexicon/types/app/foodios/feed/defs'
 import {
   Main as ExternalEmbed,
   View as ExternalEmbedView,
@@ -86,7 +85,7 @@ export type EmbedView =
   | RecordEmbedView
   | RecordWithMediaView
 
-export type MaybePostView = RecipePostView | PostView | NotFoundPost | BlockedPost
+export type MaybePostView = PostView | NotFoundPost | BlockedPost
 
 export type RecordEmbedViewInternal =
   | PostEmbedView

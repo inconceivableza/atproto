@@ -27,7 +27,7 @@ export default function (server: Server, ctx: AppContext) {
     noRules, // handled in presentation: 3p block-violating replies are turned to #blockedPost, viewer blocks turned to #notFoundPost.
     presentation,
   )
-  server.app.foodios.feed.getPostThread({
+  server.app.bsky.feed.getPostThread({
     auth: ctx.authVerifier.optionalStandardOrRole,
     handler: async ({ params, auth, req, res }) => {
       const { viewer, includeTakedowns, include3pBlocks } =

@@ -26,7 +26,7 @@ export default function (server: Server, ctx: AppContext) {
     noBlocksOrMutedReposts,
     presentation,
   )
-  server.app.foodios.feed.getAuthorFeed({
+  server.app.bsky.feed.getAuthorFeed({
     auth: ctx.authVerifier.optionalStandardOrRole,
     handler: async ({ params, auth, req }) => {
       const { viewer, includeTakedowns } = ctx.authVerifier.parseCreds(auth)
@@ -142,8 +142,9 @@ const hydration = async (inputs: {
   skeleton: Skeleton
 }): Promise<HydrationState> => {
   const { ctx, params, skeleton } = inputs
+  // TODO: use urisByCollection
   const grouped = groupBy(skeleton.items, item => item.itemType)
-  const postItems = grouped[FeedItemType.POST]?.concat(grouped[FeedItemType.REPOST] ?? []) ?? []
+  const postItems = (grouped[FeedItemType.POST] ?? []).concat(grouped[FeedItemType.REPOST] ?? [])
 
   const [feedPostState, profileViewerState] = await Promise.all([
     ctx.hydrator.hydrateFeedItems(postItems, params.hydrateCtx),

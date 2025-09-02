@@ -274,23 +274,23 @@ export class Agent extends XrpcClient {
 
   //#region "app.bsky" lexicon short hand methods
 
-  getTimeline: typeof this.app.foodios.feed.getTimeline = (params, opts) =>
-    this.app.foodios.feed.getTimeline(params, opts)
+  getTimeline: typeof this.app.bsky.feed.getTimeline = (params, opts) =>
+    this.app.bsky.feed.getTimeline(params, opts)
 
-  getAuthorFeed: typeof this.app.foodios.feed.getAuthorFeed = (params, opts) =>
-    this.app.foodios.feed.getAuthorFeed(params, opts)
+  getAuthorFeed: typeof this.app.bsky.feed.getAuthorFeed = (params, opts) =>
+    this.app.bsky.feed.getAuthorFeed(params, opts)
 
-  getActorLikes: typeof this.app.foodios.feed.getActorLikes = (params, opts) =>
-    this.app.foodios.feed.getActorLikes(params, opts)
+  getActorLikes: typeof this.app.bsky.feed.getActorLikes = (params, opts) =>
+    this.app.bsky.feed.getActorLikes(params, opts)
 
-  getPostThread: typeof this.app.foodios.feed.getPostThread = (params, opts) =>
-    this.app.foodios.feed.getPostThread(params, opts)
+  getPostThread: typeof this.app.bsky.feed.getPostThread = (params, opts) =>
+    this.app.bsky.feed.getPostThread(params, opts)
 
   getPost: typeof this.app.bsky.feed.post.get = (params) =>
     this.app.bsky.feed.post.get(params)
 
-  getPosts: typeof this.app.foodios.feed.getPosts = (params, opts) =>
-    this.app.foodios.feed.getPosts(params, opts)
+  getPosts: typeof this.app.bsky.feed.getPosts = (params, opts) =>
+    this.app.bsky.feed.getPosts(params, opts)
 
   getLikes: typeof this.app.bsky.feed.getLikes = (params, opts) =>
     this.app.bsky.feed.getLikes(params, opts)
@@ -381,7 +381,7 @@ export class Agent extends XrpcClient {
   //   [K in keyof AppFoodiosFeedRecipePost.Record as K extends "createdAt" ? never : K]: AppFoodiosFeedRecipePost.Record[K] 
   // } & Partial<Pick<AppFoodiosFeedRecipePost.Record, 'createdAt'>>
   ){
-    return this.app.foodios.feed.recipePost.create({repo: this.assertDid},
+    return this.app.foodios.feed.recipePost.create({ repo: this.assertDid },
       record
     )
   }

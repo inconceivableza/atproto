@@ -23,7 +23,7 @@ export default function (server: Server, ctx: AppContext) {
     noBlocksOrMutes,
     presentation,
   )
-  server.app.foodios.feed.getListFeed({
+  server.app.bsky.feed.getListFeed({
     auth: ctx.authVerifier.standardOptional,
     handler: async ({ params, auth, req }) => {
       const viewer = auth.credentials.iss

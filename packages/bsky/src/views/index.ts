@@ -36,7 +36,6 @@ import {
   ThreadgateView,
   isPostView,
 } from '../lexicon/types/app/bsky/feed/defs'
-import { FeedViewPost as FeedViewPostUnion, RecipePostView, ThreadViewPost as ThreadViewPostUnion } from "../lexicon/types/app/foodios/feed/defs"
 import { Record as LikeRecord } from '../lexicon/types/app/bsky/feed/like'
 import {
   Record as PostRecord,
@@ -882,37 +881,9 @@ export class Views {
     return this.post(uri, state)
   }
 
-  recipePost(uri: string, state: HydrationState): $Typed<RecipePostView> | undefined {
-    const recipePost = state.recipePosts?.get(uri)
-    if (!recipePost) return;
+  recipePost(uri: string, state: HydrationState): $Typed<PostView> | undefined {
+    return this.post(uri, state)
 
-    const parsedUri = new AtUri(uri)
-    const authorDid = parsedUri.hostname
-    const author = this.profileBasic(authorDid, state)
-    if (!author) return
-
-    const aggs = state.postAggs?.get(uri)
-    const viewer = state.postViewers?.get(uri) ?? undefined
-
-    return {
-      "$type": "app.foodios.feed.defs#recipePostView",
-      author,
-      uri,
-      cid: recipePost.cid,
-      title: recipePost.record.title,
-      text: recipePost.record.text,
-      indexedAt: recipePost.indexedAt.toISOString(),
-      replyCount: aggs?.replies,
-      likeCount: aggs?.likes,
-      repostCount: aggs?.reposts,
-      quoteCount: aggs?.quotes,
-      viewer,
-      labels: this.selfLabels({
-        cid: recipePost.cid,
-        uri,
-        record: recipePost.record
-      }),
-    }
 
   }
 
@@ -973,9 +944,9 @@ export class Views {
   feedViewPostUnion(
     item: FeedItem,
     state: HydrationState,
-  ): Un$Typed<FeedViewPostUnion> | undefined {
+  ): Un$Typed<FeedViewPost> | undefined {
     if (item.itemType === FeedItemType.RECIPE) {
-      const recipePostView = this.recipePost(item.post.uri, state)
+      const recipePostView = this.post(item.post.uri, state)
       if (!recipePostView) return;
       return {
         post: recipePostView
@@ -984,7 +955,7 @@ export class Views {
     if (item.repost && isRecipeURI(item.post.uri)) {
       const repost = state.reposts?.get(item.repost.uri)
       if (!repost) return
-      const recipePostView = this.recipePost(item.post.uri, state)
+      const recipePostView = this.post(item.post.uri, state)
       const reason = this.reasonRepost(item.repost.uri, repost, state)
       if (!(reason && recipePostView)) return
 
@@ -996,7 +967,7 @@ export class Views {
     
     const postView =  this.feedViewPost(item, state)
     if (!postView) return
-    return postView as Un$Typed<FeedViewPostUnion>
+    return postView 
   }
 
   feedViewPost(
@@ -1138,7 +1109,7 @@ export class Views {
     skele: { anchor: string; uris: string[] },
     state: HydrationState,
     opts: { height: number; depth: number },
-  ): $Typed<ThreadViewPostUnion> | $Typed<NotFoundPost> | $Typed<BlockedPost> {
+  ): $Typed<ThreadViewPost> | $Typed<NotFoundPost> | $Typed<BlockedPost> {
     const { anchor, uris } = skele
 
     const post = this.post(anchor, state)
@@ -1167,7 +1138,7 @@ export class Views {
     }
 
     return {
-      $type: 'app.foodios.feed.defs#threadViewPost',
+      $type: 'app.bsky.feed.defs#threadViewPost',
       post,
       parent: !violatesThreadGate
         ? this.threadParent(anchor, rootUri, state, opts.height)
@@ -1193,7 +1164,7 @@ export class Views {
     state: HydrationState,
     height: number,
   ):
-    | $Typed<ThreadViewPostUnion>
+    | $Typed<ThreadViewPost>
     | $Typed<NotFoundPost>
     | $Typed<BlockedPost>
     | undefined {
@@ -1216,7 +1187,7 @@ export class Views {
       return this.blockedPost(parentUri, post.author.did, state)
     }
     return {
-      $type: 'app.foodios.feed.defs#threadViewPost',
+      $type: 'app.bsky.feed.defs#threadViewPost',
       post,
       parent: this.threadParent(parentUri, rootUri, state, height - 1),
       threadContext: {
@@ -1231,7 +1202,7 @@ export class Views {
     childrenByParentUri: Record<string, string[]>,
     state: HydrationState,
     depth: number,
-  ): ($Typed<ThreadViewPostUnion> | $Typed<BlockedPost>)[] | undefined {
+  ): ($Typed<ThreadViewPost> | $Typed<BlockedPost>)[] | undefined {
     if (depth < 1) return undefined
     const childrenUris = childrenByParentUri[parentUri] ?? []
     return mapDefined(childrenUris, (uri) => {
@@ -1257,7 +1228,7 @@ export class Views {
         return undefined
       }
       return {
-        $type: 'app.foodios.feed.defs#threadViewPost',
+        $type: 'app.bsky.feed.defs#threadViewPost',
         post,
         replies: this.threadReplies(
           uri,
@@ -2353,8 +2324,7 @@ export class Views {
     uri: string,
     state: HydrationState,
   ): boolean | undefined {
-    const post = state.posts?.get(uri)
-    if (!post) {
+    if (!state.posts?.get(uri) && !state.recipePosts?.get(uri)) {
       return true
     }
     const postgateRecordUri = postUriToPostgateUri(uri)

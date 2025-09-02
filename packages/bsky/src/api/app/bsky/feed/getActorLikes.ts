@@ -24,7 +24,7 @@ export default function (server: Server, ctx: AppContext) {
     noPostBlocks,
     presentation,
   )
-  server.app.foodios.feed.getActorLikes({
+  server.app.bsky.feed.getActorLikes({
     auth: ctx.authVerifier.standardOptional,
     handler: async ({ params, auth, req }) => {
       const viewer = auth.credentials.iss
