@@ -173,13 +173,6 @@ import * as AppBskyUnspeccedSearchStarterPacksSkeleton from './types/app/bsky/un
 import * as AppBskyVideoGetJobStatus from './types/app/bsky/video/getJobStatus.js'
 import * as AppBskyVideoGetUploadLimits from './types/app/bsky/video/getUploadLimits.js'
 import * as AppBskyVideoUploadVideo from './types/app/bsky/video/uploadVideo.js'
-import * as AppFoodiosFeedGetActorLikes from './types/app/foodios/feed/getActorLikes.js'
-import * as AppFoodiosFeedGetAuthorFeed from './types/app/foodios/feed/getAuthorFeed.js'
-import * as AppFoodiosFeedGetFeed from './types/app/foodios/feed/getFeed.js'
-import * as AppFoodiosFeedGetListFeed from './types/app/foodios/feed/getListFeed.js'
-import * as AppFoodiosFeedGetPosts from './types/app/foodios/feed/getPosts.js'
-import * as AppFoodiosFeedGetPostThread from './types/app/foodios/feed/getPostThread.js'
-import * as AppFoodiosFeedGetTimeline from './types/app/foodios/feed/getTimeline.js'
 import * as ChatBskyActorDeleteAccount from './types/chat/bsky/actor/deleteAccount.js'
 import * as ChatBskyActorExportAccountData from './types/chat/bsky/actor/exportAccountData.js'
 import * as ChatBskyConvoAcceptConvo from './types/chat/bsky/convo/acceptConvo.js'
@@ -2497,90 +2490,6 @@ export class AppFoodiosFeedNS {
 
   constructor(server: Server) {
     this._server = server
-  }
-
-  getActorLikes<A extends Auth = void>(
-    cfg: MethodConfigOrHandler<
-      A,
-      AppFoodiosFeedGetActorLikes.QueryParams,
-      AppFoodiosFeedGetActorLikes.HandlerInput,
-      AppFoodiosFeedGetActorLikes.HandlerOutput
-    >,
-  ) {
-    const nsid = 'app.foodios.feed.getActorLikes' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  getAuthorFeed<A extends Auth = void>(
-    cfg: MethodConfigOrHandler<
-      A,
-      AppFoodiosFeedGetAuthorFeed.QueryParams,
-      AppFoodiosFeedGetAuthorFeed.HandlerInput,
-      AppFoodiosFeedGetAuthorFeed.HandlerOutput
-    >,
-  ) {
-    const nsid = 'app.foodios.feed.getAuthorFeed' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  getFeed<A extends Auth = void>(
-    cfg: MethodConfigOrHandler<
-      A,
-      AppFoodiosFeedGetFeed.QueryParams,
-      AppFoodiosFeedGetFeed.HandlerInput,
-      AppFoodiosFeedGetFeed.HandlerOutput
-    >,
-  ) {
-    const nsid = 'app.foodios.feed.getFeed' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  getListFeed<A extends Auth = void>(
-    cfg: MethodConfigOrHandler<
-      A,
-      AppFoodiosFeedGetListFeed.QueryParams,
-      AppFoodiosFeedGetListFeed.HandlerInput,
-      AppFoodiosFeedGetListFeed.HandlerOutput
-    >,
-  ) {
-    const nsid = 'app.foodios.feed.getListFeed' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  getPosts<A extends Auth = void>(
-    cfg: MethodConfigOrHandler<
-      A,
-      AppFoodiosFeedGetPosts.QueryParams,
-      AppFoodiosFeedGetPosts.HandlerInput,
-      AppFoodiosFeedGetPosts.HandlerOutput
-    >,
-  ) {
-    const nsid = 'app.foodios.feed.getPosts' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  getPostThread<A extends Auth = void>(
-    cfg: MethodConfigOrHandler<
-      A,
-      AppFoodiosFeedGetPostThread.QueryParams,
-      AppFoodiosFeedGetPostThread.HandlerInput,
-      AppFoodiosFeedGetPostThread.HandlerOutput
-    >,
-  ) {
-    const nsid = 'app.foodios.feed.getPostThread' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  getTimeline<A extends Auth = void>(
-    cfg: MethodConfigOrHandler<
-      A,
-      AppFoodiosFeedGetTimeline.QueryParams,
-      AppFoodiosFeedGetTimeline.HandlerInput,
-      AppFoodiosFeedGetTimeline.HandlerOutput
-    >,
-  ) {
-    const nsid = 'app.foodios.feed.getTimeline' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
   }
 }
 
