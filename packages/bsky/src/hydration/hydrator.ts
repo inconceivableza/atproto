@@ -738,7 +738,7 @@ export class Hydrator {
         uri,
         cid: post.cid,
         threadRoot: post.record.reply?.root.uri ?? uri,
-      }))
+      })).concat(recipeRefs.map(({ uri, cid, }) => ({ uri, threadRoot: uri, cid: cid! })))
     // TODO: include recipes?
     const threadContexts = await this.feed.getThreadContexts(threadRefs)
 
