@@ -1425,7 +1425,7 @@ export class Views {
     }
     const postView = this.post(uri, state)
     const post = state.posts?.get(uri)
-    if (!post || !postView) {
+    if (!postView) {
       return {
         tree: {
           type: 'notFound',
@@ -1434,7 +1434,8 @@ export class Views {
         isOPThread: false,
       }
     }
-    if (rootUri !== getRootUri(uri, post)) {
+
+    if (rootUri !== (post?.record.reply?.root.uri ?? uri)) {
       // Outside thread boundary.
       return undefined
     }
@@ -1492,9 +1493,8 @@ export class Views {
       }
     }
 
-    const parentUri = post.record.reply?.parent.uri
+    const parentUri = post?.record.reply?.parent.uri
     const hasMoreParents = !!parentUri && !parent
-
     return {
       tree: {
         type: 'post',
@@ -1505,7 +1505,7 @@ export class Views {
           postView,
           uri,
         }),
-        tags: post.tags,
+        tags: post?.tags ?? new Set(), // TODO: fix
         hasOPLike: !!state.threadContexts?.get(postView.uri)?.like,
         parent,
         replies: undefined,
@@ -2241,7 +2241,7 @@ export class Views {
         repostCount: view.repostCount,
         quoteCount: view.quoteCount,
         indexedAt: view.indexedAt,
-        embeds: undefined//depth > 1 ? undefined : postView.embed ? [postView.embed] : [],
+        embeds: depth > 1 ? undefined : view.embed ? [view.embed] : [],
       }, withTypeTag)
     }
     return this.embedNotFound(uri)
