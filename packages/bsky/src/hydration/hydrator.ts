@@ -956,6 +956,7 @@ export class Hydrator {
     const repostUris = collections.get(ids.AppBskyFeedRepost) ?? []
     const followUris = collections.get(ids.AppBskyGraphFollow) ?? []
     const verificationUris = collections.get(ids.AppBskyGraphVerification) ?? []
+    const recipeUris = collections.get(ids.AppFoodiosFeedRecipePost) ?? []
     const [
       posts,
       likes,
@@ -964,6 +965,7 @@ export class Hydrator {
       verifications,
       labels,
       profileState,
+      recipePosts
     ] = await Promise.all([
       this.feed.getPosts(postUris), // reason: mention, reply, quote
       this.feed.getLikes(likeUris), // reason: like
@@ -972,10 +974,12 @@ export class Hydrator {
       this.graph.getVerifications(verificationUris), // reason: verified
       this.label.getLabelsForSubjects(uris, ctx.labelers),
       this.hydrateProfiles(uris.map(didFromUri), ctx),
+      this.feed.getRecipes(recipeUris)
     ])
     const viewerRootPostUris = new Set<string>()
     for (const notif of notifs) {
       if (notif.reason === 'reply') {
+        // TODO: add equivalent logic for recipes
         const post = posts.get(notif.uri)
         if (post) {
           const rootUri = post.record.reply?.root.uri
@@ -998,6 +1002,7 @@ export class Hydrator {
       labels,
       threadgates,
       ctx,
+      recipePosts
     })
   }
 

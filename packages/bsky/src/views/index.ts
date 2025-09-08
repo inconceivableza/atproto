@@ -2374,6 +2374,7 @@ export class Views {
       | RecordInfo<ProfileRecord>
       | Verification
       | Pick<RecordInfo<Required<NotificationRecordDeleted>>, 'cid' | 'record'>
+      | Recipe
       | undefined
       | null
 
@@ -2404,6 +2405,8 @@ export class Views {
               takedownRef: actor.profileTakedownRef,
             }
           : undefined
+    } else if (uri.collection === ids.AppFoodiosFeedRecipePost) {
+      recordInfo = state.recipePosts?.get(notif.uri)
     }
     if (!recordInfo) return
 
