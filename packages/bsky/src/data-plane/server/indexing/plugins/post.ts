@@ -317,7 +317,7 @@ const notifsForInsert = (obj: IndexedPost) => {
     for (const embed of obj.embeds ?? []) {
       if ('embedUri' in embed) {
         const embedUri = new AtUri(embed.embedUri)
-        if (embedUri.collection === lex.ids.AppBskyFeedPost) {
+        if (embedUri.collection === lex.ids.AppBskyFeedPost || embedUri.collection === lex.ids.AppFoodiosFeedRecipePost) {
           maybeNotify({
             did: embedUri.host,
             reason: 'quote',
