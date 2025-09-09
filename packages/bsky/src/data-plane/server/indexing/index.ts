@@ -36,6 +36,7 @@ import * as Status from './plugins/status'
 import * as Threadgate from './plugins/thread-gate'
 import * as Verification from './plugins/verification'
 import * as RecipePost from './plugins/recipePost'
+import * as RecipeRevision from './plugins/recipeRevision'
 import { RecordProcessor } from './processor'
 
 export class IndexingService {
@@ -59,6 +60,7 @@ export class IndexingService {
     verification: Verification.PluginType
     status: Status.PluginType
     recipePost: RecipePost.PluginType
+    recipeRevision: RecipeRevision.PluginType
   }
 
   constructor(
@@ -85,7 +87,8 @@ export class IndexingService {
       chatDeclaration: ChatDeclaration.makePlugin(this.db, this.background),
       verification: Verification.makePlugin(this.db, this.background),
       status: Status.makePlugin(this.db, this.background),
-      recipePost: RecipePost.makePlugin(this.db, this.background)
+      recipePost: RecipePost.makePlugin(this.db, this.background),
+      recipeRevision: RecipeRevision.makePlugin(this.db, this.background)
     }
   }
 
