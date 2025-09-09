@@ -10,13 +10,13 @@ import * as lex from '../../../../lexicon/lexicons'
 import { normalizeDatetimeAlways } from '@atproto/syntax'
 
 type RecipePost = Selectable<DatabaseSchemaType['recipe_post']>
-type PostIngredient = Selectable<DatabaseSchemaType['recipe_ingredient']>
-type PostStep = Selectable<DatabaseSchemaType['recipe_step']>
+// type PostIngredient = Selectable<DatabaseSchemaType['recipe_ingredient']>
+// type PostStep = Selectable<DatabaseSchemaType['recipe_step']>
 
 interface IndexedRecipePost {
     recipePost: RecipePost
-    ingredients: PostIngredient[]
-    steps: PostStep[]
+    // ingredients: PostIngredient[]
+    // steps: PostStep[]
 }
 
 export type PluginType = RecordProcessor<RecipeRecord, IndexedRecipePost>
@@ -24,14 +24,12 @@ type Params = RecordProcessorParams<RecipeRecord, IndexedRecipePost>
 const lexId = lex.ids.AppFoodiosFeedRecipePost
 
 const insertFn: Params["insertFn"] = async (db, uri, cid, obj, timestamp) => {
-    // TODO: consider adding an entry to feed_item table
-
     const insertedRecipe = await db.insertInto("recipe_post").values({
         cid: cid.toString(),
         uri: uri.toString(),
         creator: uri.host,
-        text: obj.text,
-        title: obj.text,
+        // text: obj.text,
+        // title: obj.text,
         createdAt: normalizeDatetimeAlways(obj.createdAt),
         indexedAt: timestamp,
     }).onConflict(oc => oc.doNothing())
@@ -53,32 +51,32 @@ const insertFn: Params["insertFn"] = async (db, uri, cid, obj, timestamp) => {
     }).onConflict((oc) => oc.doNothing())
         .execute()
 
-    // TODO: validate quantity
-    const [insertedIngredients, insertedSteps] = await Promise.all([
-        obj.ingredients.length ?
-            db.insertInto("recipe_ingredient").values(obj.ingredients.map(({ name, quantity, unit }, i) => ({
-                ingredient: name,
-                order: i,
-                quantity: Number(quantity),
-                recipePostURI: uri.toString(),
-                unit
-            }))).onConflict(oc => oc.doNothing())
-                .returningAll()
-                .execute() : [],
-        obj.steps.length ?
-            db.insertInto("recipe_step").values(obj.steps.map(({ text }, i) => ({
-                recipePostURI: uri.toString(),
-                order: i,
-                text
-            }))).onConflict(oc => oc.doNothing())
-                .returningAll()
-                .execute() : []
-    ])
+    // // TODO: validate quantity
+    // const [insertedIngredients, insertedSteps] = await Promise.all([
+    //     obj.ingredients.length ?
+    //         db.insertInto("recipe_ingredient").values(obj.ingredients.map(({ name, quantity, unit }, i) => ({
+    //             ingredient: name,
+    //             order: i,
+    //             quantity: Number(quantity),
+    //             recipePostURI: uri.toString(),
+    //             unit
+    //         }))).onConflict(oc => oc.doNothing())
+    //             .returningAll()
+    //             .execute() : [],
+    //     obj.steps.length ?
+    //         db.insertInto("recipe_step").values(obj.steps.map(({ text }, i) => ({
+    //             recipePostURI: uri.toString(),
+    //             order: i,
+    //             text
+    //         }))).onConflict(oc => oc.doNothing())
+    //             .returningAll()
+    //             .execute() : []
+    // ])
 
     return {
         recipePost: insertedRecipe,
-        ingredients: insertedIngredients,
-        steps: insertedSteps
+        // ingredients: insertedIngredients,
+        // steps: insertedSteps
     }
 
 
@@ -95,16 +93,16 @@ export const makePlugin = (
         findDuplicate: async () => null,
         deleteFn: async (db, uri) => {
 
-            const [deletedSteps, deletedIngredients] = await Promise.all([
-                db.deleteFrom("recipe_step")
-                    .where("recipePostURI", "=", uri.toString())
-                    .returningAll()
-                    .execute(),
-                db.deleteFrom("recipe_ingredient")
-                    .where("recipePostURI", "=", uri.toString())
-                    .returningAll()
-                    .execute()
-            ])
+            // const [deletedSteps, deletedIngredients] = await Promise.all([
+            //     db.deleteFrom("recipe_step")
+            //         .where("recipePostURI", "=", uri.toString())
+            //         .returningAll()
+            //         .execute(),
+            //     db.deleteFrom("recipe_ingredient")
+            //         .where("recipePostURI", "=", uri.toString())
+            //         .returningAll()
+            //         .execute()
+            // ])
             const deletedPost = await db.deleteFrom("recipe_post")
                 .where("uri", "=", uri.toString())
                 .returningAll()
@@ -114,8 +112,8 @@ export const makePlugin = (
 
             return deletedPost ? {
                 recipePost: deletedPost,
-                ingredients: deletedIngredients,
-                steps: deletedSteps
+                // ingredients: deletedIngredients,
+                // steps: deletedSteps
             } : null
 
 
