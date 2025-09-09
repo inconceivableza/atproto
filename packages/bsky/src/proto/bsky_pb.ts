@@ -9146,6 +9146,177 @@ export class PingResponse extends Message<PingResponse> {
 }
 
 /**
+ * @generated from message bsky.RecordInfo
+ */
+export class RecordInfo extends Message<RecordInfo> {
+  /**
+   * @generated from field: string uri = 1;
+   */
+  uri = "";
+
+  /**
+   * @generated from field: string cid = 2;
+   */
+  cid = "";
+
+  /**
+   * @generated from field: google.protobuf.Timestamp indexed_at = 3;
+   */
+  indexedAt?: Timestamp;
+
+  /**
+   * @generated from field: bool taken_down = 4;
+   */
+  takenDown = false;
+
+  /**
+   * @generated from field: google.protobuf.Timestamp created_at = 5;
+   */
+  createdAt?: Timestamp;
+
+  /**
+   * @generated from field: google.protobuf.Timestamp sorted_at = 6;
+   */
+  sortedAt?: Timestamp;
+
+  /**
+   * @generated from field: string takedown_ref = 7;
+   */
+  takedownRef = "";
+
+  /**
+   * @generated from field: repeated string tags = 8;
+   */
+  tags: string[] = [];
+
+  constructor(data?: PartialMessage<RecordInfo>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "bsky.RecordInfo";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "uri", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: "cid", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: "indexed_at", kind: "message", T: Timestamp },
+    { no: 4, name: "taken_down", kind: "scalar", T: 8 /* ScalarType.BOOL */ },
+    { no: 5, name: "created_at", kind: "message", T: Timestamp },
+    { no: 6, name: "sorted_at", kind: "message", T: Timestamp },
+    { no: 7, name: "takedown_ref", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 8, name: "tags", kind: "scalar", T: 9 /* ScalarType.STRING */, repeated: true },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): RecordInfo {
+    return new RecordInfo().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): RecordInfo {
+    return new RecordInfo().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): RecordInfo {
+    return new RecordInfo().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: RecordInfo | PlainMessage<RecordInfo> | undefined, b: RecordInfo | PlainMessage<RecordInfo> | undefined): boolean {
+    return proto3.util.equals(RecordInfo, a, b);
+  }
+}
+
+/**
+ * @generated from message bsky.RecipeRevisionRecord
+ */
+export class RecipeRevisionRecord extends Message<RecipeRevisionRecord> {
+  /**
+   * @generated from field: bsky.RecordInfo record_info = 1;
+   */
+  recordInfo?: RecordInfo;
+
+  /**
+   * @generated from field: bytes record = 2;
+   */
+  record = new Uint8Array(0);
+
+  constructor(data?: PartialMessage<RecipeRevisionRecord>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "bsky.RecipeRevisionRecord";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "record_info", kind: "message", T: RecordInfo },
+    { no: 2, name: "record", kind: "scalar", T: 12 /* ScalarType.BYTES */ },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): RecipeRevisionRecord {
+    return new RecipeRevisionRecord().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): RecipeRevisionRecord {
+    return new RecipeRevisionRecord().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): RecipeRevisionRecord {
+    return new RecipeRevisionRecord().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: RecipeRevisionRecord | PlainMessage<RecipeRevisionRecord> | undefined, b: RecipeRevisionRecord | PlainMessage<RecipeRevisionRecord> | undefined): boolean {
+    return proto3.util.equals(RecipeRevisionRecord, a, b);
+  }
+}
+
+/**
+ * @generated from message bsky.RecipeRecord
+ */
+export class RecipeRecord extends Message<RecipeRecord> {
+  /**
+   * @generated from field: bsky.RecordInfo record_info = 1;
+   */
+  recordInfo?: RecordInfo;
+
+  /**
+   * @generated from field: bytes record = 2;
+   */
+  record = new Uint8Array(0);
+
+  /**
+   * @generated from field: repeated bsky.RecipeRevisionRecord revisions = 3;
+   */
+  revisions: RecipeRevisionRecord[] = [];
+
+  constructor(data?: PartialMessage<RecipeRecord>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "bsky.RecipeRecord";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "record_info", kind: "message", T: RecordInfo },
+    { no: 2, name: "record", kind: "scalar", T: 12 /* ScalarType.BYTES */ },
+    { no: 3, name: "revisions", kind: "message", T: RecipeRevisionRecord, repeated: true },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): RecipeRecord {
+    return new RecipeRecord().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): RecipeRecord {
+    return new RecipeRecord().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): RecipeRecord {
+    return new RecipeRecord().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: RecipeRecord | PlainMessage<RecipeRecord> | undefined, b: RecipeRecord | PlainMessage<RecipeRecord> | undefined): boolean {
+    return proto3.util.equals(RecipeRecord, a, b);
+  }
+}
+
+/**
  * @generated from message bsky.GetRecipeRecordsRequest
  */
 export class GetRecipeRecordsRequest extends Message<GetRecipeRecordsRequest> {
@@ -9187,9 +9358,9 @@ export class GetRecipeRecordsRequest extends Message<GetRecipeRecordsRequest> {
  */
 export class GetRecipeRecordsResponse extends Message<GetRecipeRecordsResponse> {
   /**
-   * @generated from field: repeated bsky.Record records = 1;
+   * @generated from field: repeated bsky.RecipeRecord records = 1;
    */
-  records: Record[] = [];
+  records: RecipeRecord[] = [];
 
   constructor(data?: PartialMessage<GetRecipeRecordsResponse>) {
     super();
@@ -9199,7 +9370,7 @@ export class GetRecipeRecordsResponse extends Message<GetRecipeRecordsResponse> 
   static readonly runtime: typeof proto3 = proto3;
   static readonly typeName = "bsky.GetRecipeRecordsResponse";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
-    { no: 1, name: "records", kind: "message", T: Record, repeated: true },
+    { no: 1, name: "records", kind: "message", T: RecipeRecord, repeated: true },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): GetRecipeRecordsResponse {
