@@ -41,6 +41,7 @@ import * as threadMute from './tables/thread-mute'
 import * as verification from './tables/verification'
 import * as viewParam from './tables/view-param'
 import * as recipePost from './tables/recipe-post'
+import * as recipeRevision from './tables/recipe-revision'
 
 export type DatabaseSchemaType = duplicateRecord.PartialDB &
   profile.PartialDB &
@@ -83,6 +84,7 @@ export type DatabaseSchemaType = duplicateRecord.PartialDB &
   verification.PartialDB &
   privateData.PartialDB &
   activitySubscription.PartialDB &
-  recipePost.PartialDB
+  recipePost.PartialDB &
+  recipeRevision.PartialDB
 
 export type DatabaseSchema = Kysely<DatabaseSchemaType>
