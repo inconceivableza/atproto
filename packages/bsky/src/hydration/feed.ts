@@ -7,7 +7,7 @@ import { Record as PostgateRecord } from '../lexicon/types/app/bsky/feed/postgat
 import { Record as RepostRecord } from '../lexicon/types/app/bsky/feed/repost'
 import { Record as ThreadgateRecord } from '../lexicon/types/app/bsky/feed/threadgate'
 import { Record as RecipeRecord } from '../lexicon/types/app/foodios/feed/recipePost'
-
+import { Record as RecipeRevisionRecord } from '../lexicon/types/app/foodios/feed/recipeRevision'
 import {
   postUriToPostgateUri,
   postUriToThreadgateUri,
@@ -17,11 +17,15 @@ import {
   HydrationMap,
   ItemRef,
   RecordInfo,
+  isValidRecord,
   parseRecord,
+  parseRecordBytes,
   parseString,
   split,
 } from './util'
 import { FeedItemType } from '../proto/bsky_pb'
+import { AtUri } from '@atproto/syntax'
+import { ids } from '../lexicon/lexicons'
 
 export type Post = RecordInfo<PostRecord> & {
   violatesThreadGate: boolean
@@ -82,7 +86,11 @@ export type Threadgates = HydrationMap<Threadgate>
 export type Postgate = RecordInfo<PostgateRecord>
 export type Postgates = HydrationMap<Postgate>
 
-export type Recipe = RecordInfo<RecipeRecord>
+
+type RecipeRevision = RecordInfo<RecipeRevisionRecord>
+export type Recipe = RecordInfo<RecipeRecord> & {
+  revisions: RecipeRevision[]
+}
 export type Recipes = HydrationMap<Recipe>
 
 export type ThreadRef = ItemRef & { threadRoot: string }
@@ -104,13 +112,43 @@ export class FeedHydrator {
   constructor(public dataplane: DataPlaneClient) { }
 
   async getRecipes(uris: string[], includeTakedowns = false): Promise<Recipes> {
+    // TODO: pass in existing state to avoid duplicate fetches
     // TODO: consider branding recipe URIs
     const { records } = await this.dataplane.getRecipeRecords({ uris })
+
     const result = new HydrationMap<Recipe>()
-    uris.forEach((uri, i) => {
-      const parsed = parseRecord<RecipeRecord>(records[i], includeTakedowns)
-      result.set(uri, parsed ?? null)
+    records.forEach(item => {
+      if (!item.recordInfo) {
+        return
+      }
+      const recipeRecord = parseRecordBytes<RecipeRecord>(item.record)
+      if (!(recipeRecord && isValidRecord(recipeRecord))) {
+        return
+      }
+      const revisions: RecipeRevision[] = item.revisions.flatMap(({ record, recordInfo }) => {
+        const revisionRecord = parseRecordBytes<RecipeRevisionRecord>(record)
+        if (!(revisionRecord && recordInfo && isValidRecord(revisionRecord))) {
+          return []
+        }
+        return [{
+          cid: recordInfo.cid,
+          indexedAt: recordInfo.indexedAt?.toDate() ?? new Date(0),
+          sortedAt: recordInfo.sortedAt?.toDate() ?? new Date(0),
+          takedownRef: recordInfo.takedownRef,
+          record: revisionRecord
+        }]
+      })
+
+      result.set(item.recordInfo.uri, {
+        cid: item.recordInfo.cid,
+        indexedAt: item.recordInfo.indexedAt?.toDate() ?? new Date(0),
+        sortedAt: item.recordInfo.sortedAt?.toDate() ?? new Date(),
+        takedownRef: item.recordInfo.takedownRef,
+        record: recipeRecord,
+        revisions
+      })
     })
+
     return result
   }
 
@@ -126,6 +164,7 @@ export class FeedHydrator {
     )
     if (!need.length) return base
     const res = await this.dataplane.getPostRecords({ uris: need })
+
     return need.reduce((acc, uri, i) => {
       const record = parseRecord<PostRecord>(res.records[i], includeTakedowns)
       const violatesThreadGate = res.meta[i].violatesThreadGate
