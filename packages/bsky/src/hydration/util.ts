@@ -82,7 +82,7 @@ export const parseRecord = <T extends UnknownRecord>(
   }
 }
 
-const isValidRecord = (json: unknown) => {
+export const isValidRecord = (json: unknown) => {
   const lexRecord = jsonToLex(json)
   if (typeof lexRecord?.['$type'] !== 'string') {
     return false
