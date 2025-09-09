@@ -1274,12 +1274,36 @@ message GetFollowsFollowingResponse {
 message PingRequest {}
 message PingResponse {}
 
+message RecordInfo {
+  string uri = 1;
+  string cid = 2;
+  google.protobuf.Timestamp indexed_at = 3;
+  bool taken_down = 4;
+  google.protobuf.Timestamp created_at = 5;
+  google.protobuf.Timestamp sorted_at = 6;
+  string takedown_ref = 7;
+  repeated string tags = 8;
+}
+
+message RecipeRevisionRecord {
+  RecordInfo record_info = 1;
+  bytes record = 2;
+}
+
+message RecipeRecord {
+  RecordInfo record_info = 1;
+  bytes record = 2;
+  repeated RecipeRevisionRecord revisions = 3;
+}
+
+
+
 message GetRecipeRecordsRequest {
   repeated string uris = 1;
 }
 
 message GetRecipeRecordsResponse {
-  repeated Record records = 1;
+  repeated RecipeRecord records = 1;
 }
 
 
