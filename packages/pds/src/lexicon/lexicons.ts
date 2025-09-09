@@ -12099,12 +12099,52 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'record',
-        description: 'Record containing a recipe post.',
+        description:
+          'Record containing metadata for a recipe post. Referred to by recipeRevisions.',
         key: 'tid',
         record: {
           type: 'object',
-          required: ['title', 'text', 'ingredients', 'steps', 'createdAt'],
+          required: ['createdAt'],
           properties: {
+            createdAt: {
+              type: 'string',
+              format: 'datetime',
+              description:
+                'Client-declared timestamp when this post was originally created.',
+            },
+          },
+        },
+      },
+    },
+  },
+  AppFoodiosFeedRecipeRevision: {
+    lexicon: 1,
+    id: 'app.foodios.feed.recipeRevision',
+    defs: {
+      main: {
+        type: 'record',
+        description:
+          'Record containing the original content of a recipe or a revision.',
+        key: 'tid',
+        record: {
+          type: 'object',
+          required: [
+            'recipePostRef',
+            'title',
+            'text',
+            'ingredients',
+            'steps',
+            'createdAt',
+          ],
+          properties: {
+            recipePostRef: {
+              type: 'ref',
+              ref: 'lex:com.atproto.repo.strongRef',
+            },
+            parentRevisionRef: {
+              type: 'ref',
+              ref: 'lex:com.atproto.repo.strongRef',
+            },
             title: {
               type: 'string',
               maxLength: 3000,
@@ -12119,14 +12159,14 @@ export const schemaDict = {
               type: 'array',
               items: {
                 type: 'ref',
-                ref: 'lex:app.foodios.feed.recipePost#ingredient',
+                ref: 'lex:app.foodios.feed.recipeRevision#ingredient',
               },
             },
             steps: {
               type: 'array',
               items: {
                 type: 'ref',
-                ref: 'lex:app.foodios.feed.recipePost#step',
+                ref: 'lex:app.foodios.feed.recipeRevision#step',
               },
             },
             images: {
@@ -17991,6 +18031,7 @@ export const ids = {
   AppBskyVideoGetUploadLimits: 'app.bsky.video.getUploadLimits',
   AppBskyVideoUploadVideo: 'app.bsky.video.uploadVideo',
   AppFoodiosFeedRecipePost: 'app.foodios.feed.recipePost',
+  AppFoodiosFeedRecipeRevision: 'app.foodios.feed.recipeRevision',
   ChatBskyActorDeclaration: 'chat.bsky.actor.declaration',
   ChatBskyActorDefs: 'chat.bsky.actor.defs',
   ChatBskyActorDeleteAccount: 'chat.bsky.actor.deleteAccount',

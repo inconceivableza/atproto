@@ -1,0 +1,139 @@
+{
+    "lexicon": 1,
+    "id": "app.foodios.feed.recipeRevision",
+    "defs": {
+        "main": {
+            "type": "record",
+            "description": "Record containing the original content of a recipe or a revision.",
+            "key": "tid",
+            "record": {
+                "type": "object",
+                "required": [
+                    "recipePostRef",
+                    "title",
+                    "text",
+                    "ingredients",
+                    "steps",
+                    "createdAt"
+                ],
+                "properties": {
+                    "recipePostRef": {
+                        "type": "ref",
+                        "ref": "com.atproto.repo.strongRef"
+                    },
+                    "parentRevisionRef": {
+                        "type": "ref",
+                        "ref": "com.atproto.repo.strongRef"
+                    },
+                    "title": {
+                        "type": "string",
+                        "maxLength": 3000,
+                        "maxGraphemes": 50
+                    },
+                    "text": {
+                        "type": "string",
+                        "maxLength": 3000,
+                        "maxGraphemes": 300
+                    },
+                    "ingredients": {
+                        "type": "array",
+                        "items": {
+                            "type": "ref",
+                            "ref": "#ingredient"
+                        }
+                    },
+                    "steps": {
+                        "type": "array",
+                        "items": {
+                            "type": "ref",
+                            "ref": "#step"
+                        }
+                    },
+                    "images": {
+                        "type": "union",
+                        "refs": [
+                            "lex:app.bsky.embed.images",
+                            "lex:app.bsky.embed.video"
+                        ]
+                    },
+                    "labels": {
+                        "type": "union",
+                        "description": "Self-label values for this post. Effectively content warnings.",
+                        "refs": [
+                            "lex:com.atproto.label.defs#selfLabels"
+                        ]
+                    },
+                    "tags": {
+                        "type": "array",
+                        "description": "Additional hashtags, in addition to any included in post text and facets.",
+                        "maxLength": 8,
+                        "items": {
+                            "type": "string",
+                            "maxLength": 640,
+                            "maxGraphemes": 64
+                        }
+                    },
+                    "createdAt": {
+                        "type": "string",
+                        "format": "datetime",
+                        "description": "Client-declared timestamp when this post was originally created."
+                    },
+                    "embed": {
+                        "type": "union",
+                        "refs": [
+                            "app.bsky.embed.images",
+                            "app.bsky.embed.video",
+                            "app.bsky.embed.external",
+                            "app.bsky.embed.record",
+                            "app.bsky.embed.recordWithMedia"
+                        ]
+                    }
+                }
+            }
+        },
+        "step": {
+            "type": "object",
+            "required": [
+                "text"
+            ],
+            "properties": {
+                "text": {
+                    "type": "string",
+                    "maxLength": 3000,
+                    "maxGraphemes": 300
+                },
+                "images": {
+                    "type": "union",
+                    "refs": [
+                        "lex:app.bsky.embed.images",
+                        "lex:app.bsky.embed.video"
+                    ]
+                }
+            }
+        },
+        "ingredient": {
+            "description": "TODO add description/alternatives properties?",
+            "type": "object",
+            "required": [
+                "name",
+                "quantity",
+                "unit"
+            ],
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "maxLength": 3000,
+                    "maxGraphemes": 300
+                },
+                "quantity": {
+                    "type": "string",
+                    "maxGraphemes": 10
+                },
+                "unit": {
+                    "type": "string",
+                    "maxGraphemes": 10
+                }
+            }
+        }
+    }
+}
