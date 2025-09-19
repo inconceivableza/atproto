@@ -1,6 +1,9 @@
 import { Database } from '../../db'
 import RecordProcessor, { RecordProcessorParams } from '../processor'
 import { DatabaseSchemaType } from '../../db/database-schema'
+import {
+    Record as RecipeRevisionRecord
+} from '../../../../lexicon/types/app/foodios/feed/recipeRevision'
 import { Selectable } from 'kysely'
 import { BackgroundQueue } from '../../background'
 import * as lex from '../../../../lexicon/lexicons'
@@ -12,21 +15,34 @@ interface IndexedRecipeRevision {
     recipeRevision: RecipeRevision
 }
 
-export type PluginType = RecordProcessor<RecipeRevision, IndexedRecipeRevision>
-type Params = RecordProcessorParams<RecipeRevision, IndexedRecipeRevision>
-const lexId = lex.ids.AppFoodiosFeedRecipePost
+export type PluginType = RecordProcessor<RecipeRevisionRecord, IndexedRecipeRevision>
+type Params = RecordProcessorParams<RecipeRevisionRecord, IndexedRecipeRevision>
+const lexId = lex.ids.AppFoodiosFeedRecipeRevision
 
 const insertFn: Params["insertFn"] = async (db, uri, cid, obj, timestamp) => {
+    // TODO: consider what happens when events are ingested out of order - 
+    // recipe revision arrives before recipe post
+
     const recipeRevision = await db.insertInto("recipe_revision").values({
         cid: cid.toString(),
         uri: uri.toString(),
-        recipePostUri: obj.recipePostUri,
+        recipePostUri: obj.recipePostRef.uri,
         creator: uri.host,
         indexedAt: timestamp,
         createdAt: normalizeDatetimeAlways(obj.createdAt),
     }).onConflict(oc => oc.doNothing())
         .returningAll()
         .executeTakeFirst()
+
+    // TODO: check the timestamp of current head before replacing it
+    await db.insertInto("recipe_head_revision").values({
+        recipePostUri: obj.recipePostRef.uri,
+        recipeRevisionUri: uri.toString()
+    }).onConflict(oc =>
+        oc
+            .column('recipePostUri')
+            .doUpdateSet({ recipeRevisionUri: uri.toString() })
+    ).execute()
 
     if (!recipeRevision) {
         return null
