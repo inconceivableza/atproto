@@ -6,6 +6,7 @@ import { AtUri } from '@atproto/syntax'
 import { ids } from '../../../lexicon/lexicons'
 import { Service } from '../../../proto/bsky_connect'
 import { GetRecipeRecordsRequest, PostRecordMeta, Record as ATRecord, RecipeRecord, RecipeRevisionRecord } from '../../../proto/bsky_pb'
+import { AppFoodiosFeedRecipeRevision } from '@atproto/api'
 import { Database } from '../db'
 import { Record as BskyRecord } from '../db/tables/record'
 import { Selectable, } from 'kysely'
@@ -128,9 +129,12 @@ export const getRecipeRecords = (db: Database) => {
           record: recordBytes,
         })
 
-      } else if (atUri.collection === ids.AppFoodiosFeedRecipePost) {
+      } else if (atUri.collection === ids.AppFoodiosFeedRecipeRevision) {
         const recordBytes = ui8.fromString(row.json, 'utf8')
-        const revs = revisionsByUri[row.uri] ??= []
+        const parsed = JSON.parse(row.json)
+        const recipeUri = AppFoodiosFeedRecipeRevision.isRecord<AppFoodiosFeedRecipeRevision.Record>(parsed) && parsed.recipePostRef.uri
+        if (!recipeUri) return;
+        const revs = revisionsByUri[recipeUri] ??= []
         revs.push(new RecipeRevisionRecord({
           recordInfo: makeRecordInfo(row),
           record: recordBytes
@@ -140,10 +144,9 @@ export const getRecipeRecords = (db: Database) => {
     const records = req.uris.map(uri => {
       const recipeRecord = recsByUri[uri] ?? new RecipeRecord()
       const revisions = revisionsByUri[uri] ?? []
-      recipeRecord.revisions = revisions
+      recipeRecord.revisions = revisions.toSorted((a, b) => (a.recordInfo?.sortedAt?.seconds ?? BigInt(0)) - (b.recordInfo?.sortedAt?.seconds ?? BigInt(0)) > 0 ? 1 : -1)
       return recipeRecord
     })
-
     return { records }
   }
 }
