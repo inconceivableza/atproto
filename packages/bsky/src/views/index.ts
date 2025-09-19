@@ -1,7 +1,7 @@
 import { HOUR, MINUTE, mapDefined } from '@atproto/common'
 import { AtUri, INVALID_HANDLE, normalizeDatetimeAlways } from '@atproto/syntax'
 import { Actor, ProfileViewerState } from '../hydration/actor'
-import { FeedItem, Like, Post, Recipe, Repost } from '../hydration/feed'
+import { FeedItem, Like, Post, Recipe, RecipeRevision, Repost } from '../hydration/feed'
 import { Follow, Verification } from '../hydration/graph'
 import { HydrationState } from '../hydration/hydrator'
 import { Label } from '../hydration/label'
@@ -62,6 +62,9 @@ import {
 import {
   Record as RecipeRecord, isRecord as isRecipeRecord,
 } from "../lexicon/types/app/foodios/feed/recipePost"
+import {
+  Record as RecipeRevisionRecord, isRecord as isRecipeRevisionRecord
+} from "../lexicon/types/app/foodios/feed/recipeRevision"
 import {
   ActivitySubscription,
   RecordDeleted as NotificationRecordDeleted,
@@ -126,6 +129,7 @@ import {
   parseThreadGate,
 } from './util'
 import { isRecipeURI } from '../util'
+import { revisionFromUri, stripSearchParams } from "@atproto/api"
 
 const notificationDeletedRecord = {
   $type: 'app.bsky.notification.defs#recordDeleted' as const,
@@ -698,7 +702,7 @@ export class Views {
       | LabelerRecord
       | VerificationRecord
       | NotificationRecordDeleted
-    | RecipeRecord
+    | RecipeRevisionRecord
   }): Label[] {
     if (!uri || !cid || !record) return []
 
@@ -707,7 +711,7 @@ export class Views {
       !isPostRecord(record) &&
       !isProfileRecord(record) &&
       !isLabelerRecord(record) &&
-      !isRecipeRecord(record)
+      !isRecipeRevisionRecord(record)
     ) {
       return []
     }
@@ -874,25 +878,25 @@ export class Views {
     }
   }
 
-  postUnion(uri: string, state: HydrationState) {
-    if (isRecipeURI(uri)) {
-      return this.recipePost(uri, state)
-    }
-    return this.post(uri, state)
-  }
-
-  recipePost(uri: string, state: HydrationState): $Typed<PostView> | undefined {
-    return this.post(uri, state)
-
-
-  }
-
   post(
     uri: string,
     state: HydrationState,
     depth = 0,
   ): $Typed<PostView> | undefined {
-    const post = isRecipeURI(uri) ? state.recipePosts?.get(uri) : state.posts?.get(uri)
+    let post: RecipeRevision | Post | null | undefined
+    let postUri = uri
+    if (isRecipeURI(uri)) {
+      // TODO: this should probably happen in the data-plane
+      const revision = revisionFromUri(uri)
+      post = revision ? state.recipePosts?.get(uri)?.revisions.find(rev => new AtUri(rev.uri).rkey === revision)
+        : state.recipePosts?.get(uri)?.revisions.at(-1)
+      if (post) {
+        postUri += `?revision=${encodeURIComponent(new AtUri(post.uri).rkey)}`
+      }
+    } else {
+      post = state.posts?.get(uri)
+    }
+
     if (!post) return
     const parsedUri = new AtUri(uri)
     const authorDid = parsedUri.hostname
@@ -911,7 +915,7 @@ export class Views {
     ]
     return {
       "$type": "app.bsky.feed.defs#postView",
-      uri,
+      uri: postUri,
       cid: post.cid,
       author,
       record: post.record,
@@ -1035,12 +1039,6 @@ export class Views {
   }
 
   maybePost(uri: string, state: HydrationState): $Typed<MaybePostView> {
-    if (isRecipeURI(uri)) {
-      const recipe = this.recipePost(uri, state)
-      if (recipe) {
-        return recipe
-      }
-    }
     const post = this.post(uri, state)
     
     if (!post) {
@@ -1268,8 +1266,12 @@ export class Views {
     //
     // Not found.
     const postView = this.post(anchorUri, state)
-    const post = isRecipeURI(anchorUri) ? state.recipePosts?.get(anchorUri) : state.posts?.get(anchorUri)
-    if (!(post && postView)) {
+    let post: RecipeRevision | Post | null | undefined
+    if (isRecipeURI(anchorUri)) {
+      post = state.recipePosts?.get(anchorUri)?.revisions.at(-1)
+    } else {
+      post = state.posts?.get(anchorUri)
+    } if (!(post && postView)) {
       return {
         hasOtherReplies: false,
         thread: [
@@ -1419,7 +1421,7 @@ export class Views {
     }
 
     // Not found.
-    const uri = state.posts?.get(childUri)?.record.reply?.parent.uri
+    const uri = stripSearchParams(state.posts?.get(childUri)?.record.reply?.parent.uri)
     if (!uri) {
       return undefined
     }
@@ -1435,7 +1437,7 @@ export class Views {
       }
     }
 
-    if (rootUri !== (post?.record.reply?.root.uri ?? uri)) {
+    if (rootUri !== (stripSearchParams(post?.record.reply?.root.uri) ?? uri)) {
       // Outside thread boundary.
       return undefined
     }
@@ -1906,16 +1908,17 @@ export class Views {
     postView: PostView
   } | null {
     // Not found.
-    const post = state.posts?.get(uri)
+    const postUri = stripSearchParams(uri)!
+    const post = state.posts?.get(postUri)
     if (post?.violatesThreadGate) {
       return null
     }
-    const postView = this.post(uri, state)
+    const postView = this.post(postUri, state)
     if (!post || !postView) {
       return null
     }
     const authorDid = postView.author.did
-    if (rootUri !== getRootUri(uri, post)) {
+    if (rootUri !== getRootUri(postUri, post)) {
       // outside thread boundary
       return null
     }
@@ -1923,11 +1926,11 @@ export class Views {
     // Blocked (1p and 3p for replies).
     const has1pBlock = this.viewerBlockExists(authorDid, state)
     const has3pBlock =
-      !state.ctx?.include3pBlocks && state.postBlocks?.get(uri)?.parent
+      !state.ctx?.include3pBlocks && state.postBlocks?.get(postUri)?.parent
     if (has1pBlock || has3pBlock) {
       return null
     }
-    if (!this.viewerSeesNeedsReview({ uri, did: authorDid }, state)) {
+    if (!this.viewerSeesNeedsReview({ uri: postUri, did: authorDid }, state)) {
       return null
     }
 
@@ -1995,7 +1998,7 @@ export class Views {
     const childrenByParentUri: Record<string, string[]> = {}
     uris.forEach((uri) => {
       const post = state.posts?.get(uri)
-      const parentUri = post?.record.reply?.parent.uri
+      const parentUri = stripSearchParams(post?.record.reply?.parent.uri)
       if (!parentUri) return
       if (includedPosts.has(uri)) return
       includedPosts.add(uri)
@@ -2227,7 +2230,7 @@ export class Views {
         withTypeTag,
       )
     } else if (parsedUri.collection === ids.AppFoodiosFeedRecipePost) {
-      const view = this.recipePost(uri, state)
+      const view = this.post(uri, state)
       if (!view) return this.embedNotFound(uri)
       return this.recordEmbedWrapper({
         $type: 'app.bsky.embed.record#viewRecord',
@@ -2374,7 +2377,7 @@ export class Views {
       | RecordInfo<ProfileRecord>
       | Verification
       | Pick<RecordInfo<Required<NotificationRecordDeleted>>, 'cid' | 'record'>
-      | Recipe
+      | RecipeRevision
       | undefined
       | null
 
@@ -2406,7 +2409,7 @@ export class Views {
             }
           : undefined
     } else if (uri.collection === ids.AppFoodiosFeedRecipePost) {
-      recordInfo = state.recipePosts?.get(notif.uri)
+      recordInfo = state.recipePosts?.get(notif.uri)?.revisions.at(-1)
     }
     if (!recordInfo) return
 
@@ -2440,5 +2443,5 @@ export class Views {
 }
 
 const getRootUri = (uri: string, post: Post): string => {
-  return post.record.reply?.root.uri ?? uri
+  return stripSearchParams(post.record.reply?.root.uri) ?? uri
 }

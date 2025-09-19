@@ -38,6 +38,7 @@ import {
   violatesThreadGate as checkViolatesThreadGate,
 } from '../../util'
 import { RecordProcessor } from '../processor'
+import { stripSearchParams } from '@atproto/api'
 
 type Notif = Insertable<Notification>
 type Post = Selectable<DatabaseSchemaType['post']>
@@ -81,15 +82,16 @@ const insertFn = async (
   obj: PostRecord,
   timestamp: string,
 ): Promise<IndexedPost | null> => {
+
   const post = {
     uri: uri.toString(),
     cid: cid.toString(),
     creator: uri.host,
     text: obj.text,
     createdAt: normalizeDatetimeAlways(obj.createdAt),
-    replyRoot: obj.reply?.root?.uri || null,
+    replyRoot: stripSearchParams(obj.reply?.root?.uri),
     replyRootCid: obj.reply?.root?.cid || null,
-    replyParent: obj.reply?.parent?.uri || null,
+    replyParent: stripSearchParams(obj.reply?.parent?.uri),
     replyParentCid: obj.reply?.parent?.cid || null,
     langs: obj.langs?.length
       ? sql<string[]>`${JSON.stringify(obj.langs)}` // sidesteps kysely's array serialization, which is non-jsonb
@@ -292,6 +294,7 @@ const findDuplicate = async (): Promise<AtUri | null> => {
 }
 
 const notifsForInsert = (obj: IndexedPost) => {
+  // TODO: check if this works with search param
   const notifs: Notif[] = []
   const notified = new Set([obj.post.creator])
   const maybeNotify = (notif: Notif) => {

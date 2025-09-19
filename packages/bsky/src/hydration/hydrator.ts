@@ -69,8 +69,7 @@ import {
   partition,
   urisByCollection,
 } from './util'
-import { Record as RecipeRecord } from "../lexicon/types/app/foodios/feed/recipePost"
-
+import { stripSearchParams } from '@atproto/api'
 export class HydrateCtx {
   labelers = this.vals.labelers
   viewer = this.vals.viewer !== null ? serviceRefToDid(this.vals.viewer) : null
@@ -387,7 +386,7 @@ export class Hydrator {
     state: HydrationState = {},
   ): Promise<HydrationState> {
     // TODO: maybe filter out any recipe records that got in here
-    const uris = refs.map((ref) => ref.uri)
+    const uris = refs.map((ref) => stripSearchParams(ref.uri))
 
     state.posts ??= new HydrationMap<Post>()
     const addPostsToHydrationState = (posts: Posts) => {
@@ -654,9 +653,11 @@ export class Hydrator {
       if (!post) return
       postAndReplyRefs.push({ uri, cid: post.cid })
       if (post.record.reply) {
-        rootUris.push(post.record.reply.root.uri)
-        parentUris.push(post.record.reply.parent.uri)
-        postAndReplyRefs.push(post.record.reply.root, post.record.reply.parent)
+        const rootUri = stripSearchParams(post.record.reply.root.uri)
+        const parentUri = stripSearchParams(post.record.reply.parent.uri)
+        rootUris.push(rootUri)
+        parentUris.push(parentUri)
+        postAndReplyRefs.push(post.record.reply.root, post.record.reply.parent) // TODO: may need to strip uris
       }
     })
     // get replies, collect reply parent authors
@@ -1333,7 +1334,7 @@ const rootUrisFromPosts = (posts: Posts): string[] => {
 }
 
 const rootUriFromPost = (post: Post): string | undefined => {
-  return post.record.reply?.root.uri
+  return stripSearchParams(post.record.reply?.root.uri)
 }
 
 const nestedRecordUrisFromPosts = (

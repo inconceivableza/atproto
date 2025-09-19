@@ -13,7 +13,6 @@ import { createPipeline } from '../../../../pipeline'
 import { uriToDid as creatorFromUri } from '../../../../util/uris'
 import { Views } from '../../../../views'
 import { resHeaders } from '../../../util'
-import { FeedItemType } from '../../../../proto/bsky_pb'
 import { partition } from '../../../../hydration/util'
 import { isRecipeURI } from '../../../../util'
 
@@ -54,7 +53,6 @@ const hydration = async (inputs: {
   skeleton: Skeleton
 }) => {
   const { ctx, params, skeleton } = inputs
-  // TODO: Also hydrate recipes
   const [recipeUris, postUris] = partition(skeleton.posts, isRecipeURI)
   const [postsState, recipesState] = await Promise.all([ctx.hydrator.hydratePosts(
     postUris.map((uri) => ({ uri })),
@@ -85,7 +83,7 @@ const presentation = (inputs: {
 }) => {
   const { ctx, skeleton, hydration } = inputs
   const posts = mapDefined(skeleton.posts, (uri) =>
-    ctx.views.postUnion(uri, hydration),
+    ctx.views.post(uri, hydration),
   )
   return { posts }
 }
