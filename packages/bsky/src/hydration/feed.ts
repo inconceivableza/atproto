@@ -24,8 +24,7 @@ import {
   split,
 } from './util'
 import { FeedItemType } from '../proto/bsky_pb'
-import { AtUri } from '@atproto/syntax'
-import { ids } from '../lexicon/lexicons'
+import { stripSearchParams } from '@atproto/api'
 
 export type Post = RecordInfo<PostRecord> & {
   violatesThreadGate: boolean
@@ -87,11 +86,11 @@ export type Postgate = RecordInfo<PostgateRecord>
 export type Postgates = HydrationMap<Postgate>
 
 
-type RecipeRevision = RecordInfo<RecipeRevisionRecord>
+export type RecipeRevision = RecordInfo<RecipeRevisionRecord> & { uri: string }
 export type Recipe = RecordInfo<RecipeRecord> & {
   revisions: RecipeRevision[]
 }
-export type Recipes = HydrationMap<Recipe>
+export type Recipes = HydrationMap<Recipe> 
 
 export type ThreadRef = ItemRef & { threadRoot: string }
 
@@ -114,7 +113,8 @@ export class FeedHydrator {
   async getRecipes(uris: string[], includeTakedowns = false): Promise<Recipes> {
     // TODO: pass in existing state to avoid duplicate fetches
     // TODO: consider branding recipe URIs
-    const { records } = await this.dataplane.getRecipeRecords({ uris })
+
+    const { records } = await this.dataplane.getRecipeRecords({ uris: uris.map(stripSearchParams) })
 
     const result = new HydrationMap<Recipe>()
     records.forEach(item => {
@@ -127,6 +127,7 @@ export class FeedHydrator {
       }
       const revisions: RecipeRevision[] = item.revisions.flatMap(({ record, recordInfo }) => {
         const revisionRecord = parseRecordBytes<RecipeRevisionRecord>(record)
+
         if (!(revisionRecord && recordInfo && isValidRecord(revisionRecord))) {
           return []
         }
@@ -135,6 +136,7 @@ export class FeedHydrator {
           indexedAt: recordInfo.indexedAt?.toDate() ?? new Date(0),
           sortedAt: recordInfo.sortedAt?.toDate() ?? new Date(0),
           takedownRef: recordInfo.takedownRef,
+          uri: recordInfo.uri,
           record: revisionRecord
         }]
       })

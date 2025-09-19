@@ -4,6 +4,7 @@ import { jsonToLex } from '@atproto/lexicon'
 import { AtUri } from '@atproto/syntax'
 import { lexicons } from '../lexicon/lexicons'
 import { Record as BskyRecord } from '../proto/bsky_pb'
+import { stripSearchParams } from '@atproto/api'
 
 export class HydrationMap<T> extends Map<string, T | null> implements Merges {
   merge(map: HydrationMap<T>): this {
@@ -11,6 +12,11 @@ export class HydrationMap<T> extends Map<string, T | null> implements Merges {
       this.set(key, val)
     })
     return this
+  }
+
+  get(key: string): T | null | undefined {
+    const strippedUri = stripSearchParams(key)
+    return super.get(strippedUri ?? key)
   }
 }
 
