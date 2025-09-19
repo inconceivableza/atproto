@@ -109,3 +109,21 @@ export const nuxSchema = z
 export function validateNux(nux: Nux) {
   nuxSchema.parse(nux)
 }
+
+export function stripSearchParams<T extends string | null | undefined>(uri: T) {
+  if (!uri) return uri
+
+  const queryIdx = uri.indexOf("?")
+  if (queryIdx < 0) return uri
+
+  const prefix = uri.slice(0, queryIdx)
+  const hashIdx = uri.indexOf("#")
+  if (hashIdx < 0) return prefix
+
+  return prefix + uri.slice(hashIdx)
+}
+
+export function revisionFromUri(uri: string) {
+  const atUri = new AtUri(uri)
+  return atUri.searchParams.get("revision")
+}
