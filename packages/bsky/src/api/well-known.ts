@@ -1,4 +1,6 @@
 import { Router } from 'express'
+import fs from 'fs'
+import path from 'path'
 import { AppContext } from '../context'
 
 export const createRouter = (ctx: AppContext): Router => {
@@ -40,5 +42,48 @@ export const createRouter = (ctx: AppContext): Router => {
     })
   }
 
+  // Env-content endpoint for appview configuration
+  router.get('/.well-known/atproto-appview-env-content', (_req, res) => {
+    const envContent = loadEnvContent()
+    res.json(envContent)
+  })
+
   return router
+}
+
+function loadEnvContent(): Record<string, any> {
+  // Check for custom file first
+  const customFile = process.env.APPVIEW_ENV_CONTENT_FILE
+  let filenames: string[]
+
+  if (customFile) {
+    filenames = [customFile]
+  } else {
+    // Fall back to standard files in order: production -> test -> development
+    filenames = [
+      'env-content.production.json',
+      'env-content.test.json',
+      'env-content.json',
+    ]
+  }
+
+  for (const filename of filenames) {
+    try {
+      const filePath = path.resolve(filename)
+      if (fs.existsSync(filePath)) {
+        const data = fs.readFileSync(filePath, 'utf8')
+        return JSON.parse(data)
+      }
+    } catch (err) {
+      console.warn(`Failed to load env-content from ${filename}:`, err)
+      continue
+    }
+  }
+
+  // Return default empty structure if no files found
+  return {
+    atproto_accounts: {
+      follow: {},
+    },
+  }
 }
