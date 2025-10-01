@@ -26,7 +26,7 @@ export interface Merges {
 
 type UnknownRecord = { $type: string; [x: string]: unknown }
 
-export type RecordInfo<T extends UnknownRecord> = {
+export type RecordInfo<T extends {}> = {
   record: T
   cid: string
   sortedAt: Date

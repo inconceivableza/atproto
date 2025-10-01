@@ -8,7 +8,7 @@ import {
   HydrateCtx,
   HydrationState,
   Hydrator,
-  mergeManyStates
+  mergeStates
 } from '../../../../hydration/hydrator'
 import { parseString } from '../../../../hydration/util'
 import { Server } from '../../../../lexicon'
@@ -142,19 +142,13 @@ const hydration = async (inputs: {
   skeleton: Skeleton
 }): Promise<HydrationState> => {
   const { ctx, params, skeleton } = inputs
-  // TODO: use urisByCollection
-  const grouped = groupBy(skeleton.items, item => item.itemType)
-  const postItems = (grouped[FeedItemType.POST] ?? []).concat(grouped[FeedItemType.REPOST] ?? [])
 
   const [feedPostState, profileViewerState] = await Promise.all([
-    ctx.hydrator.hydrateFeedItems(postItems, params.hydrateCtx),
+    ctx.hydrator.hydrateFeedItems(skeleton.items, params.hydrateCtx),
     ctx.hydrator.hydrateProfileViewers([skeleton.actor.did], params.hydrateCtx),
   ])
 
-  const recipeItems = grouped[FeedItemType.RECIPE] ?? []
-  const recipeState = await ctx.hydrator.hydrateRecipes(recipeItems.map(item => item.post.uri), params.hydrateCtx)
-
-  return mergeManyStates(feedPostState, profileViewerState, recipeState)
+  return mergeStates(feedPostState, profileViewerState)
 }
 
 const noBlocksOrMutedReposts = (inputs: {
