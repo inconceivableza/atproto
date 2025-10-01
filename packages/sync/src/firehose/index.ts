@@ -103,7 +103,6 @@ export class Firehose {
   async start() {
     try {
       for await (const evt of this.sub) {
-        debugger
         console.log("*** event ***", evt)
         if (this.opts.runner) {
           const parsed = didAndSeqForEvt(evt)
