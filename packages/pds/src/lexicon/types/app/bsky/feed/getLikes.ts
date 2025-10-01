@@ -52,6 +52,7 @@ export interface Like {
   indexedAt: string
   createdAt: string
   actor: AppBskyActorDefs.ProfileView
+  revisionUri?: string
 }
 
 const hashLike = 'like'

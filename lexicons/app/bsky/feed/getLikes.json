@@ -51,7 +51,14 @@
       "properties": {
         "indexedAt": { "type": "string", "format": "datetime" },
         "createdAt": { "type": "string", "format": "datetime" },
-        "actor": { "type": "ref", "ref": "app.bsky.actor.defs#profileView" }
+        "actor": {
+          "type": "ref",
+          "ref": "app.bsky.actor.defs#profileView"
+        },
+        "revisionUri": {
+          "type": "string",
+          "format": "at-uri"
+        }
       }
     }
   }
