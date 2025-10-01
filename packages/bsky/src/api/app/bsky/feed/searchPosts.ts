@@ -2,8 +2,8 @@ import { AtpAgent } from '@atproto/api'
 import { mapDefined } from '@atproto/common'
 import { AppContext } from '../../../../context'
 import { DataPlaneClient } from '../../../../data-plane'
-import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
-import { parseString } from '../../../../hydration/util'
+import { HydrateCtx, Hydrator, mergeManyStates, mergeStates } from '../../../../hydration/hydrator'
+import { parseString, urisByCollection } from '../../../../hydration/util'
 import { Server } from '../../../../lexicon'
 import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/searchPosts'
 import {
@@ -16,6 +16,7 @@ import {
 import { uriToDid as creatorFromUri } from '../../../../util/uris'
 import { Views } from '../../../../views'
 import { resHeaders } from '../../../util'
+import { ids } from '@atproto/api/dist/client/lexicons'
 
 export default function (server: Server, ctx: AppContext) {
   const searchPosts = createPipeline(
@@ -82,10 +83,16 @@ const hydration = async (
   inputs: HydrationFnInput<Context, Params, Skeleton>,
 ) => {
   const { ctx, params, skeleton } = inputs
-  return ctx.hydrator.hydratePosts(
-    skeleton.posts.map((uri) => ({ uri })),
-    params.hydrateCtx,
-  )
+  const byCollection = urisByCollection(skeleton.posts)
+  const states = await Promise.all([ctx.hydrator.hydrateRecipes(
+    byCollection.get(ids.AppFoodiosFeedRecipePost) ?? [],
+    params.hydrateCtx
+  ),
+  await ctx.hydrator.hydratePosts(
+    byCollection.get(ids.AppBskyFeedPost)?.map(uri => ({ uri })) ?? [],
+    params.hydrateCtx
+  )])
+  return mergeManyStates(...states)
 }
 
 const noBlocks = (inputs: RulesFnInput<Context, Params, Skeleton>) => {
