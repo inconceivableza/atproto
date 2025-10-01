@@ -60,8 +60,8 @@ import {
   isRecord as isLabelerRecord,
 } from '../lexicon/types/app/bsky/labeler/service'
 import {
-  Record as RecipeRecord, isRecord as isRecipeRecord,
-} from "../lexicon/types/app/foodios/feed/recipePost"
+  RecipeRevisionView
+} from "../lexicon/types/app/foodios/feed/defs"
 import {
   Record as RecipeRevisionRecord, isRecord as isRecipeRevisionRecord
 } from "../lexicon/types/app/foodios/feed/recipeRevision"
@@ -878,24 +878,71 @@ export class Views {
     }
   }
 
+  recipeView({ uri, revisionUri }: { uri: string, revisionUri?: string }, state: HydrationState, depth = 0): $Typed<PostView> | undefined {
+    // TODO: query individual revision from data plane at hydration level
+    const recipe = state.recipePosts?.get(uri)
+    if (!recipe) return;
+
+    const revisionRKey = revisionFromUri(uri)
+    // TODO: remove usages of revision query param (currently just outdated revision dialog)
+    const revision = revisionRKey || revisionUri ? recipe.revisions.find(rev => new AtUri(rev.uri).rkey === revisionRKey || rev.uri === revisionUri)
+      : recipe.revisions.at(-1)
+    if (!revision) return;
+
+    const parsedUri = new AtUri(uri)
+    const authorDid = parsedUri.hostname
+    const author = this.profileBasic(authorDid, state)
+    if (!author) return
+    const aggs = state.postAggs?.get(uri)
+    const viewer = state.postViewers?.get(uri)
+
+    const record: RecipeRevisionView = {
+      "$type": "app.foodios.feed.defs#recipeRevisionView",
+      revisionContent: revision.record,
+      selectedRevisionUri: revision.uri,
+      // TODO: pass createdAt field through from data-plane
+      revisionRefs: recipe.revisions.map(revision => ({ uri: revision.uri, createdAt: revision.sortedAt.toISOString() }))
+    }
+
+    return {
+      "$type": "app.bsky.feed.defs#postView",
+      uri,
+      cid: revision.cid,
+      author,
+      record: record as any,
+      embed:
+        depth < 2 && record.revisionContent.embed
+          ? this.embed(uri, record.revisionContent.embed as any, state, depth + 1)
+          : undefined,
+      replyCount: aggs?.replies ?? 0,
+      repostCount: aggs?.reposts ?? 0,
+      likeCount: aggs?.likes ?? 0,
+      quoteCount: aggs?.quotes ?? 0,
+      indexedAt: this.indexedAt(revision).toISOString(),
+      viewer: viewer
+        ? {
+          repost: viewer.repost,
+          like: viewer.like,
+          threadMuted: viewer.threadMuted,
+          replyDisabled: this.userReplyDisabled(uri, state),
+          embeddingDisabled: this.userPostEmbeddingDisabled(uri, state),
+          pinned: this.viewerPinned(uri, state, authorDid),
+        }
+        : undefined,
+    }
+  }
+
   post(
     uri: string,
     state: HydrationState,
     depth = 0,
   ): $Typed<PostView> | undefined {
-    let post: RecipeRevision | Post | null | undefined
     let postUri = uri
     if (isRecipeURI(uri)) {
-      // TODO: this should probably happen in the data-plane
-      const revision = revisionFromUri(uri)
-      post = revision ? state.recipePosts?.get(uri)?.revisions.find(rev => new AtUri(rev.uri).rkey === revision)
-        : state.recipePosts?.get(uri)?.revisions.at(-1)
-      if (post) {
-        postUri += `?revision=${encodeURIComponent(new AtUri(post.uri).rkey)}`
-      }
-    } else {
-      post = state.posts?.get(uri)
-    }
+      return this.recipeView({ uri }, state, depth)
+    } 
+    const post = state.posts?.get(uri)
+
 
     if (!post) return
     const parsedUri = new AtUri(uri)
@@ -950,7 +997,7 @@ export class Views {
     state: HydrationState,
   ): Un$Typed<FeedViewPost> | undefined {
     if (item.itemType === FeedItemType.RECIPE) {
-      const recipePostView = this.post(item.post.uri, state)
+      const recipePostView = this.recipeView({ uri: item.post.uri }, state)
       if (!recipePostView) return;
       return {
         post: recipePostView
@@ -959,7 +1006,7 @@ export class Views {
     if (item.repost && isRecipeURI(item.post.uri)) {
       const repost = state.reposts?.get(item.repost.uri)
       if (!repost) return
-      const recipePostView = this.post(item.post.uri, state)
+      const recipePostView = this.recipeView({ uri: item.post.uri, revisionUri: repost.record.subject.revisionUri }, state)
       const reason = this.reasonRepost(item.repost.uri, repost, state)
       if (!(reason && recipePostView)) return
 
@@ -2230,7 +2277,8 @@ export class Views {
         withTypeTag,
       )
     } else if (parsedUri.collection === ids.AppFoodiosFeedRecipePost) {
-      const view = this.post(uri, state)
+      const view = this.recipeView({ uri, revisionUri: embed.record.revisionUri }, state)
+
       if (!view) return this.embedNotFound(uri)
       return this.recordEmbedWrapper({
         $type: 'app.bsky.embed.record#viewRecord',

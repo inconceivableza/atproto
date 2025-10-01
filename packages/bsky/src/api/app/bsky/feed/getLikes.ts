@@ -115,6 +115,7 @@ const presentation = (inputs: {
       actor,
       createdAt: normalizeDatetimeAlways(like.record.createdAt),
       indexedAt: like.sortedAt.toISOString(),
+      revisionUri: like.record.subject.revisionUri
     }
   })
   return {

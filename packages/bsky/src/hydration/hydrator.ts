@@ -653,8 +653,8 @@ export class Hydrator {
       if (!post) return
       postAndReplyRefs.push({ uri, cid: post.cid })
       if (post.record.reply) {
-        const rootUri = stripSearchParams(post.record.reply.root.uri)
-        const parentUri = stripSearchParams(post.record.reply.parent.uri)
+        const rootUri = post.record.reply.root.uri
+        const parentUri = post.record.reply.parent.uri
         rootUris.push(rootUri)
         parentUris.push(parentUri)
         postAndReplyRefs.push(post.record.reply.root, post.record.reply.parent) // TODO: may need to strip uris
@@ -672,6 +672,7 @@ export class Hydrator {
       replyParentAuthors.push(didFromUri(parent.record.reply.parent.uri))
     })
     // hydrate state for all posts, reposts, authors of reposts + reply parent authors
+    // TODO: hydrate correct repost, quote revisions
     const repostUris = mapDefined(items, (item) => item.repost?.uri)
     const [postState, repostProfileState, reposts] = await Promise.all([
       this.hydratePosts(postAndReplyRefs, ctx, {
