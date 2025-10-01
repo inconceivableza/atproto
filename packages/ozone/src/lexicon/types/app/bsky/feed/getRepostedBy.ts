@@ -29,7 +29,7 @@ export interface OutputSchema {
   uri: string
   cid?: string
   cursor?: string
-  repostedBy: AppBskyActorDefs.ProfileView[]
+  repostedBy: RepostInfo[]
 }
 
 export type HandlerInput = void
@@ -46,3 +46,19 @@ export interface HandlerError {
 }
 
 export type HandlerOutput = HandlerError | HandlerSuccess
+
+export interface RepostInfo {
+  $type?: 'app.bsky.feed.getRepostedBy#repostInfo'
+  profileView: AppBskyActorDefs.ProfileView
+  revisionUri?: string
+}
+
+const hashRepostInfo = 'repostInfo'
+
+export function isRepostInfo<V>(v: V) {
+  return is$typed(v, id, hashRepostInfo)
+}
+
+export function validateRepostInfo<V>(v: V) {
+  return validate<RepostInfo & V>(v, id, hashRepostInfo)
+}

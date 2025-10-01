@@ -18,6 +18,7 @@ export interface Main {
   $type?: 'com.atproto.repo.strongRef'
   uri: string
   cid: string
+  revisionUri?: string
 }
 
 const hashMain = 'main'

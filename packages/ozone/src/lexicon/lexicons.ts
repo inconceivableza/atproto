@@ -2236,6 +2236,10 @@ export const schemaDict = {
             type: 'string',
             format: 'cid',
           },
+          revisionUri: {
+            type: 'string',
+            format: 'at-uri',
+          },
         },
       },
     },
@@ -7223,6 +7227,10 @@ export const schemaDict = {
             type: 'ref',
             ref: 'lex:app.bsky.actor.defs#profileView',
           },
+          revisionUri: {
+            type: 'string',
+            format: 'at-uri',
+          },
         },
       },
     },
@@ -7505,10 +7513,24 @@ export const schemaDict = {
                 type: 'array',
                 items: {
                   type: 'ref',
-                  ref: 'lex:app.bsky.actor.defs#profileView',
+                  ref: 'lex:app.bsky.feed.getRepostedBy#repostInfo',
                 },
               },
             },
+          },
+        },
+      },
+      repostInfo: {
+        type: 'object',
+        required: ['profileView'],
+        properties: {
+          profileView: {
+            type: 'ref',
+            ref: 'lex:app.bsky.actor.defs#profileView',
+          },
+          revisionUri: {
+            type: 'string',
+            format: 'at-uri',
           },
         },
       },
@@ -12088,6 +12110,47 @@ export const schemaDict = {
                 ref: 'lex:app.bsky.video.defs#jobStatus',
               },
             },
+          },
+        },
+      },
+    },
+  },
+  AppFoodiosFeedDefs: {
+    lexicon: 1,
+    id: 'app.foodios.feed.defs',
+    defs: {
+      recipeRevisionView: {
+        type: 'object',
+        required: ['selectedRevisionUri', 'revisionRefs', 'revisionContent'],
+        properties: {
+          selectedRevisionUri: {
+            type: 'string',
+            format: 'at-uri',
+          },
+          revisionRefs: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:app.foodios.feed.defs#revisionRef',
+            },
+          },
+          revisionContent: {
+            type: 'ref',
+            ref: 'lex:app.foodios.feed.recipeRevision#Record',
+          },
+        },
+      },
+      revisionRef: {
+        type: 'object',
+        required: ['uri', 'createdAt'],
+        properties: {
+          uri: {
+            type: 'string',
+            format: 'at-uri',
+          },
+          createdAt: {
+            type: 'string',
+            format: 'datetime',
           },
         },
       },
@@ -18030,6 +18093,7 @@ export const ids = {
   AppBskyVideoGetJobStatus: 'app.bsky.video.getJobStatus',
   AppBskyVideoGetUploadLimits: 'app.bsky.video.getUploadLimits',
   AppBskyVideoUploadVideo: 'app.bsky.video.uploadVideo',
+  AppFoodiosFeedDefs: 'app.foodios.feed.defs',
   AppFoodiosFeedRecipePost: 'app.foodios.feed.recipePost',
   AppFoodiosFeedRecipeRevision: 'app.foodios.feed.recipeRevision',
   ChatBskyActorDeclaration: 'chat.bsky.actor.declaration',
