@@ -47,3 +47,20 @@ export function isRevisionRef<V>(v: V) {
 export function validateRevisionRef<V>(v: V) {
   return validate<RevisionRef & V>(v, id, hashRevisionRef)
 }
+
+/** All rights reserved by the creator. */
+export type LicenseAllRights = 'licenseAllRights'
+/** Creative Commons Attribution 4.0 License. */
+export type LicenseCreativeCommonsBy = 'licenseCreativeCommonsBy'
+/** Creative Commons Attribution-ShareAlike 4.0 License. */
+export type LicenseCreativeCommonsBySa = 'licenseCreativeCommonsBySa'
+/** Creative Commons Attribution-NonCommercial 4.0 License. */
+export type LicenseCreativeCommonsByNc = 'licenseCreativeCommonsByNc'
+/** Creative Commons Attribution-NonCommercial-ShareAlike 4.0 License. */
+export type LicenseCreativeCommonsByNcSa = 'licenseCreativeCommonsByNcSa'
+/** Work dedicated to the public domain. */
+export type LicensePublicDomain = 'licensePublicDomain'
+/** Recipe from a published book. */
+export type PublicationTypeBook = 'publicationTypeBook'
+/** Recipe from a magazine. */
+export type PublicationTypeMagazine = 'publicationTypeMagazine'
