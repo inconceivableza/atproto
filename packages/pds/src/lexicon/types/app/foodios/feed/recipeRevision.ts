@@ -43,7 +43,7 @@ export interface Record {
   recipeCuisine?: string[]
   suitableForDiet?: string[]
   recipeYield?: QuantityAndUnit
-  nutritition?: Nutrition
+  nutrition?: Nutrition
   attribution?:
     | $Typed<OriginalAttribution>
     | $Typed<PersonAttribution>
