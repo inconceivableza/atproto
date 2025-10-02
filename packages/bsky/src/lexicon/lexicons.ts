@@ -12193,30 +12193,43 @@ export const schemaDict = {
           type: 'object',
           required: [
             'recipePostRef',
-            'title',
+            'name',
             'text',
             'ingredients',
-            'steps',
+            'instructions',
             'createdAt',
           ],
           properties: {
             recipePostRef: {
+              description:
+                'Reference to the recipe post record for which this is a revision',
               type: 'ref',
               ref: 'lex:com.atproto.repo.strongRef',
             },
             parentRevisionRef: {
+              description:
+                'Reference to the revision preceding this one (empty for the first revision)',
               type: 'ref',
               ref: 'lex:com.atproto.repo.strongRef',
             },
-            title: {
+            name: {
+              description: 'The name/title of the recipe',
               type: 'string',
-              maxLength: 3000,
-              maxGraphemes: 50,
+              maxLength: 500,
             },
             text: {
+              description: 'Body providing a description of the recipe',
               type: 'string',
-              maxLength: 3000,
-              maxGraphemes: 300,
+              maxLength: 10000,
+            },
+            facets: {
+              type: 'array',
+              description:
+                'Annotations of text (mentions, URLs, hashtags, etc)',
+              items: {
+                type: 'ref',
+                ref: 'lex:app.bsky.richtext.facet',
+              },
             },
             ingredients: {
               type: 'array',
@@ -12225,22 +12238,79 @@ export const schemaDict = {
                 ref: 'lex:app.foodios.feed.recipeRevision#ingredient',
               },
             },
-            steps: {
+            instructions: {
               type: 'array',
               items: {
                 type: 'ref',
-                ref: 'lex:app.foodios.feed.recipeRevision#step',
+                ref: 'lex:app.foodios.feed.recipeRevision#instructionSection',
               },
             },
-            images: {
+            prepTime: {
+              description: 'Preparation time in minutes',
+              type: 'string',
+              maxLength: 100,
+            },
+            cookingTime: {
+              description: 'Preparation time in minutes',
+              type: 'string',
+              maxLength: 100,
+            },
+            recipeCategory: {
+              type: 'array',
+              items: {
+                type: 'string',
+                maxLength: 100,
+              },
+            },
+            recipeCuisine: {
+              type: 'array',
+              items: {
+                type: 'string',
+                maxLength: 100,
+              },
+            },
+            suitableForDiet: {
+              type: 'array',
+              items: {
+                type: 'string',
+                maxLength: 100,
+              },
+            },
+            recipeYield: {
+              type: 'ref',
+              ref: 'lex:app.foodios.feed.recipeRevision#quantityAndUnit',
+            },
+            nutritition: {
+              type: 'ref',
+              ref: 'lex:app.foodios.feed.recipeRevision#nutrition',
+            },
+            attribution: {
               type: 'union',
-              refs: ['lex:app.bsky.embed.images', 'lex:app.bsky.embed.video'],
+              refs: [
+                'lex:app.foodios.feed.recipeRevision#originalAttribution',
+                'lex:app.foodios.feed.recipeRevision#personAttribution',
+                'lex:app.foodios.feed.recipeRevision#publicationAttribution',
+                'lex:app.foodios.feed.recipeRevision#websiteAttribution',
+                'lex:app.foodios.feed.recipeRevision#showAttribution',
+                'lex:app.foodios.feed.recipeRevision#productAttribution',
+              ],
+              closed: true,
             },
             labels: {
               type: 'union',
               description:
                 'Self-label values for this post. Effectively content warnings.',
               refs: ['lex:com.atproto.label.defs#selfLabels'],
+            },
+            langs: {
+              type: 'array',
+              description:
+                'Indicates human language of post primary text content.',
+              maxLength: 3,
+              items: {
+                type: 'string',
+                format: 'language',
+              },
             },
             tags: {
               type: 'array',
@@ -12272,14 +12342,34 @@ export const schemaDict = {
           },
         },
       },
-      step: {
+      instructionSection: {
+        type: 'object',
+        required: ['instructions'],
+        properties: {
+          name: {
+            type: 'string',
+            maxLength: 1000,
+          },
+          instructions: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:app.foodios.feed.recipeRevision#instruction',
+            },
+          },
+          images: {
+            type: 'union',
+            refs: ['lex:app.bsky.embed.images', 'lex:app.bsky.embed.video'],
+          },
+        },
+      },
+      instruction: {
         type: 'object',
         required: ['text'],
         properties: {
           text: {
             type: 'string',
-            maxLength: 3000,
-            maxGraphemes: 300,
+            maxLength: 2000,
           },
           images: {
             type: 'union',
@@ -12288,22 +12378,272 @@ export const schemaDict = {
         },
       },
       ingredient: {
-        description: 'TODO add description/alternatives properties?',
         type: 'object',
         required: ['name', 'quantity', 'unit'],
         properties: {
           name: {
             type: 'string',
-            maxLength: 3000,
-            maxGraphemes: 300,
+            maxLength: 500,
           },
           quantity: {
             type: 'string',
-            maxGraphemes: 10,
+            maxLength: 100,
           },
           unit: {
             type: 'string',
-            maxGraphemes: 10,
+            maxLength: 100,
+          },
+          images: {
+            type: 'union',
+            refs: ['lex:app.bsky.embed.images', 'lex:app.bsky.embed.video'],
+          },
+        },
+      },
+      quantityAndUnit: {
+        type: 'object',
+        required: ['quantity', 'unit'],
+        properties: {
+          quantity: {
+            type: 'string',
+            maxLength: 100,
+          },
+          unit: {
+            type: 'string',
+            maxLength: 100,
+          },
+        },
+      },
+      nutritition: {
+        type: 'object',
+        required: ['servingSize', 'energy'],
+        properties: {
+          servingSize: {
+            description:
+              'The serving size, in terms of the number of volume or mass.',
+            type: 'ref',
+            ref: 'lex:app.foodios.feed.recipeRevision#quantityAndUnit',
+          },
+          energy: {
+            description: 'Energy in kJ',
+            type: 'string',
+            maxLength: 100,
+          },
+          carbohydrateContent: {
+            description: 'Energy in kJ',
+            type: 'string',
+            maxLength: 100,
+          },
+          cholesterolContent: {
+            description: 'Cholesterol in mg',
+            type: 'string',
+            maxLength: 100,
+          },
+          fatContent: {
+            description: 'Fat per serving in g',
+            type: 'string',
+            maxLength: 100,
+          },
+          fiberContent: {
+            description: 'Fat per serving in g',
+            type: 'string',
+            maxLength: 100,
+          },
+          proteinContent: {
+            description: 'Protein per serving in g',
+            type: 'string',
+            maxLength: 100,
+          },
+          saturatedFatContent: {
+            description: 'Saturated per serving fat in g',
+            type: 'string',
+            maxLength: 100,
+          },
+          sodiumContent: {
+            description: 'Sodium in mg',
+            type: 'string',
+            maxLength: 100,
+          },
+          sugarContent: {
+            description: 'Sugar in g',
+            type: 'string',
+            maxLength: 100,
+          },
+          transFatContent: {
+            description: 'Trans fat in g',
+            type: 'string',
+            maxLength: 100,
+          },
+          unsaturatedFatContent: {
+            description: 'Unsaturated fat in g',
+            type: 'string',
+            maxLength: 100,
+          },
+        },
+      },
+      originalAttribution: {
+        type: 'object',
+        required: ['type', 'license'],
+        properties: {
+          type: {
+            type: 'string',
+            const: 'original',
+          },
+          license: {
+            type: 'ref',
+            ref: 'lex:exchange.recipe.defs#license',
+          },
+          url: {
+            type: 'string',
+            format: 'uri',
+          },
+        },
+      },
+      personAttribution: {
+        type: 'object',
+        required: ['type', 'name'],
+        properties: {
+          type: {
+            type: 'string',
+            const: 'person',
+          },
+          name: {
+            type: 'string',
+            maxLength: 255,
+          },
+          url: {
+            type: 'string',
+            format: 'uri',
+          },
+          notes: {
+            type: 'string',
+            maxLength: 1000,
+          },
+        },
+      },
+      publicationAttribution: {
+        type: 'object',
+        required: ['type', 'publicationType', 'title', 'author'],
+        properties: {
+          type: {
+            type: 'string',
+            const: 'publication',
+          },
+          publicationType: {
+            type: 'ref',
+            ref: 'lex:exchange.recipe.defs#publicationType',
+          },
+          title: {
+            type: 'string',
+            maxLength: 255,
+          },
+          author: {
+            type: 'string',
+            maxLength: 255,
+          },
+          publisher: {
+            type: 'string',
+            maxLength: 255,
+          },
+          isbn: {
+            type: 'string',
+            maxLength: 13,
+          },
+          page: {
+            type: 'integer',
+          },
+          url: {
+            type: 'string',
+            format: 'uri',
+          },
+          notes: {
+            type: 'string',
+            maxLength: 1000,
+          },
+        },
+      },
+      websiteAttribution: {
+        type: 'object',
+        required: ['type', 'name', 'url'],
+        properties: {
+          type: {
+            type: 'string',
+            const: 'website',
+          },
+          name: {
+            type: 'string',
+            maxLength: 255,
+          },
+          url: {
+            type: 'string',
+            format: 'uri',
+          },
+          notes: {
+            type: 'string',
+            maxLength: 1000,
+          },
+        },
+      },
+      showAttribution: {
+        type: 'object',
+        required: ['type', 'title', 'network'],
+        properties: {
+          type: {
+            type: 'string',
+            const: 'show',
+          },
+          title: {
+            type: 'string',
+            maxLength: 255,
+          },
+          episode: {
+            type: 'string',
+            maxLength: 255,
+          },
+          network: {
+            type: 'string',
+            maxLength: 255,
+          },
+          airDate: {
+            type: 'string',
+            format: 'datetime',
+          },
+          url: {
+            type: 'string',
+            format: 'uri',
+          },
+          notes: {
+            type: 'string',
+            maxLength: 1000,
+          },
+        },
+      },
+      productAttribution: {
+        type: 'object',
+        required: ['type', 'brand', 'name'],
+        properties: {
+          type: {
+            type: 'string',
+            const: 'product',
+          },
+          brand: {
+            type: 'string',
+            maxLength: 255,
+          },
+          name: {
+            type: 'string',
+            maxLength: 255,
+          },
+          upc: {
+            type: 'string',
+            maxLength: 13,
+          },
+          url: {
+            type: 'string',
+            format: 'uri',
+          },
+          notes: {
+            type: 'string',
+            maxLength: 1000,
           },
         },
       },
