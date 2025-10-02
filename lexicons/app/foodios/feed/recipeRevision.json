@@ -245,7 +245,7 @@
                 }
             }
         },
-        "nutritition": {
+        "nutrition": {
             "type": "object",
             "required": [
                 "servingSize",
@@ -326,8 +326,15 @@
                     "const": "original"
                 },
                 "license": {
-                    "type": "ref",
-                    "ref": "exchange.recipe.defs#license"
+                    "type": "union",
+                    "refs": [
+                        "app.foodios.feed.defs#licenseAllRights",
+                        "app.foodios.feed.defs#licenseCreativeCommonsBy",
+                        "app.foodios.feed.defs#licenseCreativeCommonsBySa",
+                        "app.foodios.feed.defs#licenseCreativeCommonsByNc",
+                        "app.foodios.feed.defs#licenseCreativeCommonsByNcSa",
+                        "app.foodios.feed.defs#licensePublicDomain"
+                    ]
                 },
                 "url": {
                     "type": "string",
@@ -374,8 +381,11 @@
                     "const": "publication"
                 },
                 "publicationType": {
-                    "type": "ref",
-                    "ref": "exchange.recipe.defs#publicationType"
+                    "type": "union",
+                    "refs": [
+                        "app.foodios.feed.defs#publicationTypeBook",
+                        "app.foodios.feed.defs#publicationTypeMagazine"
+                    ]
                 },
                 "title": {
                     "type": "string",
