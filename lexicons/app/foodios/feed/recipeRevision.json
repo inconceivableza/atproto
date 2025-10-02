@@ -94,7 +94,7 @@
                         "type": "ref",
                         "ref": "#quantityAndUnit"
                     },
-                    "nutritition": {
+                    "nutrition": {
                         "type": "ref",
                         "ref": "#nutrition"
                     },

@@ -12155,45 +12155,86 @@ export const schemaDict = {
         },
       },
       licenseAllRights: {
-        type: 'string',
-        const: 'licenseAllRights',
-        description: 'All rights reserved by the creator.',
+        type: 'object',
+        properties: {
+          licenseType: {
+            type: 'string',
+            const: 'licenseAllRights',
+            description: 'All rights reserved by the creator.',
+          },
+        },
       },
       licenseCreativeCommonsBy: {
-        type: 'string',
-        const: 'licenseCreativeCommonsBy',
-        description: 'Creative Commons Attribution 4.0 License.',
+        type: 'object',
+        properties: {
+          licenseType: {
+            type: 'string',
+            const: 'licenseCreativeCommonsBy',
+            description: 'Creative Commons Attribution 4.0 License.',
+          },
+        },
       },
       licenseCreativeCommonsBySa: {
-        type: 'string',
-        const: 'licenseCreativeCommonsBySa',
-        description: 'Creative Commons Attribution-ShareAlike 4.0 License.',
+        type: 'object',
+        properties: {
+          licenseType: {
+            type: 'string',
+            const: 'licenseCreativeCommonsBySa',
+            description: 'Creative Commons Attribution-ShareAlike 4.0 License.',
+          },
+        },
       },
       licenseCreativeCommonsByNc: {
-        type: 'string',
-        const: 'licenseCreativeCommonsByNc',
-        description: 'Creative Commons Attribution-NonCommercial 4.0 License.',
+        type: 'object',
+        properties: {
+          licenseType: {
+            type: 'string',
+            const: 'licenseCreativeCommonsByNc',
+            description:
+              'Creative Commons Attribution-NonCommercial 4.0 License.',
+          },
+        },
       },
       licenseCreativeCommonsByNcSa: {
-        type: 'string',
-        const: 'licenseCreativeCommonsByNcSa',
-        description:
-          'Creative Commons Attribution-NonCommercial-ShareAlike 4.0 License.',
+        type: 'object',
+        properties: {
+          licenseType: {
+            type: 'string',
+            const: 'licenseCreativeCommonsByNcSa',
+            description:
+              'Creative Commons Attribution-NonCommercial-ShareAlike 4.0 License.',
+          },
+        },
       },
       licensePublicDomain: {
-        type: 'string',
-        const: 'licensePublicDomain',
-        description: 'Work dedicated to the public domain.',
+        type: 'object',
+        properties: {
+          licenseType: {
+            type: 'string',
+            const: 'licensePublicDomain',
+            description: 'Work dedicated to the public domain.',
+          },
+        },
       },
       publicationTypeBook: {
-        type: 'string',
-        const: 'publicationTypeBook',
-        description: 'Recipe from a published book.',
+        type: 'object',
+        properties: {
+          publicationType: {
+            type: 'string',
+            const: 'publicationTypeBook',
+            description: 'Recipe from a published book.',
+          },
+        },
       },
       publicationTypeMagazine: {
-        type: 'string',
-        const: 'publicationTypeMagazine',
-        description: 'Recipe from a magazine.',
+        type: 'object',
+        properties: {
+          publicationType: {
+            type: 'string',
+            const: 'publicationTypeMagazine',
+            description: 'Recipe from a magazine.',
+          },
+        },
       },
     },
   },
@@ -12321,7 +12362,7 @@ export const schemaDict = {
               type: 'ref',
               ref: 'lex:app.foodios.feed.recipeRevision#quantityAndUnit',
             },
-            nutritition: {
+            nutrition: {
               type: 'ref',
               ref: 'lex:app.foodios.feed.recipeRevision#nutrition',
             },
