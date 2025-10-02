@@ -10,12 +10,14 @@ import {
   type OmitKey,
 } from '../../../../util'
 import type * as ComAtprotoRepoStrongRef from '../../../com/atproto/repo/strongRef.js'
+import type * as AppBskyRichtextFacet from '../../bsky/richtext/facet.js'
+import type * as ComAtprotoLabelDefs from '../../../com/atproto/label/defs.js'
 import type * as AppBskyEmbedImages from '../../bsky/embed/images.js'
 import type * as AppBskyEmbedVideo from '../../bsky/embed/video.js'
-import type * as ComAtprotoLabelDefs from '../../../com/atproto/label/defs.js'
 import type * as AppBskyEmbedExternal from '../../bsky/embed/external.js'
 import type * as AppBskyEmbedRecord from '../../bsky/embed/record.js'
 import type * as AppBskyEmbedRecordWithMedia from '../../bsky/embed/recordWithMedia.js'
+import type * as ExchangeRecipeDefs from '../../../exchange/recipe/defs.js'
 
 const is$typed = _is$typed,
   validate = _validate
@@ -25,15 +27,33 @@ export interface Record {
   $type: 'app.foodios.feed.recipeRevision'
   recipePostRef: ComAtprotoRepoStrongRef.Main
   parentRevisionRef?: ComAtprotoRepoStrongRef.Main
-  title: string
+  /** The name/title of the recipe */
+  name: string
+  /** Body providing a description of the recipe */
   text: string
+  /** Annotations of text (mentions, URLs, hashtags, etc) */
+  facets?: AppBskyRichtextFacet.Main[]
   ingredients: Ingredient[]
-  steps: Step[]
-  images?:
-    | $Typed<AppBskyEmbedImages.Main>
-    | $Typed<AppBskyEmbedVideo.Main>
-    | { $type: string }
+  instructions: InstructionSection[]
+  /** Preparation time in minutes */
+  prepTime?: string
+  /** Preparation time in minutes */
+  cookingTime?: string
+  recipeCategory?: string[]
+  recipeCuisine?: string[]
+  suitableForDiet?: string[]
+  recipeYield?: QuantityAndUnit
+  nutritition?: Nutrition
+  attribution?:
+    | $Typed<OriginalAttribution>
+    | $Typed<PersonAttribution>
+    | $Typed<PublicationAttribution>
+    | $Typed<WebsiteAttribution>
+    | $Typed<ShowAttribution>
+    | $Typed<ProductAttribution>
   labels?: $Typed<ComAtprotoLabelDefs.SelfLabels> | { $type: string }
+  /** Indicates human language of post primary text content. */
+  langs?: string[]
   /** Additional hashtags, in addition to any included in post text and facets. */
   tags?: string[]
   /** Client-declared timestamp when this post was originally created. */
@@ -58,8 +78,28 @@ export function validateRecord<V>(v: V) {
   return validate<Record & V>(v, id, hashRecord, true)
 }
 
-export interface Step {
-  $type?: 'app.foodios.feed.recipeRevision#step'
+export interface InstructionSection {
+  $type?: 'app.foodios.feed.recipeRevision#instructionSection'
+  name?: string
+  instructions: Instruction[]
+  images?:
+    | $Typed<AppBskyEmbedImages.Main>
+    | $Typed<AppBskyEmbedVideo.Main>
+    | { $type: string }
+}
+
+const hashInstructionSection = 'instructionSection'
+
+export function isInstructionSection<V>(v: V) {
+  return is$typed(v, id, hashInstructionSection)
+}
+
+export function validateInstructionSection<V>(v: V) {
+  return validate<InstructionSection & V>(v, id, hashInstructionSection)
+}
+
+export interface Instruction {
+  $type?: 'app.foodios.feed.recipeRevision#instruction'
   text: string
   images?:
     | $Typed<AppBskyEmbedImages.Main>
@@ -67,22 +107,25 @@ export interface Step {
     | { $type: string }
 }
 
-const hashStep = 'step'
+const hashInstruction = 'instruction'
 
-export function isStep<V>(v: V) {
-  return is$typed(v, id, hashStep)
+export function isInstruction<V>(v: V) {
+  return is$typed(v, id, hashInstruction)
 }
 
-export function validateStep<V>(v: V) {
-  return validate<Step & V>(v, id, hashStep)
+export function validateInstruction<V>(v: V) {
+  return validate<Instruction & V>(v, id, hashInstruction)
 }
 
-/** TODO add description/alternatives properties? */
 export interface Ingredient {
   $type?: 'app.foodios.feed.recipeRevision#ingredient'
   name: string
   quantity: string
   unit: string
+  images?:
+    | $Typed<AppBskyEmbedImages.Main>
+    | $Typed<AppBskyEmbedVideo.Main>
+    | { $type: string }
 }
 
 const hashIngredient = 'ingredient'
@@ -93,4 +136,174 @@ export function isIngredient<V>(v: V) {
 
 export function validateIngredient<V>(v: V) {
   return validate<Ingredient & V>(v, id, hashIngredient)
+}
+
+export interface QuantityAndUnit {
+  $type?: 'app.foodios.feed.recipeRevision#quantityAndUnit'
+  quantity: string
+  unit: string
+}
+
+const hashQuantityAndUnit = 'quantityAndUnit'
+
+export function isQuantityAndUnit<V>(v: V) {
+  return is$typed(v, id, hashQuantityAndUnit)
+}
+
+export function validateQuantityAndUnit<V>(v: V) {
+  return validate<QuantityAndUnit & V>(v, id, hashQuantityAndUnit)
+}
+
+export interface Nutritition {
+  $type?: 'app.foodios.feed.recipeRevision#nutritition'
+  servingSize: QuantityAndUnit
+  /** Energy in kJ */
+  energy: string
+  /** Energy in kJ */
+  carbohydrateContent?: string
+  /** Cholesterol in mg */
+  cholesterolContent?: string
+  /** Fat per serving in g */
+  fatContent?: string
+  /** Fat per serving in g */
+  fiberContent?: string
+  /** Protein per serving in g */
+  proteinContent?: string
+  /** Saturated per serving fat in g */
+  saturatedFatContent?: string
+  /** Sodium in mg */
+  sodiumContent?: string
+  /** Sugar in g */
+  sugarContent?: string
+  /** Trans fat in g */
+  transFatContent?: string
+  /** Unsaturated fat in g */
+  unsaturatedFatContent?: string
+}
+
+const hashNutritition = 'nutritition'
+
+export function isNutritition<V>(v: V) {
+  return is$typed(v, id, hashNutritition)
+}
+
+export function validateNutritition<V>(v: V) {
+  return validate<Nutritition & V>(v, id, hashNutritition)
+}
+
+export interface OriginalAttribution {
+  $type?: 'app.foodios.feed.recipeRevision#originalAttribution'
+  type: 'original'
+  license: ExchangeRecipeDefs.License
+  url?: string
+}
+
+const hashOriginalAttribution = 'originalAttribution'
+
+export function isOriginalAttribution<V>(v: V) {
+  return is$typed(v, id, hashOriginalAttribution)
+}
+
+export function validateOriginalAttribution<V>(v: V) {
+  return validate<OriginalAttribution & V>(v, id, hashOriginalAttribution)
+}
+
+export interface PersonAttribution {
+  $type?: 'app.foodios.feed.recipeRevision#personAttribution'
+  type: 'person'
+  name: string
+  url?: string
+  notes?: string
+}
+
+const hashPersonAttribution = 'personAttribution'
+
+export function isPersonAttribution<V>(v: V) {
+  return is$typed(v, id, hashPersonAttribution)
+}
+
+export function validatePersonAttribution<V>(v: V) {
+  return validate<PersonAttribution & V>(v, id, hashPersonAttribution)
+}
+
+export interface PublicationAttribution {
+  $type?: 'app.foodios.feed.recipeRevision#publicationAttribution'
+  type: 'publication'
+  publicationType: ExchangeRecipeDefs.PublicationType
+  title: string
+  author: string
+  publisher?: string
+  isbn?: string
+  page?: number
+  url?: string
+  notes?: string
+}
+
+const hashPublicationAttribution = 'publicationAttribution'
+
+export function isPublicationAttribution<V>(v: V) {
+  return is$typed(v, id, hashPublicationAttribution)
+}
+
+export function validatePublicationAttribution<V>(v: V) {
+  return validate<PublicationAttribution & V>(v, id, hashPublicationAttribution)
+}
+
+export interface WebsiteAttribution {
+  $type?: 'app.foodios.feed.recipeRevision#websiteAttribution'
+  type: 'website'
+  name: string
+  url: string
+  notes?: string
+}
+
+const hashWebsiteAttribution = 'websiteAttribution'
+
+export function isWebsiteAttribution<V>(v: V) {
+  return is$typed(v, id, hashWebsiteAttribution)
+}
+
+export function validateWebsiteAttribution<V>(v: V) {
+  return validate<WebsiteAttribution & V>(v, id, hashWebsiteAttribution)
+}
+
+export interface ShowAttribution {
+  $type?: 'app.foodios.feed.recipeRevision#showAttribution'
+  type: 'show'
+  title: string
+  episode?: string
+  network: string
+  airDate?: string
+  url?: string
+  notes?: string
+}
+
+const hashShowAttribution = 'showAttribution'
+
+export function isShowAttribution<V>(v: V) {
+  return is$typed(v, id, hashShowAttribution)
+}
+
+export function validateShowAttribution<V>(v: V) {
+  return validate<ShowAttribution & V>(v, id, hashShowAttribution)
+}
+
+export interface ProductAttribution {
+  $type?: 'app.foodios.feed.recipeRevision#productAttribution'
+  type: 'product'
+  brand: string
+  name: string
+  upc?: string
+  url?: string
+  notes?: string
+}
+
+const hashProductAttribution = 'productAttribution'
+
+export function isProductAttribution<V>(v: V) {
+  return is$typed(v, id, hashProductAttribution)
+}
+
+export function validateProductAttribution<V>(v: V) {
+  return validate<ProductAttribution & V>(v, id, hashProductAttribution)
 }
