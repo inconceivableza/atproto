@@ -13,7 +13,7 @@
                     "name",
                     "text",
                     "ingredients",
-                    "instructions",
+                    "instructionSections",
                     "createdAt"
                 ],
                 "properties": {
@@ -52,7 +52,7 @@
                             "ref": "#ingredient"
                         }
                     },
-                    "instructions": {
+                    "instructionSections": {
                         "type": "array",
                         "items": {
                             "type": "ref",

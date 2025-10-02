@@ -34,7 +34,7 @@ export interface Record {
   /** Annotations of text (mentions, URLs, hashtags, etc) */
   facets?: AppBskyRichtextFacet.Main[]
   ingredients: Ingredient[]
-  instructions: InstructionSection[]
+  instructionSections: InstructionSection[]
   /** Preparation time in minutes */
   prepTime?: string
   /** Preparation time in minutes */

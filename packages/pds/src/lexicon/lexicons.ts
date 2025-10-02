@@ -12278,7 +12278,7 @@ export const schemaDict = {
             'name',
             'text',
             'ingredients',
-            'instructions',
+            'instructionSections',
             'createdAt',
           ],
           properties: {
@@ -12320,7 +12320,7 @@ export const schemaDict = {
                 ref: 'lex:app.foodios.feed.recipeRevision#ingredient',
               },
             },
-            instructions: {
+            instructionSections: {
               type: 'array',
               items: {
                 type: 'ref',
