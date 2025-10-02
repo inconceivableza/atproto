@@ -12154,6 +12154,88 @@ export const schemaDict = {
           },
         },
       },
+      licenseAllRights: {
+        type: 'object',
+        properties: {
+          licenseType: {
+            type: 'string',
+            const: 'licenseAllRights',
+            description: 'All rights reserved by the creator.',
+          },
+        },
+      },
+      licenseCreativeCommonsBy: {
+        type: 'object',
+        properties: {
+          licenseType: {
+            type: 'string',
+            const: 'licenseCreativeCommonsBy',
+            description: 'Creative Commons Attribution 4.0 License.',
+          },
+        },
+      },
+      licenseCreativeCommonsBySa: {
+        type: 'object',
+        properties: {
+          licenseType: {
+            type: 'string',
+            const: 'licenseCreativeCommonsBySa',
+            description: 'Creative Commons Attribution-ShareAlike 4.0 License.',
+          },
+        },
+      },
+      licenseCreativeCommonsByNc: {
+        type: 'object',
+        properties: {
+          licenseType: {
+            type: 'string',
+            const: 'licenseCreativeCommonsByNc',
+            description:
+              'Creative Commons Attribution-NonCommercial 4.0 License.',
+          },
+        },
+      },
+      licenseCreativeCommonsByNcSa: {
+        type: 'object',
+        properties: {
+          licenseType: {
+            type: 'string',
+            const: 'licenseCreativeCommonsByNcSa',
+            description:
+              'Creative Commons Attribution-NonCommercial-ShareAlike 4.0 License.',
+          },
+        },
+      },
+      licensePublicDomain: {
+        type: 'object',
+        properties: {
+          licenseType: {
+            type: 'string',
+            const: 'licensePublicDomain',
+            description: 'Work dedicated to the public domain.',
+          },
+        },
+      },
+      publicationTypeBook: {
+        type: 'object',
+        properties: {
+          publicationType: {
+            type: 'string',
+            const: 'publicationTypeBook',
+            description: 'Recipe from a published book.',
+          },
+        },
+      },
+      publicationTypeMagazine: {
+        type: 'object',
+        properties: {
+          publicationType: {
+            type: 'string',
+            const: 'publicationTypeMagazine',
+            description: 'Recipe from a magazine.',
+          },
+        },
+      },
     },
   },
   AppFoodiosFeedRecipePost: {
@@ -12196,7 +12278,7 @@ export const schemaDict = {
             'name',
             'text',
             'ingredients',
-            'instructions',
+            'instructionSections',
             'createdAt',
           ],
           properties: {
@@ -12238,7 +12320,7 @@ export const schemaDict = {
                 ref: 'lex:app.foodios.feed.recipeRevision#ingredient',
               },
             },
-            instructions: {
+            instructionSections: {
               type: 'array',
               items: {
                 type: 'ref',
@@ -12280,7 +12362,7 @@ export const schemaDict = {
               type: 'ref',
               ref: 'lex:app.foodios.feed.recipeRevision#quantityAndUnit',
             },
-            nutritition: {
+            nutrition: {
               type: 'ref',
               ref: 'lex:app.foodios.feed.recipeRevision#nutrition',
             },
@@ -12413,7 +12495,7 @@ export const schemaDict = {
           },
         },
       },
-      nutritition: {
+      nutrition: {
         type: 'object',
         required: ['servingSize', 'energy'],
         properties: {
@@ -12489,8 +12571,15 @@ export const schemaDict = {
             const: 'original',
           },
           license: {
-            type: 'ref',
-            ref: 'lex:exchange.recipe.defs#license',
+            type: 'union',
+            refs: [
+              'lex:app.foodios.feed.defs#licenseAllRights',
+              'lex:app.foodios.feed.defs#licenseCreativeCommonsBy',
+              'lex:app.foodios.feed.defs#licenseCreativeCommonsBySa',
+              'lex:app.foodios.feed.defs#licenseCreativeCommonsByNc',
+              'lex:app.foodios.feed.defs#licenseCreativeCommonsByNcSa',
+              'lex:app.foodios.feed.defs#licensePublicDomain',
+            ],
           },
           url: {
             type: 'string',
@@ -12529,8 +12618,11 @@ export const schemaDict = {
             const: 'publication',
           },
           publicationType: {
-            type: 'ref',
-            ref: 'lex:exchange.recipe.defs#publicationType',
+            type: 'union',
+            refs: [
+              'lex:app.foodios.feed.defs#publicationTypeBook',
+              'lex:app.foodios.feed.defs#publicationTypeMagazine',
+            ],
           },
           title: {
             type: 'string',

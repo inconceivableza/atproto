@@ -17,7 +17,7 @@ import type * as AppBskyEmbedVideo from '../../bsky/embed/video.js'
 import type * as AppBskyEmbedExternal from '../../bsky/embed/external.js'
 import type * as AppBskyEmbedRecord from '../../bsky/embed/record.js'
 import type * as AppBskyEmbedRecordWithMedia from '../../bsky/embed/recordWithMedia.js'
-import type * as ExchangeRecipeDefs from '../../../exchange/recipe/defs.js'
+import type * as AppFoodiosFeedDefs from './defs.js'
 
 const is$typed = _is$typed,
   validate = _validate
@@ -34,7 +34,7 @@ export interface Record {
   /** Annotations of text (mentions, URLs, hashtags, etc) */
   facets?: AppBskyRichtextFacet.Main[]
   ingredients: Ingredient[]
-  instructions: InstructionSection[]
+  instructionSections: InstructionSection[]
   /** Preparation time in minutes */
   prepTime?: string
   /** Preparation time in minutes */
@@ -43,7 +43,7 @@ export interface Record {
   recipeCuisine?: string[]
   suitableForDiet?: string[]
   recipeYield?: QuantityAndUnit
-  nutritition?: Nutrition
+  nutrition?: Nutrition
   attribution?:
     | $Typed<OriginalAttribution>
     | $Typed<PersonAttribution>
@@ -154,8 +154,8 @@ export function validateQuantityAndUnit<V>(v: V) {
   return validate<QuantityAndUnit & V>(v, id, hashQuantityAndUnit)
 }
 
-export interface Nutritition {
-  $type?: 'app.foodios.feed.recipeRevision#nutritition'
+export interface Nutrition {
+  $type?: 'app.foodios.feed.recipeRevision#nutrition'
   servingSize: QuantityAndUnit
   /** Energy in kJ */
   energy: string
@@ -181,20 +181,27 @@ export interface Nutritition {
   unsaturatedFatContent?: string
 }
 
-const hashNutritition = 'nutritition'
+const hashNutrition = 'nutrition'
 
-export function isNutritition<V>(v: V) {
-  return is$typed(v, id, hashNutritition)
+export function isNutrition<V>(v: V) {
+  return is$typed(v, id, hashNutrition)
 }
 
-export function validateNutritition<V>(v: V) {
-  return validate<Nutritition & V>(v, id, hashNutritition)
+export function validateNutrition<V>(v: V) {
+  return validate<Nutrition & V>(v, id, hashNutrition)
 }
 
 export interface OriginalAttribution {
   $type?: 'app.foodios.feed.recipeRevision#originalAttribution'
   type: 'original'
-  license: ExchangeRecipeDefs.License
+  license:
+    | $Typed<AppFoodiosFeedDefs.LicenseAllRights>
+    | $Typed<AppFoodiosFeedDefs.LicenseCreativeCommonsBy>
+    | $Typed<AppFoodiosFeedDefs.LicenseCreativeCommonsBySa>
+    | $Typed<AppFoodiosFeedDefs.LicenseCreativeCommonsByNc>
+    | $Typed<AppFoodiosFeedDefs.LicenseCreativeCommonsByNcSa>
+    | $Typed<AppFoodiosFeedDefs.LicensePublicDomain>
+    | { $type: string }
   url?: string
 }
 
@@ -229,7 +236,10 @@ export function validatePersonAttribution<V>(v: V) {
 export interface PublicationAttribution {
   $type?: 'app.foodios.feed.recipeRevision#publicationAttribution'
   type: 'publication'
-  publicationType: ExchangeRecipeDefs.PublicationType
+  publicationType:
+    | $Typed<AppFoodiosFeedDefs.PublicationTypeBook>
+    | $Typed<AppFoodiosFeedDefs.PublicationTypeMagazine>
+    | { $type: string }
   title: string
   author: string
   publisher?: string
