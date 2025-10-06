@@ -107,15 +107,15 @@ export const getRecipeRecords = (db: Database) => {
     //       .innerJoin("recipe_revision", "record.uri", "recipe_revision.recipePostUri")
     //       .execute()
 
-    const revisionUris = await db.db.selectFrom("recipe_revision")
+    const revisionUris = req.uris.length > 0 ? await db.db.selectFrom("recipe_revision")
       .select("uri")
       .where("recipePostUri", "in", req.uris)
-      .execute()
-    const recipesAndRevisions = await db.db
+      .execute() : []
+    const recipesAndRevisions = req.uris.length > 0 ?  await db.db
       .selectFrom('record')
       .selectAll()
       .where('uri', 'in', req.uris.concat(revisionUris.map(r => r.uri)))
-      .execute()
+      .execute() : []
 
     const recsByUri: Record<string, RecipeRecord> = {}
     const revisionsByUri: Record<string, RecipeRevisionRecord[]> = {}
