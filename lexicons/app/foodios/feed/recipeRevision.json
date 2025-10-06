@@ -1,0 +1,518 @@
+{
+    "lexicon": 1,
+    "id": "app.foodios.feed.recipeRevision",
+    "defs": {
+        "main": {
+            "type": "record",
+            "description": "Record containing the original content of a recipe or a revision.",
+            "key": "tid",
+            "record": {
+                "type": "object",
+                "required": [
+                    "recipePostRef",
+                    "name",
+                    "text",
+                    "ingredients",
+                    "instructionSections",
+                    "createdAt"
+                ],
+                "properties": {
+                    "recipePostRef": {
+                        "description": "Reference to the recipe post record for which this is a revision",
+                        "type": "ref",
+                        "ref": "com.atproto.repo.strongRef"
+                    },
+                    "parentRevisionRef": {
+                        "description": "Reference to the revision preceding this one (empty for the first revision)",
+                        "type": "ref",
+                        "ref": "com.atproto.repo.strongRef"
+                    },
+                    "name": {
+                        "description": "The name/title of the recipe",
+                        "type": "string",
+                        "maxLength": 500
+                    },
+                    "text": {
+                        "description": "Body providing a description of the recipe",
+                        "type": "string",
+                        "maxLength": 10000
+                    },
+                    "facets": {
+                        "type": "array",
+                        "description": "Annotations of text (mentions, URLs, hashtags, etc)",
+                        "items": {
+                            "type": "ref",
+                            "ref": "app.bsky.richtext.facet"
+                        }
+                    },
+                    "ingredients": {
+                        "type": "array",
+                        "items": {
+                            "type": "ref",
+                            "ref": "#ingredient"
+                        }
+                    },
+                    "instructionSections": {
+                        "type": "array",
+                        "items": {
+                            "type": "ref",
+                            "ref": "#instructionSection"
+                        }
+                    },
+                    "prepTime": {
+                        "description": "Preparation time in minutes",
+                        "type": "string",
+                        "maxLength": 100
+                    },
+                    "cookingTime": {
+                        "description": "Preparation time in minutes",
+                        "type": "string",
+                        "maxLength": 100
+                    },
+                    "recipeCategory": {
+                        "type": "array",
+                        "items": {
+                            "type": "string",
+                            "maxLength": 100
+                        }
+                    },
+                    "recipeCuisine": {
+                        "type": "array",
+                        "items": {
+                            "type": "string",
+                            "maxLength": 100
+                        }
+                    },
+                    "suitableForDiet": {
+                        "type": "array",
+                        "items": {
+                            "type": "string",
+                            "maxLength": 100
+                        }
+                    },
+                    "recipeYield": {
+                        "type": "ref",
+                        "ref": "#quantityAndUnit"
+                    },
+                    "nutrition": {
+                        "type": "ref",
+                        "ref": "#nutrition"
+                    },
+                    "attribution": {
+                        "type": "union",
+                        "refs": [
+                        "#originalAttribution",
+                        "#personAttribution",
+                        "#publicationAttribution",
+                        "#websiteAttribution",
+                        "#showAttribution",
+                        "#productAttribution"
+                    ],
+                    "closed": true
+                },
+                    "labels": {
+                        "type": "union",
+                        "description": "Self-label values for this post. Effectively content warnings.",
+                        "refs": [
+                            "com.atproto.label.defs#selfLabels"
+                        ]
+                    },
+                    "langs": {
+                        "type": "array",
+                        "description": "Indicates human language of post primary text content.",
+                        "maxLength": 3,
+                        "items": {
+                            "type": "string",
+                            "format": "language"
+                        }
+                    },
+                    "tags": {
+                        "type": "array",
+                        "description": "Additional hashtags, in addition to any included in post text and facets.",
+                        "maxLength": 8,
+                        "items": {
+                            "type": "string",
+                            "maxLength": 640,
+                            "maxGraphemes": 64
+                        }
+                    },
+                    "createdAt": {
+                        "type": "string",
+                        "format": "datetime",
+                        "description": "Client-declared timestamp when this post was originally created."
+                    },
+                    "embed": {
+                        "type": "union",
+                        "refs": [
+                            "app.bsky.embed.images",
+                            "app.bsky.embed.video",
+                            "app.bsky.embed.external",
+                            "app.bsky.embed.record",
+                            "app.bsky.embed.recordWithMedia"
+                        ]
+                    }
+                }
+            }
+        },
+        "instructionSection": {
+            "type": "object",
+            "required": [
+                "instructions"
+            ],
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "maxLength": 1000
+                },
+                "instructions": {
+                    "type": "array",
+                    "items": {
+                        "type": "ref",
+                        "ref": "#instruction"
+                    }
+                },
+                "images": {
+                    "type": "union",
+                    "refs": [
+                        "app.bsky.embed.images",
+                        "app.bsky.embed.video"
+                    ]
+                }
+            }
+        },
+        "instruction": {
+            "type": "object",
+            "required": [
+                "text"
+            ],
+            "properties": {
+                "text": {
+                    "type": "string",
+                    "maxLength": 2000
+                },
+                "images": {
+                    "type": "union",
+                    "refs": [
+                        "app.bsky.embed.images",
+                        "app.bsky.embed.video"
+                    ]
+                }
+            }
+        },
+        "ingredient": {
+            "type": "object",
+            "required": [
+                "name",
+                "quantity",
+                "unit"
+            ],
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "maxLength": 500
+                },
+                "quantity": {
+                    "type": "string",
+                    "maxLength": 100
+                },
+                "unit": {
+                    "type": "string",
+                    "maxLength": 100
+                },
+                "images": {
+                    "type": "union",
+                    "refs": [
+                        "app.bsky.embed.images",
+                        "app.bsky.embed.video"
+                    ]
+                }
+            }
+        },
+        "quantityAndUnit": {
+            "type": "object",
+            "required": [
+                "quantity",
+                "unit"
+            ],
+            "properties": {
+                "quantity": {
+                    "type": "string",
+                    "maxLength": 100
+                },
+                "unit": {
+                    "type": "string",
+                    "maxLength": 100
+                }
+            }
+        },
+        "nutrition": {
+            "type": "object",
+            "required": [
+                "servingSize",
+                "energy"
+            ],
+            "properties": {
+                "servingSize": {
+                    "description": "The serving size, in terms of the number of volume or mass.",
+                    "type": "ref",
+                    "ref": "#quantityAndUnit"
+                },
+                "energy": {
+                    "description": "Energy in kJ",
+                    "type": "string",
+                    "maxLength": 100
+                },
+                "carbohydrateContent": {
+                    "description": "Energy in kJ",
+                    "type": "string",
+                    "maxLength": 100
+                },
+                "cholesterolContent": {
+                    "description": "Cholesterol in mg",
+                    "type": "string",
+                    "maxLength": 100
+                },
+                "fatContent": {
+                    "description": "Fat per serving in g",
+                    "type": "string",
+                    "maxLength": 100
+                },
+                "fiberContent": {
+                    "description": "Fat per serving in g",
+                    "type": "string",
+                    "maxLength": 100
+                },
+                "proteinContent": {
+                    "description": "Protein per serving in g",
+                    "type": "string",
+                    "maxLength": 100
+                },
+                "saturatedFatContent": {
+                    "description": "Saturated per serving fat in g",
+                    "type": "string",
+                    "maxLength": 100
+                },
+                "sodiumContent": {
+                    "description": "Sodium in mg",
+                    "type": "string",
+                    "maxLength": 100
+                },
+                "sugarContent": {
+                    "description": "Sugar in g",
+                    "type": "string",
+                    "maxLength": 100
+                },
+                "transFatContent": {
+                    "description": "Trans fat in g",
+                    "type": "string",
+                    "maxLength": 100
+                },
+                "unsaturatedFatContent": {
+                    "description": "Unsaturated fat in g",
+                    "type": "string",
+                    "maxLength": 100
+                }
+            }
+        },
+        "originalAttribution": {
+            "type": "object",
+            "required": [
+                "type",
+                "license"
+            ],
+            "properties": {
+                "type": {
+                    "type": "string",
+                    "const": "original"
+                },
+                "license": {
+                    "type": "union",
+                    "refs": [
+                        "app.foodios.feed.defs#licenseAllRights",
+                        "app.foodios.feed.defs#licenseCreativeCommonsBy",
+                        "app.foodios.feed.defs#licenseCreativeCommonsBySa",
+                        "app.foodios.feed.defs#licenseCreativeCommonsByNc",
+                        "app.foodios.feed.defs#licenseCreativeCommonsByNcSa",
+                        "app.foodios.feed.defs#licensePublicDomain"
+                    ]
+                },
+                "url": {
+                    "type": "string",
+                    "format": "uri"
+                }
+            }
+        },
+        "personAttribution": {
+            "type": "object",
+            "required": [
+                "type",
+                "name"
+            ],
+            "properties": {
+                "type": {
+                    "type": "string",
+                    "const": "person"
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 255
+                },
+                "url": {
+                    "type": "string",
+                    "format": "uri"
+                },
+                "notes": {
+                    "type": "string",
+                    "maxLength": 1000
+                }
+            }
+        },
+        "publicationAttribution": {
+            "type": "object",
+            "required": [
+                "type",
+                "publicationType",
+                "title",
+                "author"
+            ],
+            "properties": {
+                "type": {
+                    "type": "string",
+                    "const": "publication"
+                },
+                "publicationType": {
+                    "type": "union",
+                    "refs": [
+                        "app.foodios.feed.defs#publicationTypeBook",
+                        "app.foodios.feed.defs#publicationTypeMagazine"
+                    ]
+                },
+                "title": {
+                    "type": "string",
+                    "maxLength": 255
+                },
+                "author": {
+                    "type": "string",
+                    "maxLength": 255
+                },
+                "publisher": {
+                    "type": "string",
+                    "maxLength": 255
+                },
+                "isbn": {
+                    "type": "string",
+                    "maxLength": 13
+                },
+                "page": {
+                    "type": "integer"
+                },
+                "url": {
+                    "type": "string",
+                    "format": "uri"
+                },
+                "notes": {
+                    "type": "string",
+                    "maxLength": 1000
+                }
+            }
+        },
+        "websiteAttribution": {
+            "type": "object",
+            "required": [
+                "type",
+                "name",
+                "url"
+            ],
+            "properties": {
+                "type": {
+                    "type": "string",
+                    "const": "website"
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 255
+                },
+                "url": {
+                    "type": "string",
+                    "format": "uri"
+                },
+                "notes": {
+                    "type": "string",
+                    "maxLength": 1000
+                }
+            }
+        },
+        "showAttribution": {
+            "type": "object",
+            "required": [
+                "type",
+                "title",
+                "network"
+            ],
+            "properties": {
+                "type": {
+                    "type": "string",
+                    "const": "show"
+                },
+                "title": {
+                    "type": "string",
+                    "maxLength": 255
+                },
+                "episode": {
+                    "type": "string",
+                    "maxLength": 255
+                },
+                "network": {
+                    "type": "string",
+                    "maxLength": 255
+                },
+                "airDate": {
+                    "type": "string",
+                    "format": "datetime"
+                },
+                "url": {
+                    "type": "string",
+                    "format": "uri"
+                },
+                "notes": {
+                    "type": "string",
+                    "maxLength": 1000
+                }
+            }
+        },
+        "productAttribution": {
+            "type": "object",
+            "required": [
+                "type",
+                "brand",
+                "name"
+            ],
+            "properties": {
+                "type": {
+                    "type": "string",
+                    "const": "product"
+                },
+                "brand": {
+                    "type": "string",
+                    "maxLength": 255
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 255
+                },
+                "upc": {
+                    "type": "string",
+                    "maxLength": 13
+                },
+                "url": {
+                    "type": "string",
+                    "format": "uri"
+                },
+                "notes": {
+                    "type": "string",
+                    "maxLength": 1000
+                }
+            }
+        }
+    }
+}

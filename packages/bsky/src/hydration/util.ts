@@ -3,7 +3,8 @@ import * as ui8 from 'uint8arrays'
 import { jsonToLex } from '@atproto/lexicon'
 import { AtUri } from '@atproto/syntax'
 import { lexicons } from '../lexicon/lexicons'
-import { Record } from '../proto/bsky_pb'
+import { Record as BskyRecord } from '../proto/bsky_pb'
+import { stripSearchParams } from '@atproto/api'
 
 export class HydrationMap<T> extends Map<string, T | null> implements Merges {
   merge(map: HydrationMap<T>): this {
@@ -11,6 +12,11 @@ export class HydrationMap<T> extends Map<string, T | null> implements Merges {
       this.set(key, val)
     })
     return this
+  }
+
+  get(key: string): T | null | undefined {
+    const strippedUri = stripSearchParams(key)
+    return super.get(strippedUri ?? key)
   }
 }
 
@@ -20,7 +26,7 @@ export interface Merges {
 
 type UnknownRecord = { $type: string; [x: string]: unknown }
 
-export type RecordInfo<T extends UnknownRecord> = {
+export type RecordInfo<T extends {}> = {
   record: T
   cid: string
   sortedAt: Date
@@ -59,7 +65,7 @@ export const mergeManyMaps = <T>(...maps: HydrationMap<T>[]) => {
 export type ItemRef = { uri: string; cid?: string }
 
 export const parseRecord = <T extends UnknownRecord>(
-  entry: Record,
+  entry: BskyRecord,
   includeTakedowns: boolean,
 ): RecordInfo<T> | undefined => {
   if (!includeTakedowns && entry.takenDown) {
@@ -82,7 +88,7 @@ export const parseRecord = <T extends UnknownRecord>(
   }
 }
 
-const isValidRecord = (json: unknown) => {
+export const isValidRecord = (json: unknown) => {
   const lexRecord = jsonToLex(json)
   if (typeof lexRecord?.['$type'] !== 'string') {
     return false
@@ -164,3 +170,15 @@ export const isActivitySubscriptionEnabled = ({
   post: boolean
   reply: boolean
 }): boolean => post || reply
+
+export function partition<T>(arr: T[], filter: (val:T) => boolean) {
+  const result: [T[], T[]] = [[], []]
+  arr.forEach(v => {
+    if (filter(v)) {
+      result[0].push(v)
+    } else {
+      result[1].push(v)
+    }
+  })
+  return result
+}

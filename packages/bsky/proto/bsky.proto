@@ -992,18 +992,17 @@ message GetAuthorFeedRequest {
   FeedType feed_type = 4;
 }
 
+enum FeedItemType {
+  FEED_ITEM_TYPE_UNSPECIFIED = 0;
+  FEED_ITEM_TYPE_POST = 1;
+  FEED_ITEM_TYPE_REPOST = 2;
+  FEED_ITEM_TYPE_RECIPE = 3;
+}
+
 message AuthorFeedItem {
   string uri = 1;
-  string cid = 2;
   string repost = 3;
-  string repost_cid = 4;
-  bool posts_and_author_threads = 5;
-  bool posts_no_replies = 6;
-  bool posts_with_media = 7;
-  bool is_reply = 8;
-  bool is_repost = 9;
-  bool is_quote_post = 10;
-  bool posts_with_video = 11;
+  FeedItemType itemType = 12;
 }
 
 message GetAuthorFeedResponse {
@@ -1035,6 +1034,7 @@ message TimelineFeedItem {
   bool is_reply = 5;
   bool is_repost = 6;
   bool is_quote_post = 7;
+  FeedItemType itemType = 8;
 }
 
 // - Return recent post uris from users in list A
@@ -1274,7 +1274,37 @@ message GetFollowsFollowingResponse {
 message PingRequest {}
 message PingResponse {}
 
+message RecordInfo {
+  string uri = 1;
+  string cid = 2;
+  google.protobuf.Timestamp indexed_at = 3;
+  bool taken_down = 4;
+  google.protobuf.Timestamp created_at = 5;
+  google.protobuf.Timestamp sorted_at = 6;
+  string takedown_ref = 7;
+  repeated string tags = 8;
+}
 
+message RecipeRevisionRecord {
+  RecordInfo record_info = 1;
+  bytes record = 2;
+}
+
+message RecipeRecord {
+  RecordInfo record_info = 1;
+  bytes record = 2;
+  repeated RecipeRevisionRecord revisions = 3;
+}
+
+
+
+message GetRecipeRecordsRequest {
+  repeated string uris = 1;
+}
+
+message GetRecipeRecordsResponse {
+  repeated RecipeRecord records = 1;
+}
 
 
 service Service {
@@ -1291,6 +1321,7 @@ service Service {
   rpc GetListItemRecords(GetListItemRecordsRequest) returns (GetListItemRecordsResponse);
   rpc GetListRecords(GetListRecordsRequest) returns (GetListRecordsResponse);
   rpc GetPostRecords(GetPostRecordsRequest) returns (GetPostRecordsResponse);
+  rpc GetRecipeRecords(GetRecipeRecordsRequest) returns (GetRecipeRecordsResponse);
   rpc GetProfileRecords(GetProfileRecordsRequest) returns (GetProfileRecordsResponse);
   rpc GetActorChatDeclarationRecords(GetActorChatDeclarationRecordsRequest) returns (GetActorChatDeclarationRecordsResponse);
   rpc GetNotificationDeclarationRecords(GetNotificationDeclarationRecordsRequest) returns (GetNotificationDeclarationRecordsResponse);

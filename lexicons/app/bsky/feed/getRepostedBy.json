@@ -41,10 +41,26 @@
               "type": "array",
               "items": {
                 "type": "ref",
-                "ref": "app.bsky.actor.defs#profileView"
+                "ref": "#repostInfo"
               }
             }
           }
+        }
+      }
+    },
+    "repostInfo": {
+      "type": "object",
+      "required": [
+        "profileView"
+      ],
+      "properties": {
+        "profileView": {
+          "type": "ref",
+          "ref": "app.bsky.actor.defs#profileView"
+        },
+        "revisionUri": {
+          "type": "string",
+          "format": "at-uri"
         }
       }
     }

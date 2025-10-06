@@ -11,7 +11,7 @@ import { Notification } from '../db/tables/notification'
 
 // @NOTE re: insertions and deletions. Due to how record updates are handled,
 // (insertFn) should have the same effect as (insertFn -> deleteFn -> insertFn).
-type RecordProcessorParams<T, S> = {
+export type RecordProcessorParams<T, S> = {
   lexId: string
   insertFn: (
     db: DatabaseSchema,

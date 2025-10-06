@@ -2236,6 +2236,10 @@ export const schemaDict = {
             type: 'string',
             format: 'cid',
           },
+          revisionUri: {
+            type: 'string',
+            format: 'at-uri',
+          },
         },
       },
     },
@@ -7321,6 +7325,10 @@ export const schemaDict = {
             type: 'ref',
             ref: 'lex:app.bsky.actor.defs#profileView',
           },
+          revisionUri: {
+            type: 'string',
+            format: 'at-uri',
+          },
         },
       },
     },
@@ -7603,10 +7611,24 @@ export const schemaDict = {
                 type: 'array',
                 items: {
                   type: 'ref',
-                  ref: 'lex:app.bsky.actor.defs#profileView',
+                  ref: 'lex:app.bsky.feed.getRepostedBy#repostInfo',
                 },
               },
             },
+          },
+        },
+      },
+      repostInfo: {
+        type: 'object',
+        required: ['profileView'],
+        properties: {
+          profileView: {
+            type: 'ref',
+            ref: 'lex:app.bsky.actor.defs#profileView',
+          },
+          revisionUri: {
+            type: 'string',
+            format: 'at-uri',
           },
         },
       },
@@ -12088,6 +12110,632 @@ export const schemaDict = {
                 ref: 'lex:app.bsky.video.defs#jobStatus',
               },
             },
+          },
+        },
+      },
+    },
+  },
+  AppFoodiosFeedDefs: {
+    lexicon: 1,
+    id: 'app.foodios.feed.defs',
+    defs: {
+      recipeRevisionView: {
+        type: 'object',
+        required: ['selectedRevisionUri', 'revisionRefs', 'revisionContent'],
+        properties: {
+          selectedRevisionUri: {
+            type: 'string',
+            format: 'at-uri',
+          },
+          revisionRefs: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:app.foodios.feed.defs#revisionRef',
+            },
+          },
+          revisionContent: {
+            type: 'ref',
+            ref: 'lex:app.foodios.feed.recipeRevision#Record',
+          },
+        },
+      },
+      revisionRef: {
+        type: 'object',
+        required: ['uri', 'createdAt'],
+        properties: {
+          uri: {
+            type: 'string',
+            format: 'at-uri',
+          },
+          createdAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+        },
+      },
+      licenseAllRights: {
+        type: 'object',
+        properties: {
+          licenseType: {
+            type: 'string',
+            const: 'licenseAllRights',
+            description: 'All rights reserved by the creator.',
+          },
+        },
+      },
+      licenseCreativeCommonsBy: {
+        type: 'object',
+        properties: {
+          licenseType: {
+            type: 'string',
+            const: 'licenseCreativeCommonsBy',
+            description: 'Creative Commons Attribution 4.0 License.',
+          },
+        },
+      },
+      licenseCreativeCommonsBySa: {
+        type: 'object',
+        properties: {
+          licenseType: {
+            type: 'string',
+            const: 'licenseCreativeCommonsBySa',
+            description: 'Creative Commons Attribution-ShareAlike 4.0 License.',
+          },
+        },
+      },
+      licenseCreativeCommonsByNc: {
+        type: 'object',
+        properties: {
+          licenseType: {
+            type: 'string',
+            const: 'licenseCreativeCommonsByNc',
+            description:
+              'Creative Commons Attribution-NonCommercial 4.0 License.',
+          },
+        },
+      },
+      licenseCreativeCommonsByNcSa: {
+        type: 'object',
+        properties: {
+          licenseType: {
+            type: 'string',
+            const: 'licenseCreativeCommonsByNcSa',
+            description:
+              'Creative Commons Attribution-NonCommercial-ShareAlike 4.0 License.',
+          },
+        },
+      },
+      licensePublicDomain: {
+        type: 'object',
+        properties: {
+          licenseType: {
+            type: 'string',
+            const: 'licensePublicDomain',
+            description: 'Work dedicated to the public domain.',
+          },
+        },
+      },
+      publicationTypeBook: {
+        type: 'object',
+        properties: {
+          publicationType: {
+            type: 'string',
+            const: 'publicationTypeBook',
+            description: 'Recipe from a published book.',
+          },
+        },
+      },
+      publicationTypeMagazine: {
+        type: 'object',
+        properties: {
+          publicationType: {
+            type: 'string',
+            const: 'publicationTypeMagazine',
+            description: 'Recipe from a magazine.',
+          },
+        },
+      },
+    },
+  },
+  AppFoodiosFeedRecipePost: {
+    lexicon: 1,
+    id: 'app.foodios.feed.recipePost',
+    defs: {
+      main: {
+        type: 'record',
+        description:
+          'Record containing metadata for a recipe post. Referred to by recipeRevisions.',
+        key: 'tid',
+        record: {
+          type: 'object',
+          required: ['createdAt'],
+          properties: {
+            createdAt: {
+              type: 'string',
+              format: 'datetime',
+              description:
+                'Client-declared timestamp when this post was originally created.',
+            },
+          },
+        },
+      },
+    },
+  },
+  AppFoodiosFeedRecipeRevision: {
+    lexicon: 1,
+    id: 'app.foodios.feed.recipeRevision',
+    defs: {
+      main: {
+        type: 'record',
+        description:
+          'Record containing the original content of a recipe or a revision.',
+        key: 'tid',
+        record: {
+          type: 'object',
+          required: [
+            'recipePostRef',
+            'name',
+            'text',
+            'ingredients',
+            'instructionSections',
+            'createdAt',
+          ],
+          properties: {
+            recipePostRef: {
+              description:
+                'Reference to the recipe post record for which this is a revision',
+              type: 'ref',
+              ref: 'lex:com.atproto.repo.strongRef',
+            },
+            parentRevisionRef: {
+              description:
+                'Reference to the revision preceding this one (empty for the first revision)',
+              type: 'ref',
+              ref: 'lex:com.atproto.repo.strongRef',
+            },
+            name: {
+              description: 'The name/title of the recipe',
+              type: 'string',
+              maxLength: 500,
+            },
+            text: {
+              description: 'Body providing a description of the recipe',
+              type: 'string',
+              maxLength: 10000,
+            },
+            facets: {
+              type: 'array',
+              description:
+                'Annotations of text (mentions, URLs, hashtags, etc)',
+              items: {
+                type: 'ref',
+                ref: 'lex:app.bsky.richtext.facet',
+              },
+            },
+            ingredients: {
+              type: 'array',
+              items: {
+                type: 'ref',
+                ref: 'lex:app.foodios.feed.recipeRevision#ingredient',
+              },
+            },
+            instructionSections: {
+              type: 'array',
+              items: {
+                type: 'ref',
+                ref: 'lex:app.foodios.feed.recipeRevision#instructionSection',
+              },
+            },
+            prepTime: {
+              description: 'Preparation time in minutes',
+              type: 'string',
+              maxLength: 100,
+            },
+            cookingTime: {
+              description: 'Preparation time in minutes',
+              type: 'string',
+              maxLength: 100,
+            },
+            recipeCategory: {
+              type: 'array',
+              items: {
+                type: 'string',
+                maxLength: 100,
+              },
+            },
+            recipeCuisine: {
+              type: 'array',
+              items: {
+                type: 'string',
+                maxLength: 100,
+              },
+            },
+            suitableForDiet: {
+              type: 'array',
+              items: {
+                type: 'string',
+                maxLength: 100,
+              },
+            },
+            recipeYield: {
+              type: 'ref',
+              ref: 'lex:app.foodios.feed.recipeRevision#quantityAndUnit',
+            },
+            nutrition: {
+              type: 'ref',
+              ref: 'lex:app.foodios.feed.recipeRevision#nutrition',
+            },
+            attribution: {
+              type: 'union',
+              refs: [
+                'lex:app.foodios.feed.recipeRevision#originalAttribution',
+                'lex:app.foodios.feed.recipeRevision#personAttribution',
+                'lex:app.foodios.feed.recipeRevision#publicationAttribution',
+                'lex:app.foodios.feed.recipeRevision#websiteAttribution',
+                'lex:app.foodios.feed.recipeRevision#showAttribution',
+                'lex:app.foodios.feed.recipeRevision#productAttribution',
+              ],
+              closed: true,
+            },
+            labels: {
+              type: 'union',
+              description:
+                'Self-label values for this post. Effectively content warnings.',
+              refs: ['lex:com.atproto.label.defs#selfLabels'],
+            },
+            langs: {
+              type: 'array',
+              description:
+                'Indicates human language of post primary text content.',
+              maxLength: 3,
+              items: {
+                type: 'string',
+                format: 'language',
+              },
+            },
+            tags: {
+              type: 'array',
+              description:
+                'Additional hashtags, in addition to any included in post text and facets.',
+              maxLength: 8,
+              items: {
+                type: 'string',
+                maxLength: 640,
+                maxGraphemes: 64,
+              },
+            },
+            createdAt: {
+              type: 'string',
+              format: 'datetime',
+              description:
+                'Client-declared timestamp when this post was originally created.',
+            },
+            embed: {
+              type: 'union',
+              refs: [
+                'lex:app.bsky.embed.images',
+                'lex:app.bsky.embed.video',
+                'lex:app.bsky.embed.external',
+                'lex:app.bsky.embed.record',
+                'lex:app.bsky.embed.recordWithMedia',
+              ],
+            },
+          },
+        },
+      },
+      instructionSection: {
+        type: 'object',
+        required: ['instructions'],
+        properties: {
+          name: {
+            type: 'string',
+            maxLength: 1000,
+          },
+          instructions: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:app.foodios.feed.recipeRevision#instruction',
+            },
+          },
+          images: {
+            type: 'union',
+            refs: ['lex:app.bsky.embed.images', 'lex:app.bsky.embed.video'],
+          },
+        },
+      },
+      instruction: {
+        type: 'object',
+        required: ['text'],
+        properties: {
+          text: {
+            type: 'string',
+            maxLength: 2000,
+          },
+          images: {
+            type: 'union',
+            refs: ['lex:app.bsky.embed.images', 'lex:app.bsky.embed.video'],
+          },
+        },
+      },
+      ingredient: {
+        type: 'object',
+        required: ['name', 'quantity', 'unit'],
+        properties: {
+          name: {
+            type: 'string',
+            maxLength: 500,
+          },
+          quantity: {
+            type: 'string',
+            maxLength: 100,
+          },
+          unit: {
+            type: 'string',
+            maxLength: 100,
+          },
+          images: {
+            type: 'union',
+            refs: ['lex:app.bsky.embed.images', 'lex:app.bsky.embed.video'],
+          },
+        },
+      },
+      quantityAndUnit: {
+        type: 'object',
+        required: ['quantity', 'unit'],
+        properties: {
+          quantity: {
+            type: 'string',
+            maxLength: 100,
+          },
+          unit: {
+            type: 'string',
+            maxLength: 100,
+          },
+        },
+      },
+      nutrition: {
+        type: 'object',
+        required: ['servingSize', 'energy'],
+        properties: {
+          servingSize: {
+            description:
+              'The serving size, in terms of the number of volume or mass.',
+            type: 'ref',
+            ref: 'lex:app.foodios.feed.recipeRevision#quantityAndUnit',
+          },
+          energy: {
+            description: 'Energy in kJ',
+            type: 'string',
+            maxLength: 100,
+          },
+          carbohydrateContent: {
+            description: 'Energy in kJ',
+            type: 'string',
+            maxLength: 100,
+          },
+          cholesterolContent: {
+            description: 'Cholesterol in mg',
+            type: 'string',
+            maxLength: 100,
+          },
+          fatContent: {
+            description: 'Fat per serving in g',
+            type: 'string',
+            maxLength: 100,
+          },
+          fiberContent: {
+            description: 'Fat per serving in g',
+            type: 'string',
+            maxLength: 100,
+          },
+          proteinContent: {
+            description: 'Protein per serving in g',
+            type: 'string',
+            maxLength: 100,
+          },
+          saturatedFatContent: {
+            description: 'Saturated per serving fat in g',
+            type: 'string',
+            maxLength: 100,
+          },
+          sodiumContent: {
+            description: 'Sodium in mg',
+            type: 'string',
+            maxLength: 100,
+          },
+          sugarContent: {
+            description: 'Sugar in g',
+            type: 'string',
+            maxLength: 100,
+          },
+          transFatContent: {
+            description: 'Trans fat in g',
+            type: 'string',
+            maxLength: 100,
+          },
+          unsaturatedFatContent: {
+            description: 'Unsaturated fat in g',
+            type: 'string',
+            maxLength: 100,
+          },
+        },
+      },
+      originalAttribution: {
+        type: 'object',
+        required: ['type', 'license'],
+        properties: {
+          type: {
+            type: 'string',
+            const: 'original',
+          },
+          license: {
+            type: 'union',
+            refs: [
+              'lex:app.foodios.feed.defs#licenseAllRights',
+              'lex:app.foodios.feed.defs#licenseCreativeCommonsBy',
+              'lex:app.foodios.feed.defs#licenseCreativeCommonsBySa',
+              'lex:app.foodios.feed.defs#licenseCreativeCommonsByNc',
+              'lex:app.foodios.feed.defs#licenseCreativeCommonsByNcSa',
+              'lex:app.foodios.feed.defs#licensePublicDomain',
+            ],
+          },
+          url: {
+            type: 'string',
+            format: 'uri',
+          },
+        },
+      },
+      personAttribution: {
+        type: 'object',
+        required: ['type', 'name'],
+        properties: {
+          type: {
+            type: 'string',
+            const: 'person',
+          },
+          name: {
+            type: 'string',
+            maxLength: 255,
+          },
+          url: {
+            type: 'string',
+            format: 'uri',
+          },
+          notes: {
+            type: 'string',
+            maxLength: 1000,
+          },
+        },
+      },
+      publicationAttribution: {
+        type: 'object',
+        required: ['type', 'publicationType', 'title', 'author'],
+        properties: {
+          type: {
+            type: 'string',
+            const: 'publication',
+          },
+          publicationType: {
+            type: 'union',
+            refs: [
+              'lex:app.foodios.feed.defs#publicationTypeBook',
+              'lex:app.foodios.feed.defs#publicationTypeMagazine',
+            ],
+          },
+          title: {
+            type: 'string',
+            maxLength: 255,
+          },
+          author: {
+            type: 'string',
+            maxLength: 255,
+          },
+          publisher: {
+            type: 'string',
+            maxLength: 255,
+          },
+          isbn: {
+            type: 'string',
+            maxLength: 13,
+          },
+          page: {
+            type: 'integer',
+          },
+          url: {
+            type: 'string',
+            format: 'uri',
+          },
+          notes: {
+            type: 'string',
+            maxLength: 1000,
+          },
+        },
+      },
+      websiteAttribution: {
+        type: 'object',
+        required: ['type', 'name', 'url'],
+        properties: {
+          type: {
+            type: 'string',
+            const: 'website',
+          },
+          name: {
+            type: 'string',
+            maxLength: 255,
+          },
+          url: {
+            type: 'string',
+            format: 'uri',
+          },
+          notes: {
+            type: 'string',
+            maxLength: 1000,
+          },
+        },
+      },
+      showAttribution: {
+        type: 'object',
+        required: ['type', 'title', 'network'],
+        properties: {
+          type: {
+            type: 'string',
+            const: 'show',
+          },
+          title: {
+            type: 'string',
+            maxLength: 255,
+          },
+          episode: {
+            type: 'string',
+            maxLength: 255,
+          },
+          network: {
+            type: 'string',
+            maxLength: 255,
+          },
+          airDate: {
+            type: 'string',
+            format: 'datetime',
+          },
+          url: {
+            type: 'string',
+            format: 'uri',
+          },
+          notes: {
+            type: 'string',
+            maxLength: 1000,
+          },
+        },
+      },
+      productAttribution: {
+        type: 'object',
+        required: ['type', 'brand', 'name'],
+        properties: {
+          type: {
+            type: 'string',
+            const: 'product',
+          },
+          brand: {
+            type: 'string',
+            maxLength: 255,
+          },
+          name: {
+            type: 'string',
+            maxLength: 255,
+          },
+          upc: {
+            type: 'string',
+            maxLength: 13,
+          },
+          url: {
+            type: 'string',
+            format: 'uri',
+          },
+          notes: {
+            type: 'string',
+            maxLength: 1000,
           },
         },
       },
@@ -17877,6 +18525,9 @@ export const ids = {
   AppBskyVideoGetJobStatus: 'app.bsky.video.getJobStatus',
   AppBskyVideoGetUploadLimits: 'app.bsky.video.getUploadLimits',
   AppBskyVideoUploadVideo: 'app.bsky.video.uploadVideo',
+  AppFoodiosFeedDefs: 'app.foodios.feed.defs',
+  AppFoodiosFeedRecipePost: 'app.foodios.feed.recipePost',
+  AppFoodiosFeedRecipeRevision: 'app.foodios.feed.recipeRevision',
   ChatBskyActorDeclaration: 'chat.bsky.actor.declaration',
   ChatBskyActorDefs: 'chat.bsky.actor.defs',
   ChatBskyActorDeleteAccount: 'chat.bsky.actor.deleteAccount',

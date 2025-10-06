@@ -70,6 +70,7 @@ export class Firehose {
   private destoryDefer: Deferrable
 
   constructor(public opts: FirehoseOptions) {
+    console.log("*** creating firehouse **")
     this.destoryDefer = createDeferrable()
     this.abortController = new AbortController()
     if (this.opts.getCursor && this.opts.runner) {
@@ -102,6 +103,7 @@ export class Firehose {
   async start() {
     try {
       for await (const evt of this.sub) {
+        console.log("*** event ***", evt)
         if (this.opts.runner) {
           const parsed = didAndSeqForEvt(evt)
           if (!parsed) {

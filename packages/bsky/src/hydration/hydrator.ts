@@ -8,8 +8,8 @@ import { isMain as isEmbedRecord } from '../lexicon/types/app/bsky/embed/record'
 import { isMain as isEmbedRecordWithMedia } from '../lexicon/types/app/bsky/embed/recordWithMedia'
 import { isListRule as isThreadgateListRule } from '../lexicon/types/app/bsky/feed/threadgate'
 import { hydrationLogger } from '../logger'
-import { Notification } from '../proto/bsky_pb'
-import { ParsedLabelers } from '../util'
+import { FeedItemType, Notification } from '../proto/bsky_pb'
+import { ParsedLabelers, isRecipeURI } from '../util'
 import { uriToDid, uriToDid as didFromUri } from '../util/uris'
 import {
   ActivitySubscriptionStates,
@@ -32,6 +32,7 @@ import {
   PostViewerStates,
   Postgates,
   Posts,
+  Recipes,
   Reposts,
   ThreadContexts,
   ThreadRef,
@@ -64,16 +65,18 @@ import {
   mergeManyMaps,
   mergeMaps,
   mergeNestedMaps,
+  parseRecord,
+  partition,
   urisByCollection,
 } from './util'
-
+import { stripSearchParams } from '@atproto/api'
 export class HydrateCtx {
   labelers = this.vals.labelers
   viewer = this.vals.viewer !== null ? serviceRefToDid(this.vals.viewer) : null
   includeTakedowns = this.vals.includeTakedowns
   includeActorTakedowns = this.vals.includeActorTakedowns
   include3pBlocks = this.vals.include3pBlocks
-  constructor(private vals: HydrateCtxVals) {}
+  constructor(private vals: HydrateCtxVals) { }
   // Convenience with use with dataplane.getActors cache control
   get skipCacheForViewer() {
     if (!this.viewer) return
@@ -98,6 +101,7 @@ export type HydrationState = {
   profileViewers?: ProfileViewerStates
   profileAggs?: ProfileAggs
   posts?: Posts
+  recipePosts?: Recipes
   postAggs?: PostAggs
   postViewers?: PostViewerStates
   threadContexts?: ThreadContexts
@@ -381,7 +385,8 @@ export class Hydrator {
     ctx: HydrateCtx,
     state: HydrationState = {},
   ): Promise<HydrationState> {
-    const uris = refs.map((ref) => ref.uri)
+    // TODO: maybe filter out any recipe records that got in here
+    const uris = refs.map((ref) => stripSearchParams(ref.uri))
 
     state.posts ??= new HydrationMap<Post>()
     const addPostsToHydrationState = (posts: Posts) => {
@@ -424,15 +429,19 @@ export class Hydrator {
 
     // layer 1: first level embeds plus thread roots we haven't fetched yet
     const urisLayer1 = nestedRecordUrisFromPosts(postsLayer0)
-    const urisLayer1ByCollection = urisByCollection(urisLayer1)
+    const urisLayer1ByCollection = urisByCollection(urisLayer1.concat(additionalRootUris))
     const embedPostUrisLayer1 =
       urisLayer1ByCollection.get(ids.AppBskyFeedPost) ?? []
+    const embedRecipeUrisLayer1 = urisLayer1ByCollection.get(ids.AppFoodiosFeedRecipePost) ?? []
+
     const postsLayer1 = await this.feed.getPosts(
-      [...embedPostUrisLayer1, ...additionalRootUris],
+      embedPostUrisLayer1,
       ctx.includeTakedowns,
       state.posts,
     )
     addPostsToHydrationState(postsLayer1)
+
+    const recipesLayer1 = await this.feed.getRecipes(embedRecipeUrisLayer1, ctx.includeTakedowns)
 
     // layer 2: second level embeds, ignoring any additional root uris we mixed-in to the previous layer
     const urisLayer2 = nestedRecordUrisFromPosts(
@@ -442,6 +451,7 @@ export class Hydrator {
     const urisLayer2ByCollection = urisByCollection(urisLayer2)
     const embedPostUrisLayer2 =
       urisLayer2ByCollection.get(ids.AppBskyFeedPost) ?? []
+    const embedRecipeUrisLayer2 = urisLayer2ByCollection.get(ids.AppFoodiosFeedRecipePost) ?? []
 
     const [postsLayer2, threadgates] = await Promise.all([
       this.feed.getPosts(
@@ -452,6 +462,11 @@ export class Hydrator {
       this.feed.getThreadgatesForPosts([...postUrisWithThreadgates.values()]),
     ])
     addPostsToHydrationState(postsLayer2)
+
+    const recipesLayer2 = await this.feed.getRecipes(embedRecipeUrisLayer2, ctx.includeTakedowns)
+    const recipeState: HydrationState = {
+      recipePosts: mergeManyMaps(state.recipePosts ?? new HydrationMap(), recipesLayer1, recipesLayer2)
+    } 
 
     // collect list/feedgen embeds, lists in threadgates, post record hydration
     const threadgateListUris = getListUrisFromThreadgates(threadgates)
@@ -525,6 +540,7 @@ export class Hydrator {
       feedGenState,
       labelerState,
       starterPackState,
+      recipeState,
       {
         posts,
         postAggs,
@@ -607,11 +623,29 @@ export class Hydrator {
     items: FeedItem[],
     ctx: HydrateCtx,
   ): Promise<HydrationState> {
+    const recipeUris: string[] = []
+    const otherItems: FeedItem[] = []
+    items.forEach((item)=> {
+      if (item.itemType === FeedItemType.RECIPE) {
+        recipeUris.push(item.post.uri)
+      } else if (item.itemType === FeedItemType.REPOST) {
+        if (isRecipeURI(item.post.uri)) {
+          recipeUris.push(item.post.uri)
+        }
+      } else {
+        otherItems.push(item)
+      }
+    })
+
+    const recipesState = await this.hydrateRecipes(recipeUris, ctx)
+
     // get posts, collect reply refs
     const posts = await this.feed.getPosts(
-      items.map((item) => item.post.uri),
+      otherItems.map((item) => item.post.uri),
       ctx.includeTakedowns,
     )
+
+    // TODO: handle case where post is reply to recipe
     const rootUris: string[] = []
     const parentUris: string[] = []
     const postAndReplyRefs: ItemRef[] = []
@@ -619,9 +653,11 @@ export class Hydrator {
       if (!post) return
       postAndReplyRefs.push({ uri, cid: post.cid })
       if (post.record.reply) {
-        rootUris.push(post.record.reply.root.uri)
-        parentUris.push(post.record.reply.parent.uri)
-        postAndReplyRefs.push(post.record.reply.root, post.record.reply.parent)
+        const rootUri = post.record.reply.root.uri
+        const parentUri = post.record.reply.parent.uri
+        rootUris.push(rootUri)
+        parentUris.push(parentUri)
+        postAndReplyRefs.push(post.record.reply.root, post.record.reply.parent) // TODO: may need to strip uris
       }
     })
     // get replies, collect reply parent authors
@@ -636,6 +672,7 @@ export class Hydrator {
       replyParentAuthors.push(didFromUri(parent.record.reply.parent.uri))
     })
     // hydrate state for all posts, reposts, authors of reposts + reply parent authors
+    // TODO: hydrate correct repost, quote revisions
     const repostUris = mapDefined(items, (item) => item.repost?.uri)
     const [postState, repostProfileState, reposts] = await Promise.all([
       this.hydratePosts(postAndReplyRefs, ctx, {
@@ -647,10 +684,25 @@ export class Hydrator {
       ),
       this.feed.getReposts(repostUris, ctx.includeTakedowns),
     ])
-    return mergeManyStates(postState, repostProfileState, {
+    return mergeManyStates(recipesState, postState, repostProfileState, {
       reposts,
       ctx,
     })
+  }
+
+  async hydrateRecipes(uris: string[], ctx: HydrateCtx): Promise<HydrationState> {
+    // TODO: consider branding recipe URIs
+    const recipes = await this.feed.getRecipes(uris, ctx.includeTakedowns)
+    const postAggs = await this.feed.getPostAggregates(uris.map(uri => ({ uri })), ctx.viewer)
+    const postViewers = ctx.viewer ?
+      await this.feed.getPostViewerStates(uris.map(uri => ({ uri, threadRoot: uri })), ctx.viewer)
+      : undefined
+    const profilesState = await this.hydrateProfiles(uris.map(didFromUri), ctx)
+    return mergeStates({
+      recipePosts: recipes,
+      postAggs,
+      postViewers,
+    }, profilesState)
   }
 
   // app.bsky.feed.defs#threadViewPost
@@ -667,7 +719,10 @@ export class Hydrator {
     refs: ItemRef[],
     ctx: HydrateCtx,
   ): Promise<HydrationState> {
-    const postsState = await this.hydratePosts(refs, ctx)
+    const [recipeRefs, postRefs] = partition(refs, ({ uri }) => isRecipeURI(uri))
+    const postsState = await this.hydratePosts(postRefs, ctx)
+    const recipesState = await this.hydrateRecipes(
+      recipeRefs.map((ref) => ref.uri), ctx)
 
     const { posts } = postsState
     const postsList = posts ? Array.from(posts.entries()) : []
@@ -685,11 +740,11 @@ export class Hydrator {
         uri,
         cid: post.cid,
         threadRoot: post.record.reply?.root.uri ?? uri,
-      }))
-
+      })).concat(recipeRefs.map(({ uri, cid, }) => ({ uri, threadRoot: uri, cid: cid! })))
+    // TODO: include recipes?
     const threadContexts = await this.feed.getThreadContexts(threadRefs)
 
-    return mergeStates(postsState, { threadContexts })
+    return mergeManyStates(postsState, recipesState, { threadContexts })
   }
 
   // app.bsky.feed.defs#generatorView
@@ -903,6 +958,7 @@ export class Hydrator {
     const repostUris = collections.get(ids.AppBskyFeedRepost) ?? []
     const followUris = collections.get(ids.AppBskyGraphFollow) ?? []
     const verificationUris = collections.get(ids.AppBskyGraphVerification) ?? []
+    const recipeUris = collections.get(ids.AppFoodiosFeedRecipePost) ?? []
     const [
       posts,
       likes,
@@ -911,6 +967,7 @@ export class Hydrator {
       verifications,
       labels,
       profileState,
+      recipePosts
     ] = await Promise.all([
       this.feed.getPosts(postUris), // reason: mention, reply, quote
       this.feed.getLikes(likeUris), // reason: like
@@ -919,10 +976,12 @@ export class Hydrator {
       this.graph.getVerifications(verificationUris), // reason: verified
       this.label.getLabelsForSubjects(uris, ctx.labelers),
       this.hydrateProfiles(uris.map(didFromUri), ctx),
+      this.feed.getRecipes(recipeUris)
     ])
     const viewerRootPostUris = new Set<string>()
     for (const notif of notifs) {
       if (notif.reason === 'reply') {
+        // TODO: add equivalent logic for recipes
         const post = posts.get(notif.uri)
         if (post) {
           const rootUri = post.record.reply?.root.uri
@@ -945,6 +1004,7 @@ export class Hydrator {
       labels,
       threadgates,
       ctx,
+      recipePosts
     })
   }
 
@@ -985,7 +1045,7 @@ export class Hydrator {
         pairs.push([source, target])
       }
     }
-
+    // TODO: determine if recipe is blocked
     const blocks = await this.graph.getBidirectionalBlocks(pairs)
     const listUrisSet = new Set<string>()
     for (const [source, targets] of didMap) {
@@ -1027,7 +1087,7 @@ export class Hydrator {
           blockUri: block?.blockUri,
           blockListUri:
             block?.blockListUri &&
-            listState.actors?.get(uriToDid(block.blockListUri))
+              listState.actors?.get(uriToDid(block.blockListUri))
               ? block.blockListUri
               : undefined,
         }
@@ -1275,7 +1335,7 @@ const rootUrisFromPosts = (posts: Posts): string[] => {
 }
 
 const rootUriFromPost = (post: Post): string | undefined => {
-  return post.record.reply?.root.uri
+  return stripSearchParams(post.record.reply?.root.uri)
 }
 
 const nestedRecordUrisFromPosts = (
@@ -1335,8 +1395,8 @@ export const mergeStates = (
 ): HydrationState => {
   assert(
     !stateA.ctx?.viewer ||
-      !stateB.ctx?.viewer ||
-      stateA.ctx?.viewer === stateB.ctx?.viewer,
+    !stateB.ctx?.viewer ||
+    stateA.ctx?.viewer === stateB.ctx?.viewer,
     'incompatible viewers',
   )
   return {
@@ -1379,6 +1439,7 @@ export const mergeStates = (
       stateB.bidirectionalBlocks,
     ),
     verifications: mergeMaps(stateA.verifications, stateB.verifications),
+    recipePosts: mergeMaps(stateA.recipePosts, stateB.recipePosts)
   }
 }
 

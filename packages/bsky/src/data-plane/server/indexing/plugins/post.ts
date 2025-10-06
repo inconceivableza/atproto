@@ -38,6 +38,7 @@ import {
   violatesThreadGate as checkViolatesThreadGate,
 } from '../../util'
 import { RecordProcessor } from '../processor'
+import { stripSearchParams } from '@atproto/api'
 
 type Notif = Insertable<Notification>
 type Post = Selectable<DatabaseSchemaType['post']>
@@ -81,15 +82,16 @@ const insertFn = async (
   obj: PostRecord,
   timestamp: string,
 ): Promise<IndexedPost | null> => {
+
   const post = {
     uri: uri.toString(),
     cid: cid.toString(),
     creator: uri.host,
     text: obj.text,
     createdAt: normalizeDatetimeAlways(obj.createdAt),
-    replyRoot: obj.reply?.root?.uri || null,
+    replyRoot: stripSearchParams(obj.reply?.root?.uri),
     replyRootCid: obj.reply?.root?.cid || null,
-    replyParent: obj.reply?.parent?.uri || null,
+    replyParent: stripSearchParams(obj.reply?.parent?.uri),
     replyParentCid: obj.reply?.parent?.cid || null,
     langs: obj.langs?.length
       ? sql<string[]>`${JSON.stringify(obj.langs)}` // sidesteps kysely's array serialization, which is non-jsonb
@@ -198,7 +200,7 @@ const insertFn = async (
       embeds.push(recordEmbed)
       await db.insertInto('post_embed_record').values(recordEmbed).execute()
 
-      if (embedUri.collection === lex.ids.AppBskyFeedPost) {
+      if (embedUri.collection === lex.ids.AppBskyFeedPost || embedUri.collection === lex.ids.AppFoodiosFeedRecipePost) {
         const quote = {
           uri: uri.toString(),
           cid: cid.toString(),
@@ -292,6 +294,7 @@ const findDuplicate = async (): Promise<AtUri | null> => {
 }
 
 const notifsForInsert = (obj: IndexedPost) => {
+  // TODO: check if this works with search param
   const notifs: Notif[] = []
   const notified = new Set([obj.post.creator])
   const maybeNotify = (notif: Notif) => {
@@ -317,7 +320,7 @@ const notifsForInsert = (obj: IndexedPost) => {
     for (const embed of obj.embeds ?? []) {
       if ('embedUri' in embed) {
         const embedUri = new AtUri(embed.embedUri)
-        if (embedUri.collection === lex.ids.AppBskyFeedPost) {
+        if (embedUri.collection === lex.ids.AppBskyFeedPost || embedUri.collection === lex.ids.AppFoodiosFeedRecipePost) {
           maybeNotify({
             did: embedUri.host,
             reason: 'quote',
@@ -428,7 +431,7 @@ const deleteFn = async (
     const embedUri = new AtUri(deletedPosts.embedUri)
     deletedEmbeds.push(deletedPosts)
 
-    if (embedUri.collection === lex.ids.AppBskyFeedPost) {
+    if (embedUri.collection === lex.ids.AppBskyFeedPost || embedUri.collection === lex.ids.AppFoodiosFeedRecipePost) {
       await db.deleteFrom('quote').where('uri', '=', uriStr).execute()
       await db
         .insertInto('post_agg')

@@ -4,6 +4,7 @@ import {
   HydrateCtx,
   HydrationState,
   Hydrator,
+  mergeStates,
 } from '../../../../hydration/hydrator'
 import { Server } from '../../../../lexicon'
 import { ids } from '../../../../lexicon/lexicons'
@@ -12,6 +13,8 @@ import { createPipeline } from '../../../../pipeline'
 import { uriToDid as creatorFromUri } from '../../../../util/uris'
 import { Views } from '../../../../views'
 import { resHeaders } from '../../../util'
+import { partition } from '../../../../hydration/util'
+import { isRecipeURI } from '../../../../util'
 
 export default function (server: Server, ctx: AppContext) {
   const getPosts = createPipeline(skeleton, hydration, noBlocks, presentation)
@@ -50,10 +53,13 @@ const hydration = async (inputs: {
   skeleton: Skeleton
 }) => {
   const { ctx, params, skeleton } = inputs
-  return ctx.hydrator.hydratePosts(
-    skeleton.posts.map((uri) => ({ uri })),
+  const [recipeUris, postUris] = partition(skeleton.posts, isRecipeURI)
+  const [postsState, recipesState] = await Promise.all([ctx.hydrator.hydratePosts(
+    postUris.map((uri) => ({ uri })),
     params.hydrateCtx,
-  )
+  ), ctx.hydrator.hydrateRecipes(recipeUris, params.hydrateCtx)
+  ])
+  return mergeStates(postsState, recipesState)
 }
 
 const noBlocks = (inputs: {

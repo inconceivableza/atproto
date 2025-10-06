@@ -95,8 +95,14 @@ const presentation = (inputs: {
       return
     }
     const creatorDid = creatorFromUri(uri)
-    return ctx.views.profile(creatorDid, hydration)
+    const profileView = ctx.views.profile(creatorDid, hydration)
+    if (!profileView) return;
+    return {
+      profileView,
+      revisionUri: repost?.record.subject.revisionUri
+    }
   })
+
   return {
     repostedBy: repostViews,
     cursor: skeleton.cursor,

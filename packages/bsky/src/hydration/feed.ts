@@ -6,6 +6,8 @@ import { Record as PostRecord } from '../lexicon/types/app/bsky/feed/post'
 import { Record as PostgateRecord } from '../lexicon/types/app/bsky/feed/postgate'
 import { Record as RepostRecord } from '../lexicon/types/app/bsky/feed/repost'
 import { Record as ThreadgateRecord } from '../lexicon/types/app/bsky/feed/threadgate'
+import { Record as RecipeRecord } from '../lexicon/types/app/foodios/feed/recipePost'
+import { Record as RecipeRevisionRecord } from '../lexicon/types/app/foodios/feed/recipeRevision'
 import {
   postUriToPostgateUri,
   postUriToThreadgateUri,
@@ -15,10 +17,14 @@ import {
   HydrationMap,
   ItemRef,
   RecordInfo,
+  isValidRecord,
   parseRecord,
+  parseRecordBytes,
   parseString,
   split,
 } from './util'
+import { FeedItemType } from '../proto/bsky_pb'
+import { stripSearchParams } from '@atproto/api'
 
 export type Post = RecordInfo<PostRecord> & {
   violatesThreadGate: boolean
@@ -79,6 +85,13 @@ export type Threadgates = HydrationMap<Threadgate>
 export type Postgate = RecordInfo<PostgateRecord>
 export type Postgates = HydrationMap<Postgate>
 
+
+export type RecipeRevision = RecordInfo<RecipeRevisionRecord> & { uri: string }
+export type Recipe = RecordInfo<RecipeRecord> & {
+  revisions: RecipeRevision[]
+}
+export type Recipes = HydrationMap<Recipe> 
+
 export type ThreadRef = ItemRef & { threadRoot: string }
 
 // @NOTE the feed item types in the protos for author feeds and timelines
@@ -91,10 +104,55 @@ export type FeedItem = {
    * only in author feeds.
    */
   authorPinned?: boolean
+  itemType: FeedItemType
 }
 
 export class FeedHydrator {
-  constructor(public dataplane: DataPlaneClient) {}
+  constructor(public dataplane: DataPlaneClient) { }
+
+  async getRecipes(uris: string[], includeTakedowns = false): Promise<Recipes> {
+    // TODO: pass in existing state to avoid duplicate fetches
+    // TODO: consider branding recipe URIs
+
+    const { records } = await this.dataplane.getRecipeRecords({ uris: uris.map(stripSearchParams) })
+
+    const result = new HydrationMap<Recipe>()
+    records.forEach(item => {
+      if (!item.recordInfo) {
+        return
+      }
+      const recipeRecord = parseRecordBytes<RecipeRecord>(item.record)
+      if (!(recipeRecord && isValidRecord(recipeRecord))) {
+        return
+      }
+      const revisions: RecipeRevision[] = item.revisions.flatMap(({ record, recordInfo }) => {
+        const revisionRecord = parseRecordBytes<RecipeRevisionRecord>(record)
+
+        if (!(revisionRecord && recordInfo && isValidRecord(revisionRecord))) {
+          return []
+        }
+        return [{
+          cid: recordInfo.cid,
+          indexedAt: recordInfo.indexedAt?.toDate() ?? new Date(0),
+          sortedAt: recordInfo.sortedAt?.toDate() ?? new Date(0),
+          takedownRef: recordInfo.takedownRef,
+          uri: recordInfo.uri,
+          record: revisionRecord
+        }]
+      })
+
+      result.set(item.recordInfo.uri, {
+        cid: item.recordInfo.cid,
+        indexedAt: item.recordInfo.indexedAt?.toDate() ?? new Date(0),
+        sortedAt: item.recordInfo.sortedAt?.toDate() ?? new Date(),
+        takedownRef: item.recordInfo.takedownRef,
+        record: recipeRecord,
+        revisions
+      })
+    })
+
+    return result
+  }
 
   async getPosts(
     uris: string[],
@@ -108,6 +166,7 @@ export class FeedHydrator {
     )
     if (!need.length) return base
     const res = await this.dataplane.getPostRecords({ uris: need })
+
     return need.reduce((acc, uri, i) => {
       const record = parseRecord<PostRecord>(res.records[i], includeTakedowns)
       const violatesThreadGate = res.meta[i].violatesThreadGate
@@ -119,13 +178,13 @@ export class FeedHydrator {
         uri,
         record
           ? {
-              ...record,
-              violatesThreadGate,
-              violatesEmbeddingRules,
-              hasThreadGate,
-              hasPostGate,
-              tags,
-            }
+            ...record,
+            violatesThreadGate,
+            violatesEmbeddingRules,
+            hasThreadGate,
+            hasPostGate,
+            tags,
+          }
           : null,
       )
     }, base)
