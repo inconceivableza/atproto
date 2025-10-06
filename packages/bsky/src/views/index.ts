@@ -23,6 +23,7 @@ import {
   Record as ProfileRecord,
   isRecord as isProfileRecord,
 } from '../lexicon/types/app/bsky/actor/profile'
+import { BookmarkView } from '../lexicon/types/app/bsky/bookmark/defs'
 import {
   BlockedPost,
   FeedViewPost,
@@ -44,6 +45,7 @@ import {
 import { Record as RepostRecord } from '../lexicon/types/app/bsky/feed/repost'
 import { isListRule } from '../lexicon/types/app/bsky/feed/threadgate'
 import {
+  ListItemView,
   ListView,
   ListViewBasic,
   StarterPackView,
@@ -271,6 +273,7 @@ export class Views {
 
     return {
       ...baseView,
+      website: this.profileWebsite(did, state),
       viewer: baseView.viewer
         ? {
             ...baseView.viewer,
@@ -349,6 +352,7 @@ export class Views {
       did,
       handle: actor.handle ?? INVALID_HANDLE,
       displayName: actor.profile?.displayName,
+      pronouns: actor.profile?.pronouns,
       avatar: actor.profile?.avatar
         ? this.imgUriBuilder.getPresetUri(
             'avatar',
@@ -448,6 +452,16 @@ export class Views {
       return activitySubscription
     }
     return undefined
+  }
+
+  profileWebsite(did: string, state: HydrationState): string | undefined {
+    const actor = state.actors?.get(did)
+    if (!actor?.profile?.website) return
+    const { website } = actor.profile
+
+    // The record property accepts any URI, but we don't want
+    // to pass the client any schemes other than HTTPS.
+    return website.startsWith('https://') ? website : undefined
   }
 
   knownFollowers(
@@ -631,6 +645,16 @@ export class Views {
           }
         : undefined,
     }
+  }
+
+  listItemView(
+    uri: string,
+    did: string,
+    state: HydrationState,
+  ): Un$Typed<ListItemView> | undefined {
+    const subject = this.profile(did, state)
+    if (!subject) return
+    return { uri, subject }
   }
 
   starterPackBasic(
@@ -850,6 +874,7 @@ export class Views {
           )
         : undefined,
       likeCount: aggs?.likes ?? 0,
+      acceptsInteractions: feedgen.record.acceptsInteractions,
       labels,
       viewer: viewer
         ? {
@@ -970,6 +995,7 @@ export class Views {
         depth < 2 && post.record.embed
           ? this.embed(uri, post.record.embed as any, state, depth + 1)
           : undefined,
+      bookmarkCount: aggs?.bookmarks ?? 0,
       replyCount: aggs?.replies ?? 0,
       repostCount: aggs?.reposts ?? 0,
       likeCount: aggs?.likes ?? 0,
@@ -979,6 +1005,7 @@ export class Views {
         ? {
             repost: viewer.repost,
             like: viewer.like,
+            bookmarked: viewer.bookmarked,
             threadMuted: viewer.threadMuted,
             replyDisabled: this.userReplyDisabled(uri, state),
             embeddingDisabled: this.userPostEmbeddingDisabled(uri, state),
@@ -1144,6 +1171,32 @@ export class Views {
   reasonPin(): $Typed<ReasonPin> {
     return {
       $type: 'app.bsky.feed.defs#reasonPin',
+    }
+  }
+
+  // Bookmarks
+  // ------------
+  bookmark(
+    key: string,
+    state: HydrationState,
+  ): Un$Typed<BookmarkView> | undefined {
+    const viewer = state.ctx?.viewer
+    if (!viewer) return
+
+    const bookmark = state.bookmarks?.get(viewer)?.get(key)
+    if (!bookmark) return
+
+    const atUri = new AtUri(bookmark.subjectUri)
+    if (atUri.collection !== ids.AppBskyFeedPost) return
+
+    const item = this.maybePost(bookmark.subjectUri, state)
+    return {
+      createdAt: bookmark.indexedAt?.toDate().toISOString(),
+      subject: {
+        uri: bookmark.subjectUri,
+        cid: bookmark.subjectCid,
+      },
+      item,
     }
   }
 

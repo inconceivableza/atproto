@@ -16,13 +16,17 @@ export const readEnv = (): ServerEnvironment => {
     contactEmailAddress: envStr('PDS_CONTACT_EMAIL_ADDRESS'),
     emailImagesBaseUrl: envStr('PDS_EMAIL_IMAGES_BASE_URL'),
     acceptingImports: envBool('PDS_ACCEPTING_REPO_IMPORTS'),
+    maxImportSize: envInt('PDS_MAX_REPO_IMPORT_SIZE'),
     blobUploadLimit: envInt('PDS_BLOB_UPLOAD_LIMIT'),
     devMode: envBool('PDS_DEV_MODE'),
 
-    // OAuth
+    // hCaptcha
     hcaptchaSiteKey: envStr('PDS_HCAPTCHA_SITE_KEY'),
     hcaptchaSecretKey: envStr('PDS_HCAPTCHA_SECRET_KEY'),
     hcaptchaTokenSalt: envStr('PDS_HCAPTCHA_TOKEN_SALT'),
+
+    // OAuth
+    trustedOAuthClients: envList('PDS_OAUTH_TRUSTED_CLIENTS'),
 
     // app branding
     socialAppName: envStr('PDS_SOCIAL_APP_NAME'),
@@ -172,6 +176,7 @@ export type ServerEnvironment = {
   contactEmailAddress?: string
   emailImagesBaseUrl?: string
   acceptingImports?: boolean
+  maxImportSize?: number
   blobUploadLimit?: number
   devMode?: boolean
 
@@ -179,6 +184,7 @@ export type ServerEnvironment = {
   hcaptchaSiteKey?: string
   hcaptchaSecretKey?: string
   hcaptchaTokenSalt?: string
+  trustedOAuthClients?: string[]
 
   // app branding
   socialAppName?: string
@@ -296,7 +302,11 @@ export type ServerEnvironment = {
   disableSsrfProtection?: boolean
 
   // fetch
+  fetchForceLogging?: boolean
   fetchMaxResponseSize?: number
+
+  // lexicon resolver
+  lexiconDidAuthority?: string
 
   // proxy
   proxyAllowHTTP2?: boolean

@@ -2958,6 +2958,11 @@ export class GetInteractionCountsResponse extends Message<GetInteractionCountsRe
    */
   quotes: number[] = [];
 
+  /**
+   * @generated from field: repeated int32 bookmarks = 5;
+   */
+  bookmarks: number[] = [];
+
   constructor(data?: PartialMessage<GetInteractionCountsResponse>) {
     super();
     proto3.util.initPartial(data, this);
@@ -2970,6 +2975,7 @@ export class GetInteractionCountsResponse extends Message<GetInteractionCountsRe
     { no: 2, name: "reposts", kind: "scalar", T: 5 /* ScalarType.INT32 */, repeated: true },
     { no: 3, name: "replies", kind: "scalar", T: 5 /* ScalarType.INT32 */, repeated: true },
     { no: 4, name: "quotes", kind: "scalar", T: 5 /* ScalarType.INT32 */, repeated: true },
+    { no: 5, name: "bookmarks", kind: "scalar", T: 5 /* ScalarType.INT32 */, repeated: true },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): GetInteractionCountsResponse {
@@ -7259,9 +7265,54 @@ export class AuthorFeedItem extends Message<AuthorFeedItem> {
   uri = "";
 
   /**
+   * @generated from field: string cid = 2;
+   */
+  cid = "";
+
+  /**
    * @generated from field: string repost = 3;
    */
   repost = "";
+
+  /**
+   * @generated from field: string repost_cid = 4;
+   */
+  repostCid = "";
+
+  /**
+   * @generated from field: bool posts_and_author_threads = 5;
+   */
+  postsAndAuthorThreads = false;
+
+  /**
+   * @generated from field: bool posts_no_replies = 6;
+   */
+  postsNoReplies = false;
+
+  /**
+   * @generated from field: bool posts_with_media = 7;
+   */
+  postsWithMedia = false;
+
+  /**
+   * @generated from field: bool is_reply = 8;
+   */
+  isReply = false;
+
+  /**
+   * @generated from field: bool is_repost = 9;
+   */
+  isRepost = false;
+
+  /**
+   * @generated from field: bool is_quote_post = 10;
+   */
+  isQuotePost = false;
+
+  /**
+   * @generated from field: bool posts_with_video = 11;
+   */
+  postsWithVideo = false;
 
   /**
    * @generated from field: bsky.FeedItemType itemType = 12;
@@ -7277,7 +7328,16 @@ export class AuthorFeedItem extends Message<AuthorFeedItem> {
   static readonly typeName = "bsky.AuthorFeedItem";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
     { no: 1, name: "uri", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: "cid", kind: "scalar", T: 9 /* ScalarType.STRING */ },
     { no: 3, name: "repost", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 4, name: "repost_cid", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 5, name: "posts_and_author_threads", kind: "scalar", T: 8 /* ScalarType.BOOL */ },
+    { no: 6, name: "posts_no_replies", kind: "scalar", T: 8 /* ScalarType.BOOL */ },
+    { no: 7, name: "posts_with_media", kind: "scalar", T: 8 /* ScalarType.BOOL */ },
+    { no: 8, name: "is_reply", kind: "scalar", T: 8 /* ScalarType.BOOL */ },
+    { no: 9, name: "is_repost", kind: "scalar", T: 8 /* ScalarType.BOOL */ },
+    { no: 10, name: "is_quote_post", kind: "scalar", T: 8 /* ScalarType.BOOL */ },
+    { no: 11, name: "posts_with_video", kind: "scalar", T: 8 /* ScalarType.BOOL */ },
     { no: 12, name: "itemType", kind: "enum", T: proto3.getEnumType(FeedItemType) },
   ]);
 
@@ -8957,6 +9017,282 @@ export class GetRecordTakedownResponse extends Message<GetRecordTakedownResponse
 }
 
 /**
+ *
+ * Bookmarks
+ *
+ *
+ * @generated from message bsky.Bookmark
+ */
+export class Bookmark extends Message<Bookmark> {
+  /**
+   * @generated from field: bsky.StashRef ref = 1;
+   */
+  ref?: StashRef;
+
+  /**
+   * @generated from field: string subject_uri = 2;
+   */
+  subjectUri = "";
+
+  /**
+   * @generated from field: string subject_cid = 3;
+   */
+  subjectCid = "";
+
+  /**
+   * @generated from field: google.protobuf.Timestamp indexed_at = 4;
+   */
+  indexedAt?: Timestamp;
+
+  constructor(data?: PartialMessage<Bookmark>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "bsky.Bookmark";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "ref", kind: "message", T: StashRef },
+    { no: 2, name: "subject_uri", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: "subject_cid", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 4, name: "indexed_at", kind: "message", T: Timestamp },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): Bookmark {
+    return new Bookmark().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): Bookmark {
+    return new Bookmark().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): Bookmark {
+    return new Bookmark().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: Bookmark | PlainMessage<Bookmark> | undefined, b: Bookmark | PlainMessage<Bookmark> | undefined): boolean {
+    return proto3.util.equals(Bookmark, a, b);
+  }
+}
+
+/**
+ * @generated from message bsky.GetBookmarksByActorAndSubjectsRequest
+ */
+export class GetBookmarksByActorAndSubjectsRequest extends Message<GetBookmarksByActorAndSubjectsRequest> {
+  /**
+   * @generated from field: string actor_did = 1;
+   */
+  actorDid = "";
+
+  /**
+   * @generated from field: repeated string uris = 2;
+   */
+  uris: string[] = [];
+
+  constructor(data?: PartialMessage<GetBookmarksByActorAndSubjectsRequest>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "bsky.GetBookmarksByActorAndSubjectsRequest";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "actor_did", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: "uris", kind: "scalar", T: 9 /* ScalarType.STRING */, repeated: true },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): GetBookmarksByActorAndSubjectsRequest {
+    return new GetBookmarksByActorAndSubjectsRequest().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): GetBookmarksByActorAndSubjectsRequest {
+    return new GetBookmarksByActorAndSubjectsRequest().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): GetBookmarksByActorAndSubjectsRequest {
+    return new GetBookmarksByActorAndSubjectsRequest().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: GetBookmarksByActorAndSubjectsRequest | PlainMessage<GetBookmarksByActorAndSubjectsRequest> | undefined, b: GetBookmarksByActorAndSubjectsRequest | PlainMessage<GetBookmarksByActorAndSubjectsRequest> | undefined): boolean {
+    return proto3.util.equals(GetBookmarksByActorAndSubjectsRequest, a, b);
+  }
+}
+
+/**
+ * @generated from message bsky.GetBookmarksByActorAndSubjectsResponse
+ */
+export class GetBookmarksByActorAndSubjectsResponse extends Message<GetBookmarksByActorAndSubjectsResponse> {
+  /**
+   * @generated from field: repeated bsky.Bookmark bookmarks = 1;
+   */
+  bookmarks: Bookmark[] = [];
+
+  constructor(data?: PartialMessage<GetBookmarksByActorAndSubjectsResponse>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "bsky.GetBookmarksByActorAndSubjectsResponse";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "bookmarks", kind: "message", T: Bookmark, repeated: true },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): GetBookmarksByActorAndSubjectsResponse {
+    return new GetBookmarksByActorAndSubjectsResponse().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): GetBookmarksByActorAndSubjectsResponse {
+    return new GetBookmarksByActorAndSubjectsResponse().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): GetBookmarksByActorAndSubjectsResponse {
+    return new GetBookmarksByActorAndSubjectsResponse().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: GetBookmarksByActorAndSubjectsResponse | PlainMessage<GetBookmarksByActorAndSubjectsResponse> | undefined, b: GetBookmarksByActorAndSubjectsResponse | PlainMessage<GetBookmarksByActorAndSubjectsResponse> | undefined): boolean {
+    return proto3.util.equals(GetBookmarksByActorAndSubjectsResponse, a, b);
+  }
+}
+
+/**
+ * @generated from message bsky.GetActorBookmarksRequest
+ */
+export class GetActorBookmarksRequest extends Message<GetActorBookmarksRequest> {
+  /**
+   * @generated from field: string actor_did = 1;
+   */
+  actorDid = "";
+
+  /**
+   * @generated from field: int32 limit = 2;
+   */
+  limit = 0;
+
+  /**
+   * @generated from field: string cursor = 3;
+   */
+  cursor = "";
+
+  constructor(data?: PartialMessage<GetActorBookmarksRequest>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "bsky.GetActorBookmarksRequest";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "actor_did", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: "limit", kind: "scalar", T: 5 /* ScalarType.INT32 */ },
+    { no: 3, name: "cursor", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): GetActorBookmarksRequest {
+    return new GetActorBookmarksRequest().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): GetActorBookmarksRequest {
+    return new GetActorBookmarksRequest().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): GetActorBookmarksRequest {
+    return new GetActorBookmarksRequest().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: GetActorBookmarksRequest | PlainMessage<GetActorBookmarksRequest> | undefined, b: GetActorBookmarksRequest | PlainMessage<GetActorBookmarksRequest> | undefined): boolean {
+    return proto3.util.equals(GetActorBookmarksRequest, a, b);
+  }
+}
+
+/**
+ * @generated from message bsky.BookmarkInfo
+ */
+export class BookmarkInfo extends Message<BookmarkInfo> {
+  /**
+   * stash key
+   *
+   * @generated from field: string key = 1;
+   */
+  key = "";
+
+  /**
+   * @generated from field: string subject = 2;
+   */
+  subject = "";
+
+  constructor(data?: PartialMessage<BookmarkInfo>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "bsky.BookmarkInfo";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "key", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: "subject", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): BookmarkInfo {
+    return new BookmarkInfo().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): BookmarkInfo {
+    return new BookmarkInfo().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): BookmarkInfo {
+    return new BookmarkInfo().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: BookmarkInfo | PlainMessage<BookmarkInfo> | undefined, b: BookmarkInfo | PlainMessage<BookmarkInfo> | undefined): boolean {
+    return proto3.util.equals(BookmarkInfo, a, b);
+  }
+}
+
+/**
+ * @generated from message bsky.GetActorBookmarksResponse
+ */
+export class GetActorBookmarksResponse extends Message<GetActorBookmarksResponse> {
+  /**
+   * @generated from field: repeated bsky.BookmarkInfo bookmarks = 1;
+   */
+  bookmarks: BookmarkInfo[] = [];
+
+  /**
+   * @generated from field: string cursor = 2;
+   */
+  cursor = "";
+
+  constructor(data?: PartialMessage<GetActorBookmarksResponse>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "bsky.GetActorBookmarksResponse";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "bookmarks", kind: "message", T: BookmarkInfo, repeated: true },
+    { no: 2, name: "cursor", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): GetActorBookmarksResponse {
+    return new GetActorBookmarksResponse().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): GetActorBookmarksResponse {
+    return new GetActorBookmarksResponse().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): GetActorBookmarksResponse {
+    return new GetActorBookmarksResponse().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: GetActorBookmarksResponse | PlainMessage<GetActorBookmarksResponse> | undefined, b: GetActorBookmarksResponse | PlainMessage<GetActorBookmarksResponse> | undefined): boolean {
+    return proto3.util.equals(GetActorBookmarksResponse, a, b);
+  }
+}
+
+/**
  * GetFollowsFollowing gets the list of DIDs that the actor follows that also follow the targets
  *
  * @generated from message bsky.GetFollowsFollowingRequest
@@ -9142,6 +9478,55 @@ export class PingResponse extends Message<PingResponse> {
 
   static equals(a: PingResponse | PlainMessage<PingResponse> | undefined, b: PingResponse | PlainMessage<PingResponse> | undefined): boolean {
     return proto3.util.equals(PingResponse, a, b);
+  }
+}
+
+/**
+ * @generated from message bsky.StashRef
+ */
+export class StashRef extends Message<StashRef> {
+  /**
+   * @generated from field: string actor_did = 1;
+   */
+  actorDid = "";
+
+  /**
+   * @generated from field: string namespace = 2;
+   */
+  namespace = "";
+
+  /**
+   * @generated from field: string key = 3;
+   */
+  key = "";
+
+  constructor(data?: PartialMessage<StashRef>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "bsky.StashRef";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "actor_did", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: "namespace", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: "key", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): StashRef {
+    return new StashRef().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): StashRef {
+    return new StashRef().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): StashRef {
+    return new StashRef().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: StashRef | PlainMessage<StashRef> | undefined, b: StashRef | PlainMessage<StashRef> | undefined): boolean {
+    return proto3.util.equals(StashRef, a, b);
   }
 }
 

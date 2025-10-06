@@ -1,5 +1,99 @@
 # @atproto/api
 
+## 0.17.0
+
+### Minor Changes
+
+- [#4238](https://github.com/bluesky-social/atproto/pull/4238) [`dba2d30e2`](https://github.com/bluesky-social/atproto/commit/dba2d30e2c4ce0eb624f2139b485719d14474940) Thanks [@gaearon](https://github.com/gaearon)! - Don't clear session in resumeSession on transient network errors
+
+### Patch Changes
+
+- [#4232](https://github.com/bluesky-social/atproto/pull/4232) [`7f38ee03c`](https://github.com/bluesky-social/atproto/commit/7f38ee03c01357686a4ce54cdf8eed4e37074a58) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Add `pronouns` to `profileView` and `profileViewBasic`
+
+## 0.16.11
+
+### Patch Changes
+
+- [#4228](https://github.com/bluesky-social/atproto/pull/4228) [`1a5d7427b`](https://github.com/bluesky-social/atproto/commit/1a5d7427bf5811a019e7b50c7c2af711b8f2dd33) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Add app.bsky.unspecced.getOnboardingSuggestedStarterPacks
+
+- [#4228](https://github.com/bluesky-social/atproto/pull/4228) [`1a5d7427b`](https://github.com/bluesky-social/atproto/commit/1a5d7427bf5811a019e7b50c7c2af711b8f2dd33) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Add app.bsky.unspecced.getOnboardingSuggestedStarterPacksSkeleton
+
+## 0.16.10
+
+### Patch Changes
+
+- [#4224](https://github.com/bluesky-social/atproto/pull/4224) [`8dc4caf55`](https://github.com/bluesky-social/atproto/commit/8dc4caf55840578c835b4c851d4a599c15627a78) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Add `pronouns` and `website` to `app.bsky.actor.profile`
+
+## 0.16.9
+
+### Patch Changes
+
+- [#4189](https://github.com/bluesky-social/atproto/pull/4189) [`ff30786af`](https://github.com/bluesky-social/atproto/commit/ff30786af6f72ad6506939bfca01a3f55a096c1c) Thanks [@foysalit](https://github.com/foysalit)! - Add revoke credentials moderation event type to lexicons
+
+## 0.16.8
+
+### Patch Changes
+
+- [#3881](https://github.com/bluesky-social/atproto/pull/3881) [`a5b20f021`](https://github.com/bluesky-social/atproto/commit/a5b20f0218bd13e3c5d7681de2263dcc850b7523) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Add expanded moderation report reasons as outlined in
+  [RFC-0009](https://github.com/bluesky-social/proposals/tree/main/0009-mod-report-granularity)
+- Updated dependencies [[`055a413fb`](https://github.com/bluesky-social/atproto/commit/055a413fba4fab510ec899377154f1204ab12099)]:
+  - @atproto/common-web@0.4.3
+  - @atproto/lexicon@0.5.1
+  - @atproto/xrpc@0.7.5
+
+## 0.16.7
+
+### Patch Changes
+
+- [#4164](https://github.com/bluesky-social/atproto/pull/4164) [`09717f29a`](https://github.com/bluesky-social/atproto/commit/09717f29ac7ca742c9c3310980dbe4d112b7597f) Thanks [@rafaelbsky](https://github.com/rafaelbsky)! - Add bookmarks lexicons
+
+## 0.16.6
+
+### Patch Changes
+
+- Updated dependencies [[`f9dc9aa4c`](https://github.com/bluesky-social/atproto/commit/f9dc9aa4c9eaf2f82d140fbf011a9015e7f1a00d), [`f9dc9aa4c`](https://github.com/bluesky-social/atproto/commit/f9dc9aa4c9eaf2f82d140fbf011a9015e7f1a00d), [`f9dc9aa4c`](https://github.com/bluesky-social/atproto/commit/f9dc9aa4c9eaf2f82d140fbf011a9015e7f1a00d), [`f9dc9aa4c`](https://github.com/bluesky-social/atproto/commit/f9dc9aa4c9eaf2f82d140fbf011a9015e7f1a00d)]:
+  - @atproto/lexicon@0.5.0
+  - @atproto/syntax@0.4.1
+  - @atproto/xrpc@0.7.4
+
+## 0.16.5
+
+### Patch Changes
+
+- [#4142](https://github.com/bluesky-social/atproto/pull/4142) [`66dbf8db6`](https://github.com/bluesky-social/atproto/commit/66dbf8db6dd9defeee140accd2e7b25d13feb8b6) Thanks [@DavidBuchanan314](https://github.com/DavidBuchanan314)! - add com.atproto.temp.revokeAccountCredentials lexicon schema
+
+## 0.16.4
+
+### Patch Changes
+
+- Updated dependencies [[`2104d9033`](https://github.com/bluesky-social/atproto/commit/2104d9033e2e1a3a7b821c1f0c5c8ffac5832d59)]:
+  - @atproto/lexicon@0.4.14
+  - @atproto/xrpc@0.7.3
+
+## 0.16.3
+
+### Patch Changes
+
+- [#4109](https://github.com/bluesky-social/atproto/pull/4109) [`3156ddf61`](https://github.com/bluesky-social/atproto/commit/3156ddf61519fede9ed148478f082184a1e3242e) Thanks [@foysalit](https://github.com/foysalit)! - Add batchId filter to tools.ozone.moderation.queryEvents endpoint
+
+- Updated dependencies [[`331a356ce`](https://github.com/bluesky-social/atproto/commit/331a356ce27ff1d0b24747b0c16f3b54b07a0a12)]:
+  - @atproto/lexicon@0.4.13
+  - @atproto/xrpc@0.7.2
+
+## 0.16.2
+
+### Patch Changes
+
+- [#4081](https://github.com/bluesky-social/atproto/pull/4081) [`c370d933b`](https://github.com/bluesky-social/atproto/commit/c370d933b76b4e15b83a82b40d1b6a32bd54add6) Thanks [@rafaelbsky](https://github.com/rafaelbsky)! - Adds `purpose` filtering to `app.bsky.graph.getLists`.
+  Adds `app.bsky.graph.getListsWithMembership`.
+  Adds `app.bsky.graph.getStarterPacksWithMembership`.
+
+## 0.16.1
+
+### Patch Changes
+
+- [#3927](https://github.com/bluesky-social/atproto/pull/3927) [`171efadb4`](https://github.com/bluesky-social/atproto/commit/171efadb49f842aa8ff3bf9d790caa6e0e0456ef) Thanks [@foysalit](https://github.com/foysalit)! - Introduces ozone event timeline lexicons
+
 ## 0.16.0
 
 ### Minor Changes
