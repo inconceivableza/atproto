@@ -119,6 +119,11 @@ export enum FeedItemType {
    * @generated from enum value: FEED_ITEM_TYPE_RECIPE = 3;
    */
   RECIPE = 3,
+
+  /**
+   * @generated from enum value: FEED_ITEM_TYPE_REVIEW_RATING = 4;
+   */
+  REVIEW_RATING = 4,
 }
 // Retrieve enum metadata with: proto3.getEnumType(FeedItemType)
 proto3.util.setEnumType(FeedItemType, "bsky.FeedItemType", [
@@ -126,6 +131,7 @@ proto3.util.setEnumType(FeedItemType, "bsky.FeedItemType", [
   { no: 1, name: "FEED_ITEM_TYPE_POST" },
   { no: 2, name: "FEED_ITEM_TYPE_REPOST" },
   { no: 3, name: "FEED_ITEM_TYPE_RECIPE" },
+  { no: 4, name: "FEED_ITEM_TYPE_REVIEW_RATING" },
 ]);
 
 /**
@@ -9772,6 +9778,123 @@ export class GetRecipeRecordsResponse extends Message<GetRecipeRecordsResponse> 
 
   static equals(a: GetRecipeRecordsResponse | PlainMessage<GetRecipeRecordsResponse> | undefined, b: GetRecipeRecordsResponse | PlainMessage<GetRecipeRecordsResponse> | undefined): boolean {
     return proto3.util.equals(GetRecipeRecordsResponse, a, b);
+  }
+}
+
+/**
+ * @generated from message bsky.ReviewRatingRecord
+ */
+export class ReviewRatingRecord extends Message<ReviewRatingRecord> {
+  /**
+   * @generated from field: bsky.RecordInfo record_info = 1;
+   */
+  recordInfo?: RecordInfo;
+
+  /**
+   * @generated from field: bytes record = 2;
+   */
+  record = new Uint8Array(0);
+
+  constructor(data?: PartialMessage<ReviewRatingRecord>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "bsky.ReviewRatingRecord";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "record_info", kind: "message", T: RecordInfo },
+    { no: 2, name: "record", kind: "scalar", T: 12 /* ScalarType.BYTES */ },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): ReviewRatingRecord {
+    return new ReviewRatingRecord().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): ReviewRatingRecord {
+    return new ReviewRatingRecord().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): ReviewRatingRecord {
+    return new ReviewRatingRecord().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: ReviewRatingRecord | PlainMessage<ReviewRatingRecord> | undefined, b: ReviewRatingRecord | PlainMessage<ReviewRatingRecord> | undefined): boolean {
+    return proto3.util.equals(ReviewRatingRecord, a, b);
+  }
+}
+
+/**
+ * @generated from message bsky.GetReviewRatingRecordsRequest
+ */
+export class GetReviewRatingRecordsRequest extends Message<GetReviewRatingRecordsRequest> {
+  /**
+   * @generated from field: repeated string uris = 1;
+   */
+  uris: string[] = [];
+
+  constructor(data?: PartialMessage<GetReviewRatingRecordsRequest>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "bsky.GetReviewRatingRecordsRequest";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "uris", kind: "scalar", T: 9 /* ScalarType.STRING */, repeated: true },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): GetReviewRatingRecordsRequest {
+    return new GetReviewRatingRecordsRequest().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): GetReviewRatingRecordsRequest {
+    return new GetReviewRatingRecordsRequest().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): GetReviewRatingRecordsRequest {
+    return new GetReviewRatingRecordsRequest().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: GetReviewRatingRecordsRequest | PlainMessage<GetReviewRatingRecordsRequest> | undefined, b: GetReviewRatingRecordsRequest | PlainMessage<GetReviewRatingRecordsRequest> | undefined): boolean {
+    return proto3.util.equals(GetReviewRatingRecordsRequest, a, b);
+  }
+}
+
+/**
+ * @generated from message bsky.GetReviewRatingRecordsResponse
+ */
+export class GetReviewRatingRecordsResponse extends Message<GetReviewRatingRecordsResponse> {
+  /**
+   * @generated from field: repeated bsky.ReviewRatingRecord records = 1;
+   */
+  records: ReviewRatingRecord[] = [];
+
+  constructor(data?: PartialMessage<GetReviewRatingRecordsResponse>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "bsky.GetReviewRatingRecordsResponse";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "records", kind: "message", T: ReviewRatingRecord, repeated: true },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): GetReviewRatingRecordsResponse {
+    return new GetReviewRatingRecordsResponse().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): GetReviewRatingRecordsResponse {
+    return new GetReviewRatingRecordsResponse().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): GetReviewRatingRecordsResponse {
+    return new GetReviewRatingRecordsResponse().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: GetReviewRatingRecordsResponse | PlainMessage<GetReviewRatingRecordsResponse> | undefined, b: GetReviewRatingRecordsResponse | PlainMessage<GetReviewRatingRecordsResponse> | undefined): boolean {
+    return proto3.util.equals(GetReviewRatingRecordsResponse, a, b);
   }
 }
 
