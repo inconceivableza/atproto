@@ -998,6 +998,7 @@ enum FeedItemType {
   FEED_ITEM_TYPE_POST = 1;
   FEED_ITEM_TYPE_REPOST = 2;
   FEED_ITEM_TYPE_RECIPE = 3;
+  FEED_ITEM_TYPE_REVIEW_RATING = 4;
 }
 
 message AuthorFeedItem {
@@ -1359,6 +1360,19 @@ message GetRecipeRecordsResponse {
 }
 
 
+message ReviewRatingRecord {
+  RecordInfo record_info = 1;
+  bytes record = 2;
+}
+
+message GetReviewRatingRecordsRequest {
+  repeated string uris = 1;
+}
+
+message GetReviewRatingRecordsResponse {
+  repeated ReviewRatingRecord records = 1;
+}
+
 service Service {
   //
   // Read Path
@@ -1374,6 +1388,7 @@ service Service {
   rpc GetListRecords(GetListRecordsRequest) returns (GetListRecordsResponse);
   rpc GetPostRecords(GetPostRecordsRequest) returns (GetPostRecordsResponse);
   rpc GetRecipeRecords(GetRecipeRecordsRequest) returns (GetRecipeRecordsResponse);
+  rpc GetReviewRatingRecords(GetReviewRatingRecordsRequest) returns (GetReviewRatingRecordsResponse);
   rpc GetProfileRecords(GetProfileRecordsRequest) returns (GetProfileRecordsResponse);
   rpc GetActorChatDeclarationRecords(GetActorChatDeclarationRecordsRequest) returns (GetActorChatDeclarationRecordsResponse);
   rpc GetNotificationDeclarationRecords(GetNotificationDeclarationRecordsRequest) returns (GetNotificationDeclarationRecordsResponse);

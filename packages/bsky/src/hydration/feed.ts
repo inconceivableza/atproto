@@ -8,6 +8,7 @@ import { Record as RepostRecord } from '../lexicon/types/app/bsky/feed/repost'
 import { Record as ThreadgateRecord } from '../lexicon/types/app/bsky/feed/threadgate'
 import { Record as RecipeRecord } from '../lexicon/types/app/foodios/feed/recipePost'
 import { Record as RecipeRevisionRecord } from '../lexicon/types/app/foodios/feed/recipeRevision'
+import { Record as ReviewRatingRecord } from '../lexicon/types/app/foodios/feed/reviewRating'
 import {
   postUriToPostgateUri,
   postUriToThreadgateUri,
@@ -93,6 +94,8 @@ export type Recipe = RecordInfo<RecipeRecord> & {
   revisions: RecipeRevision[]
 }
 export type Recipes = HydrationMap<Recipe> 
+export type ReviewRating = RecordInfo<ReviewRatingRecord>
+export type ReviewRatings = HydrationMap<ReviewRating>
 
 export type ThreadRef = ItemRef & { threadRoot: string }
 
@@ -150,6 +153,30 @@ export class FeedHydrator {
         takedownRef: item.recordInfo.takedownRef,
         record: recipeRecord,
         revisions
+      })
+    })
+
+    return result
+  }
+
+  async getReviewRatings(uris: string[], includeTakedowns = false): Promise<ReviewRatings> {
+    const { records } = await this.dataplane.getReviewRatingRecords({ uris: uris.map(stripSearchParams) })
+
+    const result = new HydrationMap<ReviewRating>()
+    records.forEach(item => {
+      if (!item.recordInfo) {
+        return
+      }
+      const reviewRatingRecord = parseRecordBytes<ReviewRatingRecord>(item.record)
+      if (!(reviewRatingRecord && isValidRecord(reviewRatingRecord))) {
+        return
+      }
+      result.set(item.recordInfo.uri, {
+        cid: item.recordInfo.cid,
+        indexedAt: item.recordInfo.indexedAt?.toDate() ?? new Date(0),
+        sortedAt: item.recordInfo.sortedAt?.toDate() ?? new Date(),
+        takedownRef: item.recordInfo.takedownRef,
+        record: reviewRatingRecord
       })
     })
 

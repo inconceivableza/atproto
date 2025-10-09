@@ -200,7 +200,11 @@ const insertFn = async (
       embeds.push(recordEmbed)
       await db.insertInto('post_embed_record').values(recordEmbed).execute()
 
-      if (embedUri.collection === lex.ids.AppBskyFeedPost || embedUri.collection === lex.ids.AppFoodiosFeedRecipePost) {
+      if (
+        embedUri.collection === lex.ids.AppBskyFeedPost ||
+        embedUri.collection === lex.ids.AppFoodiosFeedRecipePost ||
+        embedUri.collection === lex.ids.AppFoodiosFeedReviewRating
+      ) {
         const quote = {
           uri: uri.toString(),
           cid: cid.toString(),
@@ -320,7 +324,9 @@ const notifsForInsert = (obj: IndexedPost) => {
     for (const embed of obj.embeds ?? []) {
       if ('embedUri' in embed) {
         const embedUri = new AtUri(embed.embedUri)
-        if (embedUri.collection === lex.ids.AppBskyFeedPost || embedUri.collection === lex.ids.AppFoodiosFeedRecipePost) {
+        if (embedUri.collection === lex.ids.AppBskyFeedPost ||
+            embedUri.collection === lex.ids.AppFoodiosFeedRecipePost ||
+            embedUri.collection === lex.ids.AppFoodiosFeedReviewRating) {
           maybeNotify({
             did: embedUri.host,
             reason: 'quote',

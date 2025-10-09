@@ -12,6 +12,7 @@ import {
   AppBskyActorProfile,
   AppBskyFeedPost,
   AppFoodiosFeedRecipePost,
+  AppFoodiosFeedReviewRating,
   AppBskyLabelerDefs,
   AppNS,
   ChatNS,
@@ -389,6 +390,16 @@ export class Agent extends XrpcClient {
 
   getRecipePost: typeof this.app.foodios.feed.recipePost.get = (params) => {
     return this.app.foodios.feed.recipePost.get(params)
+  }
+
+  async reviewRating(record: AppFoodiosFeedReviewRating.Record) {
+    return this.app.foodios.feed.reviewRating.create({ repo: this.assertDid },
+      record
+    )
+  }
+
+  getReviewRating: typeof this.app.foodios.feed.reviewRating.get = (params) => {
+    return this.app.foodios.feed.reviewRating.get(params)
   }
 
   async deletePost(postUri: string) {

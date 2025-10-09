@@ -275,6 +275,10 @@ class SelfThreadTracker {
       return true
     }
 
+    if (this.hydration.reviewRatings?.get(uri)) {
+      return true
+    }
+
     // must be hydratable to be part of self-thread
     const post = this.hydration.posts?.get(uri)
     if (!post) {

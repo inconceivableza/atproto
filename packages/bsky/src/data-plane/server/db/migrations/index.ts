@@ -56,3 +56,4 @@ export * as _20250627T025331240Z from './20250627T025331240Z-add-actor-age-assur
 export * as _20250812T183735692Z from './20250812T183735692Z-add-bookmarks'
 export * as _20250813T174955711Z from './20250813T174955711Z-add-post-agg-bookmarks'
 export * as _20250909T113942313Z from './20250909T113942313Z-recipe-revision'
+export * as _20251008T152735000Z from './20251008T152735000Z-review-rating'

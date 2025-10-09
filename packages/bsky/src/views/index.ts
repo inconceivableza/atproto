@@ -1,7 +1,14 @@
 import { HOUR, MINUTE, mapDefined } from '@atproto/common'
 import { AtUri, INVALID_HANDLE, normalizeDatetimeAlways } from '@atproto/syntax'
 import { Actor, ProfileViewerState } from '../hydration/actor'
-import { FeedItem, Like, Post, Recipe, RecipeRevision, Repost } from '../hydration/feed'
+import {
+  FeedItem,
+  Like,
+  Post,
+  RecipeRevision,
+  Repost,
+  ReviewRating,
+} from '../hydration/feed'
 import { Follow, Verification } from '../hydration/graph'
 import { HydrationState } from '../hydration/hydrator'
 import { Label } from '../hydration/label'
@@ -68,6 +75,9 @@ import {
   Record as RecipeRevisionRecord, isRecord as isRecipeRevisionRecord
 } from "../lexicon/types/app/foodios/feed/recipeRevision"
 import {
+  Record as ReviewRatingRecord, isRecord as isReviewRatingRecord
+} from "../lexicon/types/app/foodios/feed/reviewRating"
+import {
   ActivitySubscription,
   RecordDeleted as NotificationRecordDeleted,
 } from '../lexicon/types/app/bsky/notification/defs'
@@ -130,7 +140,7 @@ import {
   parsePostgate,
   parseThreadGate,
 } from './util'
-import { isRecipeURI } from '../util'
+import { isRecipeURI, isReviewRatingURI } from '../util'
 import { revisionFromUri, stripSearchParams } from "@atproto/api"
 
 const notificationDeletedRecord = {
@@ -726,7 +736,8 @@ export class Views {
       | LabelerRecord
       | VerificationRecord
       | NotificationRecordDeleted
-    | RecipeRevisionRecord
+      | RecipeRevisionRecord
+      | ReviewRatingRecord
   }): Label[] {
     if (!uri || !cid || !record) return []
 
@@ -735,7 +746,8 @@ export class Views {
       !isPostRecord(record) &&
       !isProfileRecord(record) &&
       !isLabelerRecord(record) &&
-      !isRecipeRevisionRecord(record)
+      !isRecipeRevisionRecord(record) &&
+      !isReviewRatingRecord(record)
     ) {
       return []
     }
@@ -957,6 +969,46 @@ export class Views {
     }
   }
 
+  reviewRatingView({ uri }: { uri: string }, state: HydrationState, depth = 0): $Typed<PostView> | undefined {
+    const review = state.reviewRatings?.get(uri)
+    if (!review) return;
+
+    const parsedUri = new AtUri(uri)
+    const authorDid = parsedUri.hostname
+    const author = this.profileBasic(authorDid, state)
+    if (!author) return
+    const aggs = state.postAggs?.get(uri)
+    const viewer = state.postViewers?.get(uri)
+
+    const record: $Typed<PostView> = {
+      "$type": "app.bsky.feed.defs#postView",
+      uri: uri,
+      cid: review.cid,
+      author,
+      record: review.record as any,
+      embed:
+        depth < 2 && review.record.embed
+          ? this.embed(uri, review.record.embed as any, state, depth + 1)
+          : undefined,
+      replyCount: aggs?.replies ?? 0,
+      repostCount: aggs?.reposts ?? 0,
+      likeCount: aggs?.likes ?? 0,
+      quoteCount: aggs?.quotes ?? 0,
+      indexedAt: this.indexedAt(review).toISOString(),
+      viewer: viewer
+        ? {
+          repost: viewer.repost,
+          like: viewer.like,
+          threadMuted: viewer.threadMuted,
+          replyDisabled: this.userReplyDisabled(uri, state),
+          embeddingDisabled: this.userPostEmbeddingDisabled(uri, state),
+          pinned: this.viewerPinned(uri, state, authorDid),
+        }
+        : undefined,
+    }
+    return record
+  }
+
   post(
     uri: string,
     state: HydrationState,
@@ -965,7 +1017,10 @@ export class Views {
     let postUri = uri
     if (isRecipeURI(uri)) {
       return this.recipeView({ uri }, state, depth)
-    } 
+    }
+    if (isReviewRatingURI(uri)) {
+      return this.reviewRatingView({ uri }, state, depth)
+    }
     const post = state.posts?.get(uri)
 
 
@@ -991,7 +1046,7 @@ export class Views {
       cid: post.cid,
       author,
       record: post.record,
-      embed: 
+      embed:
         depth < 2 && post.record.embed
           ? this.embed(uri, post.record.embed as any, state, depth + 1)
           : undefined,
@@ -1030,6 +1085,13 @@ export class Views {
         post: recipePostView
       }
     }
+    if (item.itemType == FeedItemType.REVIEW_RATING) {
+      const reviewPostView = this.reviewRatingView({ uri: item.post.uri }, state)
+      if (!reviewPostView) return;
+      return {
+        post: reviewPostView
+      }
+    }
     if (item.repost && isRecipeURI(item.post.uri)) {
       const repost = state.reposts?.get(item.repost.uri)
       if (!repost) return
@@ -1042,10 +1104,10 @@ export class Views {
         reason
       }
     }
-    
+
     const postView =  this.feedViewPost(item, state)
     if (!postView) return
-    return postView 
+    return postView
   }
 
   feedViewPost(
@@ -1114,7 +1176,6 @@ export class Views {
 
   maybePost(uri: string, state: HydrationState): $Typed<MaybePostView> {
     const post = this.post(uri, state)
-    
     if (!post) {
       return this.notFoundPost(uri)
     }
@@ -1228,7 +1289,7 @@ export class Views {
     })
     let rootUri = anchor
     let violatesThreadGate = false // TODO: fix
-    if (!isRecipeURI(post.uri)) {
+    if (!isRecipeURI(post.uri) && !isReviewRatingURI(post.uri)) {
       const postInfo = state.posts?.get(anchor)
       if (!postInfo) return this.notFoundPost(anchor)
       rootUri = getRootUri(anchor, postInfo)
@@ -1366,12 +1427,15 @@ export class Views {
     //
     // Not found.
     const postView = this.post(anchorUri, state)
-    let post: RecipeRevision | Post | null | undefined
+    let post: RecipeRevision | ReviewRating | Post | null | undefined
     if (isRecipeURI(anchorUri)) {
       post = state.recipePosts?.get(anchorUri)?.revisions.at(-1)
+    } else if (isReviewRatingURI(anchorUri)) {
+      post = state.reviewRatings?.get(anchorUri)
     } else {
       post = state.posts?.get(anchorUri)
-    } if (!(post && postView)) {
+    }
+    if (!(post && postView)) {
       return {
         hasOtherReplies: false,
         thread: [
@@ -1406,7 +1470,7 @@ export class Views {
 
     const record = postView.record
     //@ts-ignore // TODO: clean up
-    const rootUri = record?.reply?.root.uri ?? anchorUri 
+    const rootUri = record?.reply?.root.uri ?? anchorUri
     const opDid = uriToDid(rootUri)
     const authorDid = postView.author.did
     const isOPPost = authorDid === opDid
@@ -2347,6 +2411,23 @@ export class Views {
         indexedAt: view.indexedAt,
         embeds: depth > 1 ? undefined : view.embed ? [view.embed] : [],
       }, withTypeTag)
+    } else if (parsedUri.collection === ids.AppFoodiosFeedReviewRating) {
+      const view = this.reviewRatingView({ uri }, state)
+      if (!view) return this.embedNotFound(uri)
+      return this.recordEmbedWrapper({
+        $type: 'app.bsky.embed.record#viewRecord',
+        uri: view.uri,
+        cid: view.cid,
+        author: view.author,
+        value: view.record,
+        labels: view.labels,
+        likeCount: view.likeCount,
+        replyCount: view.replyCount,
+        repostCount: view.repostCount,
+        quoteCount: view.quoteCount,
+        indexedAt: view.indexedAt,
+        embeds: depth > 1 ? undefined : view.embed ? [view.embed] : [],
+      }, withTypeTag)
     }
     return this.embedNotFound(uri)
   }
@@ -2431,7 +2512,7 @@ export class Views {
     uri: string,
     state: HydrationState,
   ): boolean | undefined {
-    if (!state.posts?.get(uri) && !state.recipePosts?.get(uri)) {
+    if (!state.posts?.get(uri) && !state.recipePosts?.get(uri) && !state.reviewRatings?.get(uri)) {
       return true
     }
     const postgateRecordUri = postUriToPostgateUri(uri)
@@ -2479,6 +2560,7 @@ export class Views {
       | Verification
       | Pick<RecordInfo<Required<NotificationRecordDeleted>>, 'cid' | 'record'>
       | RecipeRevision
+      | ReviewRating
       | undefined
       | null
 
@@ -2511,6 +2593,8 @@ export class Views {
           : undefined
     } else if (uri.collection === ids.AppFoodiosFeedRecipePost) {
       recordInfo = state.recipePosts?.get(notif.uri)?.revisions.at(-1)
+    } else if (uri.collection === ids.AppFoodiosFeedReviewRating) {
+      recordInfo = state.reviewRatings?.get(notif.uri)
     }
     if (!recordInfo) return
 

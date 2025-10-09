@@ -43,6 +43,10 @@ export function moderateRecipe() {
   return new ModerationDecision()
 }
 
+export function moderateReview() {
+  return new ModerationDecision()
+}
+
 export function moderateNotification(
   subject: ModerationSubjectNotification,
   opts: ModerationOpts,

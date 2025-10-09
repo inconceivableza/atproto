@@ -182,3 +182,14 @@ export function partition<T>(arr: T[], filter: (val:T) => boolean) {
   })
   return result
 }
+
+export function partitionMap<T>(arr: T[], map: (val:T) => string) {
+  const result: Map<string, T[]> = new Map()
+  arr.forEach(v => {
+    const key = map(v)
+    const group = result.get(key) ?? []
+    group.push(v)
+    result.set(key, group)
+  })
+  return result 
+}

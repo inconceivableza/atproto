@@ -5,7 +5,14 @@ import { keyBy } from '@atproto/common'
 import { AtUri } from '@atproto/syntax'
 import { ids } from '../../../lexicon/lexicons'
 import { Service } from '../../../proto/bsky_connect'
-import { GetRecipeRecordsRequest, PostRecordMeta, Record as ATRecord, RecipeRecord, RecipeRevisionRecord } from '../../../proto/bsky_pb'
+import {
+  GetRecipeRecordsRequest,
+  GetReviewRatingRecordsRequest,
+  PostRecordMeta,
+  RecipeRecord,
+  RecipeRevisionRecord,
+  Record as ATRecord,
+} from '../../../proto/bsky_pb'
 import { AppFoodiosFeedRecipeRevision } from '@atproto/api'
 import { Database } from '../db'
 import { Record as BskyRecord } from '../db/tables/record'
@@ -21,6 +28,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
   getListRecords: getRecords(db, ids.AppBskyGraphList),
   getPostRecords: getPostRecords(db),
   getRecipeRecords: getRecipeRecords(db),
+  getReviewRatingRecords: getReviewRatingRecords(db),
   getProfileRecords: getRecords(db, ids.AppBskyActorProfile),
   getRepostRecords: getRecords(db, ids.AppBskyFeedRepost),
   getThreadGateRecords: getRecords(db, ids.AppBskyFeedThreadgate),
@@ -147,6 +155,14 @@ export const getRecipeRecords = (db: Database) => {
       recipeRecord.revisions = revisions.toSorted((a, b) => (a.recordInfo?.sortedAt?.seconds ?? BigInt(0)) - (b.recordInfo?.sortedAt?.seconds ?? BigInt(0)) > 0 ? 1 : -1)
       return recipeRecord
     })
+    return { records }
+  }
+}
+
+export const getReviewRatingRecords = (db: Database) => {
+  const getBaseRecords = getRecords(db, ids.AppFoodiosFeedReviewRating)
+  return async function (req: GetReviewRatingRecordsRequest) {
+    const { records } = await getBaseRecords(req)
     return { records }
   }
 }
