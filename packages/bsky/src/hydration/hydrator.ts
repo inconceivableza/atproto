@@ -488,7 +488,8 @@ export class Hydrator {
     const urisLayer1ByCollection = urisByCollection(urisLayer1.concat(additionalRootUris))
     const embedPostUrisLayer1 =
       urisLayer1ByCollection.get(ids.AppBskyFeedPost) ?? []
-    const embedRecipeUrisLayer1 = urisLayer1ByCollection.get(ids.AppFoodiosFeedRecipePost) ?? []
+    const embedRecipeUrisLayer1 =
+      urisLayer1ByCollection.get(ids.AppFoodiosFeedRecipePost) ?? []
 
     const postsLayer1 = await this.feed.getPosts(
       [...embedPostUrisLayer1, ...additionalRootUris],
