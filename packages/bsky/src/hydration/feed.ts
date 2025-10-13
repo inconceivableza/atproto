@@ -19,13 +19,15 @@ import {
   ItemRef,
   RecordInfo,
   isValidRecord,
+  parseJsonBytes,
   parseRecord,
   parseRecordBytes,
   parseString,
   split,
 } from './util'
 import { FeedItemType } from '../proto/bsky_pb'
-import { stripSearchParams } from '@atproto/api'
+import { jsonToLex, lexicons, stripSearchParams } from '@atproto/api'
+import { hydrationLogger } from '../logger'
 
 export type Post = RecordInfo<PostRecord> & {
   violatesThreadGate: boolean
@@ -93,8 +95,14 @@ export type RecipeRevision = RecordInfo<RecipeRevisionRecord> & { uri: string }
 export type Recipe = RecordInfo<RecipeRecord> & {
   revisions: RecipeRevision[]
 }
-export type Recipes = HydrationMap<Recipe> 
-export type ReviewRating = RecordInfo<ReviewRatingRecord>
+export type Recipes = HydrationMap<Recipe>
+export type ReviewRating = RecordInfo<ReviewRatingRecord> & {
+  violatesThreadGate: boolean
+  violatesEmbeddingRules: boolean
+  hasThreadGate: boolean
+  hasPostGate: boolean
+  tags: Set<string>
+}
 export type ReviewRatings = HydrationMap<ReviewRating>
 
 export type ThreadRef = ItemRef & { threadRoot: string }
@@ -159,28 +167,60 @@ export class FeedHydrator {
     return result
   }
 
-  async getReviewRatings(uris: string[], includeTakedowns = false): Promise<ReviewRatings> {
-    const { records } = await this.dataplane.getReviewRatingRecords({ uris: uris.map(stripSearchParams) })
+  async getReviewRatings(
+    uris: string[],
+    includeTakedowns = false,
+    given = new HydrationMap<ReviewRating>(),
+  ): Promise<ReviewRatings> {
+    const [have, need] = split(uris, (uri) => given.has(uri))
+    const base = have.reduce(
+      (acc, uri) => acc.set(uri, given.get(uri) ?? null),
+      new HydrationMap<ReviewRating>(),
+    )
+    if (!need.length) return base
 
-    const result = new HydrationMap<ReviewRating>()
-    records.forEach(item => {
-      if (!item.recordInfo) {
-        return
+    const res = await this.dataplane.getReviewRatingRecords({ uris: need })
+    return need.reduce((acc, uri, i) => {
+      const item = res.records[i]
+      hydrationLogger.info({ item }, 'Processing review rating item')
+      if (!item.record) {
+        hydrationLogger.warn({ item }, 'Missing record for review rating')
+        return acc.set(uri, null)
       }
-      const reviewRatingRecord = parseRecordBytes<ReviewRatingRecord>(item.record)
-      if (!(reviewRatingRecord && isValidRecord(reviewRatingRecord))) {
-        return
+      const record = parseRecord<ReviewRatingRecord>(item, includeTakedowns)
+      hydrationLogger.info({ record }, "record")
+      if (!record) {
+        const jsonRecord = parseJsonBytes(item.record)
+        const parsedRecord = parseRecordBytes<ReviewRatingRecord>(item.record)
+        const lexRecord = jsonToLex(jsonRecord)
+        hydrationLogger.warn({ item, record, jsonRecord, parsedRecord, lexRecord }, 'Invalid review rating record')
+        if (typeof lexRecord?.['$type'] !== 'string') {
+          hydrationLogger.warn({ lexRecord }, 'type is not string')
+        }
+        try {
+          lexicons.assertValidRecord(lexRecord!['$type'], lexRecord)
+        } catch (e) {
+          hydrationLogger.warn({ lexRecord, e }, 'validation error')
+          return acc.set(uri, null)
+        }
+        hydrationLogger.warn({ lexRecord, jsonRecord, record }, 'Weirdly, isValidRecord failed but assertValidRecord succeeded')
+        return acc.set(uri, null)
       }
-      result.set(item.recordInfo.uri, {
-        cid: item.recordInfo.cid,
-        indexedAt: item.recordInfo.indexedAt?.toDate() ?? new Date(0),
-        sortedAt: item.recordInfo.sortedAt?.toDate() ?? new Date(),
-        takedownRef: item.recordInfo.takedownRef,
-        record: reviewRatingRecord
-      })
-    })
-
-    return result
+      const tags = new Set<string>(item.tags ?? [])
+      const reviewRating: ReviewRating = {
+        ...record,
+        cid: item.cid,
+        indexedAt: item.indexedAt?.toDate() ?? new Date(0),
+        sortedAt: item.sortedAt?.toDate() ?? new Date(),
+        takedownRef: item.takedownRef,
+        hasThreadGate: false,
+        hasPostGate: false,
+        violatesEmbeddingRules: false,
+        violatesThreadGate: false,
+        tags,
+      }
+      return acc.set(uri, reviewRating)
+    }, base)
   }
 
   async getPosts(

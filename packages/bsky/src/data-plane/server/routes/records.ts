@@ -178,9 +178,27 @@ export const getRecipeRecords = (db: Database) => {
 
 export const getReviewRatingRecords = (db: Database) => {
   const getBaseRecords = getRecords(db, ids.AppFoodiosFeedReviewRating)
-  return async function (req: GetReviewRatingRecordsRequest) {
-    const { records } = await getBaseRecords(req)
-    return { records }
+  return async function (req: GetReviewRatingRecordsRequest): Promise<{ records: ATRecord[]; meta: PostRecordMeta[] }> {
+    const [{ records }, details] = await Promise.all([
+      getBaseRecords(req),
+      req.uris.length
+        ? await db.db
+          .selectFrom('review_rating')
+          .where('uri', 'in', req.uris)
+          .selectAll()
+          .execute()
+        : [],
+    ])
+    const byKey = keyBy(details, 'uri')
+    const meta = req.uris.map((uri) => {
+      return new PostRecordMeta({
+        violatesThreadGate: false, // !!byKey.get(uri)?.violatesThreadGate,
+        violatesEmbeddingRules: false, // !!byKey.get(uri)?.violatesEmbeddingRules,
+        hasThreadGate: false, // !!byKey.get(uri)?.hasThreadGate,
+        hasPostGate: false, // !!byKey.get(uri)?.hasPostGate,
+      })
+    })
+    return { records, meta }
   }
 }
 

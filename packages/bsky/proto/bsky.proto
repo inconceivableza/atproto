@@ -1361,8 +1361,15 @@ message GetRecipeRecordsResponse {
 
 
 message ReviewRatingRecord {
-  RecordInfo record_info = 1;
-  bytes record = 2;
+  bytes record = 1;
+  string cid = 2;
+  google.protobuf.Timestamp indexed_at = 4;
+  bool taken_down = 5;
+  google.protobuf.Timestamp created_at = 6;
+  google.protobuf.Timestamp sorted_at = 7;
+  string takedown_ref = 8;
+  repeated string tags = 9;
+  RecordInfo record_info = 10;
 }
 
 message GetReviewRatingRecordsRequest {
@@ -1371,6 +1378,7 @@ message GetReviewRatingRecordsRequest {
 
 message GetReviewRatingRecordsResponse {
   repeated ReviewRatingRecord records = 1;
+  repeated PostRecordMeta meta = 2;
 }
 
 service Service {
