@@ -9786,14 +9786,49 @@ export class GetRecipeRecordsResponse extends Message<GetRecipeRecordsResponse> 
  */
 export class ReviewRatingRecord extends Message<ReviewRatingRecord> {
   /**
-   * @generated from field: bsky.RecordInfo record_info = 1;
-   */
-  recordInfo?: RecordInfo;
-
-  /**
-   * @generated from field: bytes record = 2;
+   * @generated from field: bytes record = 1;
    */
   record = new Uint8Array(0);
+
+  /**
+   * @generated from field: string cid = 2;
+   */
+  cid = "";
+
+  /**
+   * @generated from field: google.protobuf.Timestamp indexed_at = 4;
+   */
+  indexedAt?: Timestamp;
+
+  /**
+   * @generated from field: bool taken_down = 5;
+   */
+  takenDown = false;
+
+  /**
+   * @generated from field: google.protobuf.Timestamp created_at = 6;
+   */
+  createdAt?: Timestamp;
+
+  /**
+   * @generated from field: google.protobuf.Timestamp sorted_at = 7;
+   */
+  sortedAt?: Timestamp;
+
+  /**
+   * @generated from field: string takedown_ref = 8;
+   */
+  takedownRef = "";
+
+  /**
+   * @generated from field: repeated string tags = 9;
+   */
+  tags: string[] = [];
+
+  /**
+   * @generated from field: bsky.RecordInfo record_info = 10;
+   */
+  recordInfo?: RecordInfo;
 
   constructor(data?: PartialMessage<ReviewRatingRecord>) {
     super();
@@ -9803,8 +9838,15 @@ export class ReviewRatingRecord extends Message<ReviewRatingRecord> {
   static readonly runtime: typeof proto3 = proto3;
   static readonly typeName = "bsky.ReviewRatingRecord";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
-    { no: 1, name: "record_info", kind: "message", T: RecordInfo },
-    { no: 2, name: "record", kind: "scalar", T: 12 /* ScalarType.BYTES */ },
+    { no: 1, name: "record", kind: "scalar", T: 12 /* ScalarType.BYTES */ },
+    { no: 2, name: "cid", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 4, name: "indexed_at", kind: "message", T: Timestamp },
+    { no: 5, name: "taken_down", kind: "scalar", T: 8 /* ScalarType.BOOL */ },
+    { no: 6, name: "created_at", kind: "message", T: Timestamp },
+    { no: 7, name: "sorted_at", kind: "message", T: Timestamp },
+    { no: 8, name: "takedown_ref", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 9, name: "tags", kind: "scalar", T: 9 /* ScalarType.STRING */, repeated: true },
+    { no: 10, name: "record_info", kind: "message", T: RecordInfo },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): ReviewRatingRecord {
@@ -9870,6 +9912,11 @@ export class GetReviewRatingRecordsResponse extends Message<GetReviewRatingRecor
    */
   records: ReviewRatingRecord[] = [];
 
+  /**
+   * @generated from field: repeated bsky.PostRecordMeta meta = 2;
+   */
+  meta: PostRecordMeta[] = [];
+
   constructor(data?: PartialMessage<GetReviewRatingRecordsResponse>) {
     super();
     proto3.util.initPartial(data, this);
@@ -9879,6 +9926,7 @@ export class GetReviewRatingRecordsResponse extends Message<GetReviewRatingRecor
   static readonly typeName = "bsky.GetReviewRatingRecordsResponse";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
     { no: 1, name: "records", kind: "message", T: ReviewRatingRecord, repeated: true },
+    { no: 2, name: "meta", kind: "message", T: PostRecordMeta, repeated: true },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): GetReviewRatingRecordsResponse {
