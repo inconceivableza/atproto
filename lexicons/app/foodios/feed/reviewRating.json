@@ -25,18 +25,20 @@
                         "type": "integer",
                         "minimum": 1,
                         "maximum": 10,
-                        "description": "Rating value from 1 to 10 (representing 1/2 to 5 stars?)."
+                        "description": "Rating value from 1 to 10 (representing 1/2 to 5 stars)."
                     },
-                    "reviewBody": {
+                    "text": {
                         "type": "string",
-                        "maxLength": 2000
+                        "maxLength": 2000,
+                        "description": "The actual body of the review (reviewBody)."
                     },
-                    "images": {
+                    "embed": {
                         "type": "union",
                         "refs": [
                             "app.bsky.embed.images",
                             "app.bsky.embed.video"
-                        ]
+                        ],
+                        "description": "Any images or videos attached to this review (image)."
                     },
                     "langs": {
                         "type": "array",

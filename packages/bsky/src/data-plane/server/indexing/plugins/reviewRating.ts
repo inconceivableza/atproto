@@ -1,4 +1,4 @@
-import { Insertable, Selectable } from 'kysely'
+import { Insertable, Selectable, sql } from 'kysely'
 import { CID } from 'multiformats/cid'
 import { AtUri, normalizeDatetimeAlways } from '@atproto/syntax'
 import * as lex from '../../../../lexicon/lexicons'
@@ -7,6 +7,7 @@ import { BackgroundQueue } from '../../background'
 import { Database } from '../../db'
 import { DatabaseSchema, DatabaseSchemaType } from '../../db/database-schema'
 import { Notification } from '../../db/tables/notification'
+import { excluded } from '../../db/util'
 import { RecordProcessor } from '../processor'
 
 const lexId = lex.ids.AppFoodiosFeedReviewRating
@@ -30,7 +31,7 @@ const insertFn = async (
       subject: obj.subject.uri,
       subjectCid: obj.subject.cid,
       reviewRating: obj.reviewRating ?? 0,
-      reviewBody: obj.reviewBody ?? null,
+      text: obj.text ?? null,
       createdAt: normalizeDatetimeAlways(obj.createdAt),
       indexedAt: timestamp,
     })
@@ -49,6 +50,7 @@ const findDuplicate = async (
     .selectFrom('review_rating')
     .where('creator', '=', uri.host)
     .where('subject', '=', obj.subject.uri)
+    .where('reviewAspect', '=', '')
     .selectAll()
     .executeTakeFirst()
   return found ? new AtUri(found.uri) : null
@@ -102,8 +104,29 @@ const updateAggregates = async (
   db: DatabaseSchema,
   reviewRating: IndexedReviewRating,
 ) => {
-  // For now, we don't maintain aggregate counts for reviews
-  // This can be extended later if needed to track review counts and average ratings
+  const ratingAggQb = db
+    .insertInto('rating_agg')
+    .columns(['uri', 'aspect', 'ratingCount', 'ratingAverage'])
+    .expression((eb) =>
+      eb
+        .selectFrom('review_rating')
+        .select([
+          'subject as uri',
+          sql<string>`coalesce(review_rating."reviewAspect", '')`.as('aspect'),
+          sql<number>`count(review_rating."reviewRating")`.as('ratingAverage'),
+          sql<number>`avg(review_rating."reviewRating")`.as('ratingAverage'),
+        ])
+        .where('review_rating.subject', '=', reviewRating.subject)
+        .where('review_rating.reviewRating', 'is not', null)
+        .groupBy(['subject', 'reviewAspect'])
+    )
+    .onConflict((oc) =>
+      oc.columns(['uri', 'aspect']).doUpdateSet({
+        ratingCount: excluded(db, 'ratingCount'),
+        ratingAverage: excluded(db, 'ratingAverage'),
+      }),
+    )
+  await ratingAggQb.execute()
 }
 
 export type PluginType = RecordProcessor<

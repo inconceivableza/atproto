@@ -7,8 +7,9 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .addColumn('creator', 'varchar', (col) => col.notNull())
     .addColumn('subject', 'varchar', (col) => col.notNull())
     .addColumn('subjectCid', 'varchar', (col) => col.notNull())
-    .addColumn('reviewRating', 'integer', (col) => col.notNull())
-    .addColumn('reviewBody', 'varchar')
+    .addColumn('reviewRating', 'integer')
+    .addColumn('reviewAspect', 'varchar')
+    .addColumn('text', 'varchar')
     .addColumn('createdAt', 'varchar', (col) => col.notNull())
     .addColumn('indexedAt', 'varchar', (col) => col.notNull())
     .addColumn('sortAt', 'varchar', (col) =>

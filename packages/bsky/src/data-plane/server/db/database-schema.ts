@@ -30,8 +30,11 @@ import * as privateData from './tables/private-data'
 import * as profile from './tables/profile'
 import * as profileAgg from './tables/profile-agg'
 import * as quote from './tables/quote'
+import * as ratingAgg from './tables/rating-agg'
+import * as recipePost from './tables/recipe-post'
 import * as record from './tables/record'
 import * as repost from './tables/repost'
+import * as reviewRating from './tables/review-rating'
 import * as starterPack from './tables/starter-pack'
 import * as subscription from './tables/subscription'
 import * as suggestedFeed from './tables/suggested-feed'
@@ -41,8 +44,6 @@ import * as threadgate from './tables/thread-gate'
 import * as threadMute from './tables/thread-mute'
 import * as verification from './tables/verification'
 import * as viewParam from './tables/view-param'
-import * as recipePost from './tables/recipe-post'
-import * as reviewRating from './tables/review-rating'
 
 export type DatabaseSchemaType = duplicateRecord.PartialDB &
   profile.PartialDB &
@@ -87,6 +88,7 @@ export type DatabaseSchemaType = duplicateRecord.PartialDB &
   activitySubscription.PartialDB &
   bookmark.PartialDB &
   recipePost.PartialDB &
-  reviewRating.PartialDB
+  reviewRating.PartialDB &
+  ratingAgg.PartialDB
 
 export type DatabaseSchema = Kysely<DatabaseSchemaType>

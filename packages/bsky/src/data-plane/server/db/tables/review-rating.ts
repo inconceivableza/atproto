@@ -11,8 +11,9 @@ export interface ReviewRating {
   subject: string
   subjectCid: string
   // currently all reviews are of recipies. If this is varied, we should introduce a subjectCollection field
-  reviewRating: number
-  reviewBody: string | null
+  reviewAspect: string | null
+  reviewRating: number | null
+  text: string | null
   createdAt: string
   indexedAt: string
   sortAt: GeneratedAlways<string>
