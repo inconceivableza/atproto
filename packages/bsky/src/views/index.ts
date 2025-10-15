@@ -940,6 +940,12 @@ export class Views {
       // TODO: pass createdAt field through from data-plane
       revisionRefs: recipe.revisions.map(revision => ({ uri: revision.uri, createdAt: revision.sortedAt.toISOString() }))
     }
+    const ratingCount = aggs?.ratingCount ?? -1
+    const ratingAverage = aggs?.ratingAverage ?? -1
+    const ratingInfo = {
+      ...(ratingCount === -1) ? {} : {ratingCount},
+      ...(ratingAverage === -1) ? {} : {ratingAverage100: Math.round(ratingAverage * 100)},
+    }
 
     return {
       "$type": "app.bsky.feed.defs#postView",
@@ -966,6 +972,7 @@ export class Views {
           pinned: this.viewerPinned(uri, state, authorDid),
         }
         : undefined,
+      ...ratingInfo,
     }
   }
 

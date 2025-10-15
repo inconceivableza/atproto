@@ -380,7 +380,7 @@ export class Agent extends XrpcClient {
 
   async recipePost(record: AppFoodiosFeedRecipePost.Record
   //   {
-  //   [K in keyof AppFoodiosFeedRecipePost.Record as K extends "createdAt" ? never : K]: AppFoodiosFeedRecipePost.Record[K] 
+  //   [K in keyof AppFoodiosFeedRecipePost.Record as K extends "createdAt" ? never : K]: AppFoodiosFeedRecipePost.Record[K]
   // } & Partial<Pick<AppFoodiosFeedRecipePost.Record, 'createdAt'>>
   ){
     return this.app.foodios.feed.recipePost.create({ repo: this.assertDid },

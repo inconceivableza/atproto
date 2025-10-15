@@ -30,7 +30,7 @@ const insertFn = async (
       creator: uri.host,
       subject: obj.subject.uri,
       subjectCid: obj.subject.cid,
-      reviewRating: obj.reviewRating ?? 0,
+      reviewRating: obj.reviewRating ?? null,
       text: obj.text ?? null,
       createdAt: normalizeDatetimeAlways(obj.createdAt),
       indexedAt: timestamp,
