@@ -1827,6 +1827,13 @@ export const schemaDict = {
           quoteCount: {
             type: 'integer',
           },
+          ratingCount: {
+            type: 'integer',
+          },
+          ratingAverage100: {
+            type: 'integer',
+            description: 'Average rating * 100',
+          },
           indexedAt: {
             type: 'string',
             format: 'datetime',
@@ -8546,15 +8553,18 @@ export const schemaDict = {
               minimum: 1,
               maximum: 10,
               description:
-                'Rating value from 1 to 10 (representing 1/2 to 5 stars?).',
+                'Rating value from 1 to 10 (representing 1/2 to 5 stars).',
             },
-            reviewBody: {
+            text: {
               type: 'string',
               maxLength: 2000,
+              description: 'The actual body of the review (reviewBody).',
             },
-            images: {
+            embed: {
               type: 'union',
               refs: ['lex:app.bsky.embed.images', 'lex:app.bsky.embed.video'],
+              description:
+                'Any images or videos attached to this review (image).',
             },
             langs: {
               type: 'array',

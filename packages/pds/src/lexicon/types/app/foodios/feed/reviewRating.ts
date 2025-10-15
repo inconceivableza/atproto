@@ -22,10 +22,11 @@ export interface Record {
   $type: 'app.foodios.feed.reviewRating'
   subject: ComAtprotoRepoStrongRef.Main
   createdAt: string
-  /** Rating value from 1 to 10 (representing 1/2 to 5 stars?). */
+  /** Rating value from 1 to 10 (representing 1/2 to 5 stars). */
   reviewRating?: number
-  reviewBody?: string
-  images?:
+  /** The actual body of the review (reviewBody). */
+  text?: string
+  embed?:
     | $Typed<AppBskyEmbedImages.Main>
     | $Typed<AppBskyEmbedVideo.Main>
     | { $type: string }
