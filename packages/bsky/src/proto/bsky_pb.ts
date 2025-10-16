@@ -2979,6 +2979,11 @@ export class GetInteractionCountsResponse extends Message<GetInteractionCountsRe
    */
   ratingAverage: number[] = [];
 
+  /**
+   * @generated from field: repeated int32 reviewCount = 8;
+   */
+  reviewCount: number[] = [];
+
   constructor(data?: PartialMessage<GetInteractionCountsResponse>) {
     super();
     proto3.util.initPartial(data, this);
@@ -2994,6 +2999,7 @@ export class GetInteractionCountsResponse extends Message<GetInteractionCountsRe
     { no: 5, name: "bookmarks", kind: "scalar", T: 5 /* ScalarType.INT32 */, repeated: true },
     { no: 6, name: "ratingCount", kind: "scalar", T: 5 /* ScalarType.INT32 */, repeated: true },
     { no: 7, name: "ratingAverage", kind: "scalar", T: 2 /* ScalarType.FLOAT */, repeated: true },
+    { no: 8, name: "reviewCount", kind: "scalar", T: 5 /* ScalarType.INT32 */, repeated: true },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): GetInteractionCountsResponse {
