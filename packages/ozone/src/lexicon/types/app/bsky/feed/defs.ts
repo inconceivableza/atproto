@@ -44,6 +44,8 @@ export interface PostView {
   ratingCount?: number
   /** Average rating * 100 */
   ratingAverage100?: number
+  /** Number of review/ratings with non-empty text */
+  reviewCount?: number
   indexedAt: string
   viewer?: ViewerState
   labels?: ComAtprotoLabelDefs.Label[]

@@ -1834,6 +1834,10 @@ export const schemaDict = {
             type: 'integer',
             description: 'Average rating * 100',
           },
+          reviewCount: {
+            type: 'integer',
+            description: 'Number of review/ratings with non-empty text',
+          },
           indexedAt: {
             type: 'string',
             format: 'datetime',
