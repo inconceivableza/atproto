@@ -7,6 +7,7 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .addColumn('aspect', 'text', (col) => col.defaultTo(''))
     .addColumn('ratingCount', 'bigint', (col) => col.notNull().defaultTo(0))
     .addColumn('ratingAverage', 'numeric', (col) => col.defaultTo(null))
+    .addColumn('reviewCount', 'bigint', (col) => col.notNull().defaultTo(0))
     .addPrimaryKeyConstraint('rating_agg_pk', ['uri', 'aspect'])
     .execute()
 }

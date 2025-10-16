@@ -40,6 +40,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
         'post_agg.bookmarkCount',
         'rating_agg.ratingCount',
         sql<string>`coalesce(rating_agg."ratingAverage"::text, '')`.as('ratingAverage'), // postgres returns floats as strings
+        'rating_agg.reviewCount',
       ])
       .execute()
     const byUri = keyBy(res, 'uri')
@@ -53,6 +54,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       ratingAverage: uris.map(
         (uri) => stringToFloat(byUri.get(uri)?.ratingAverage) ?? -1,
       ),
+      reviewCount: uris.map((uri) => byUri.get(uri)?.reviewCount ?? 0),
     }
   },
   async getCountsForUsers(req) {

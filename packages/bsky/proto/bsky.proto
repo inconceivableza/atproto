@@ -364,6 +364,7 @@ message GetInteractionCountsResponse {
   repeated int32 bookmarks = 5;
   repeated int32 ratingCount = 6;
   repeated float ratingAverage = 7;
+  repeated int32 reviewCount = 8;
 }
 
 message GetCountsForUsersRequest {

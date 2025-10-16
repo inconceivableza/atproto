@@ -106,15 +106,16 @@ const updateAggregates = async (
 ) => {
   const ratingAggQb = db
     .insertInto('rating_agg')
-    .columns(['uri', 'aspect', 'ratingCount', 'ratingAverage'])
+    .columns(['uri', 'aspect', 'ratingCount', 'ratingAverage', 'reviewCount'])
     .expression((eb) =>
       eb
         .selectFrom('review_rating')
         .select([
           'subject as uri',
           sql<string>`coalesce(review_rating."reviewAspect", '')`.as('aspect'),
-          sql<number>`count(review_rating."reviewRating")`.as('ratingAverage'),
+          sql<number>`count(review_rating."reviewRating")`.as('ratingCount'),
           sql<number>`avg(review_rating."reviewRating")`.as('ratingAverage'),
+          sql<number>`count(review_rating.text) FILTER (where text <> '')`.as('reviewCount'),
         ])
         .where('review_rating.subject', '=', reviewRating.subject)
         .where('review_rating.reviewRating', 'is not', null)
@@ -124,6 +125,7 @@ const updateAggregates = async (
       oc.columns(['uri', 'aspect']).doUpdateSet({
         ratingCount: excluded(db, 'ratingCount'),
         ratingAverage: excluded(db, 'ratingAverage'),
+        reviewCount: excluded(db, 'reviewCount'),
       }),
     )
   await ratingAggQb.execute()

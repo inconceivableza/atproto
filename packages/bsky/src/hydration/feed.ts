@@ -62,6 +62,7 @@ export type PostAgg = {
   bookmarks: number
   ratingCount: number | null
   ratingAverage: number | null
+  reviewCount: number | null
 }
 
 export type PostAggs = HydrationMap<PostAgg>
@@ -365,6 +366,7 @@ export class FeedHydrator {
         bookmarks: counts.bookmarks[i] ?? 0,
         ratingCount: counts.ratingCount[i] ?? null,
         ratingAverage: counts.ratingAverage[i] ?? null,
+        reviewCount: counts.reviewCount[i] ?? null,
       })
     }, new HydrationMap<PostAgg>())
   }

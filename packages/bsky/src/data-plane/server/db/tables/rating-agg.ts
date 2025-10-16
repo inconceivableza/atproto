@@ -7,6 +7,7 @@ export interface RatingAgg {
   aspect: string
   ratingCount: Generated<number>
   ratingAverage: Generated<number>
+  reviewCount: Generated<number>
 }
 
 export type PartialDB = {

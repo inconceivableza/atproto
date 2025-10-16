@@ -942,9 +942,11 @@ export class Views {
     }
     const ratingCount = aggs?.ratingCount ?? -1
     const ratingAverage = aggs?.ratingAverage ?? -1
+    const reviewCount = aggs?.reviewCount ?? -1
     const ratingInfo = {
       ...(ratingCount === -1) ? {} : {ratingCount},
       ...(ratingAverage === -1) ? {} : {ratingAverage100: Math.round(ratingAverage * 100)},
+      ...(reviewCount === -1) ? {} : {reviewCount},
     }
 
     return {
