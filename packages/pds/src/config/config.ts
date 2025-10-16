@@ -26,6 +26,7 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
     emailImagesBaseUrl: env.emailImagesBaseUrl ?? 'https://bsky.social/about/images/email/',
     contactEmailAddress: env.contactEmailAddress,
     acceptingImports: env.acceptingImports ?? true,
+    maxImportSize: env.maxImportSize,
     blobUploadLimit: env.blobUploadLimit ?? 5 * 1024 * 1024, // 5mb
     devMode: env.devMode ?? false,
   }
@@ -263,7 +264,7 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
   const oauthCfg: ServerConfig['oauth'] = entrywayCfg
     ? {
         issuer: entrywayCfg.url,
-        provider: false,
+        provider: undefined,
       }
     : {
         issuer: serviceCfg.publicUrl,
@@ -323,8 +324,13 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
                 f.href != null && f.href !== '',
             ),
           },
+          trustedClients: env.trustedOAuthClients,
         },
       }
+
+  const lexiconCfg: LexiconResolverConfig = {
+    didAuthority: env.lexiconDidAuthority,
+  }
 
   return {
     service: serviceCfg,
@@ -345,6 +351,7 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
     rateLimits: rateLimitsCfg,
     crawlers: crawlersCfg,
     fetch: fetchCfg,
+    lexicon: lexiconCfg,
     proxy: proxyCfg,
     oauth: oauthCfg,
   }
@@ -371,6 +378,7 @@ export type ServerConfig = {
   fetch: FetchConfig
   proxy: ProxyConfig
   oauth: OAuthConfig
+  lexicon: LexiconResolverConfig
 }
 
 export type ServiceConfig = {
@@ -383,6 +391,7 @@ export type ServiceConfig = {
   termsOfServiceUrl?: string
   emailImagesBaseUrl?: string
   acceptingImports: boolean
+  maxImportSize?: number
   blobUploadLimit: number
   contactEmailAddress?: string
   devMode: boolean
@@ -470,12 +479,15 @@ export type ProxyConfig = {
 
 export type OAuthConfig = {
   issuer: string
-  provider:
-    | false
-    | {
-        hcaptcha?: HcaptchaConfig
-        branding: BrandingInput
-      }
+  provider?: {
+    hcaptcha?: HcaptchaConfig
+    branding: BrandingInput
+    trustedClients?: string[]
+  }
+}
+
+export type LexiconResolverConfig = {
+  didAuthority?: string
 }
 
 export type InvitesConfig =

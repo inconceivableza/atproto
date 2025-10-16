@@ -6,6 +6,7 @@ import * as actorState from './tables/actor-state'
 import * as actorSync from './tables/actor-sync'
 import * as algo from './tables/algo'
 import * as blobTakedown from './tables/blob-takedown'
+import * as bookmark from './tables/bookmark'
 import * as didCache from './tables/did-cache'
 import * as duplicateRecord from './tables/duplicate-record'
 import * as feedGenerator from './tables/feed-generator'
@@ -83,6 +84,7 @@ export type DatabaseSchemaType = duplicateRecord.PartialDB &
   verification.PartialDB &
   privateData.PartialDB &
   activitySubscription.PartialDB &
+  bookmark.PartialDB &
   recipePost.PartialDB
 
 export type DatabaseSchema = Kysely<DatabaseSchemaType>

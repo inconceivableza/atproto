@@ -223,7 +223,9 @@ export const parseCommitAuthenticated = async (
       return op.cid !== null && op.cid.equals(verifiedCids[op.path])
     }
   })
-  return formatCommitOps(evt, verifiedOps)
+  return formatCommitOps(evt, verifiedOps, {
+    skipCidVerification: true, // already checked via verifyProofs()
+  })
 }
 
 export const parseCommitUnauthenticated = async (
@@ -245,8 +247,12 @@ const maybeFilterOps = (
   })
 }
 
-const formatCommitOps = async (evt: Commit, ops: RepoOp[]) => {
-  const car = await readCar(evt.blocks)
+const formatCommitOps = async (
+  evt: Commit,
+  ops: RepoOp[],
+  options?: { skipCidVerification: boolean },
+) => {
+  const car = await readCar(evt.blocks, options)
 
   const evts: CommitEvt[] = []
 
