@@ -31,7 +31,8 @@ const insertFn = async (
       subject: obj.subject.uri,
       subjectCid: obj.subject.cid,
       reviewRating: obj.reviewRating ?? null,
-      text: obj.text ?? null,
+      // FIXME: remove .reviewBody; this is for backwards compatibility with unremoved schemas...
+      text: obj.text ?? (obj.reviewBody as (string | null)) ?? null,
       createdAt: normalizeDatetimeAlways(obj.createdAt),
       indexedAt: timestamp,
     })
