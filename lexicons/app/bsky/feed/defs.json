@@ -28,6 +28,9 @@
         "repostCount": { "type": "integer" },
         "likeCount": { "type": "integer" },
         "quoteCount": { "type": "integer" },
+        "ratingCount": { "type": "integer" },
+        "ratingAverage100": { "type": "integer", "description": "Average rating * 100" },
+        "reviewCount": { "type": "integer", "description": "Number of review/ratings with non-empty text" },
         "indexedAt": { "type": "string", "format": "datetime" },
         "viewer": { "type": "ref", "ref": "#viewerState" },
         "labels": {

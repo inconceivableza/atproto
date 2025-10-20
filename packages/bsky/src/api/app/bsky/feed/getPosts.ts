@@ -4,7 +4,7 @@ import {
   HydrateCtx,
   HydrationState,
   Hydrator,
-  mergeStates,
+  mergeManyStates,
 } from '../../../../hydration/hydrator'
 import { Server } from '../../../../lexicon'
 import { ids } from '../../../../lexicon/lexicons'
@@ -13,8 +13,8 @@ import { createPipeline } from '../../../../pipeline'
 import { uriToDid as creatorFromUri } from '../../../../util/uris'
 import { Views } from '../../../../views'
 import { resHeaders } from '../../../util'
-import { partition } from '../../../../hydration/util'
-import { isRecipeURI } from '../../../../util'
+import { partitionMap } from '../../../../hydration/util'
+import { getURICollection } from '../../../../util'
 
 export default function (server: Server, ctx: AppContext) {
   const getPosts = createPipeline(skeleton, hydration, noBlocks, presentation)
@@ -53,13 +53,18 @@ const hydration = async (inputs: {
   skeleton: Skeleton
 }) => {
   const { ctx, params, skeleton } = inputs
-  const [recipeUris, postUris] = partition(skeleton.posts, isRecipeURI)
-  const [postsState, recipesState] = await Promise.all([ctx.hydrator.hydratePosts(
-    postUris.map((uri) => ({ uri })),
-    params.hydrateCtx,
-  ), ctx.hydrator.hydrateRecipes(recipeUris, params.hydrateCtx)
+  const collectionUrisMap = partitionMap(skeleton.posts, getURICollection)
+  const recipeUris = collectionUrisMap.get(ids.AppFoodiosFeedRecipePost) ?? []
+  const reviewRatingUris = collectionUrisMap.get(ids.AppFoodiosFeedReviewRating) ?? []
+  const postUris = collectionUrisMap.get(ids.AppBskyFeedPost) ?? []
+  const [postsState, recipesState, reviewRatingsState] = await Promise.all([ctx.hydrator.hydratePosts(
+      postUris.map((uri) => ({ uri })),
+      params.hydrateCtx,
+    ),
+    ctx.hydrator.hydrateRecipes(recipeUris, params.hydrateCtx),
+    ctx.hydrator.hydrateReviewRatings(reviewRatingUris, params.hydrateCtx),
   ])
-  return mergeStates(postsState, recipesState)
+  return mergeManyStates(postsState, recipesState, reviewRatingsState)
 }
 
 const noBlocks = (inputs: {

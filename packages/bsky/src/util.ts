@@ -50,3 +50,12 @@ export const formatLabelerHeader = (parsed: ParsedLabelers): string => {
 export function isRecipeURI(uri:string) {
   return new AtUri(uri).collection === ids.AppFoodiosFeedRecipePost
 }
+
+export function isReviewRatingURI(uri: string) {
+  return new AtUri(uri).collection === ids.AppFoodiosFeedReviewRating
+}
+
+export function getURICollection(uri: string) {
+  const collection = new AtUri(uri).collection
+  return collection
+}

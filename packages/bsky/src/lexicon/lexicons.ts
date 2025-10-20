@@ -1827,6 +1827,17 @@ export const schemaDict = {
           quoteCount: {
             type: 'integer',
           },
+          ratingCount: {
+            type: 'integer',
+          },
+          ratingAverage100: {
+            type: 'integer',
+            description: 'Average rating * 100',
+          },
+          reviewCount: {
+            type: 'integer',
+            description: 'Number of review/ratings with non-empty text',
+          },
           indexedAt: {
             type: 'string',
             format: 'datetime',
@@ -8520,6 +8531,77 @@ export const schemaDict = {
       },
     },
   },
+  AppFoodiosFeedReviewRating: {
+    lexicon: 1,
+    id: 'app.foodios.feed.reviewRating',
+    defs: {
+      main: {
+        type: 'record',
+        description:
+          "Record declaring a 'rating' and/or 'review' of a piece of subject content. Minimally based on schema.org Review and Rating",
+        key: 'tid',
+        record: {
+          type: 'object',
+          required: ['subject', 'createdAt'],
+          properties: {
+            subject: {
+              type: 'ref',
+              ref: 'lex:com.atproto.repo.strongRef',
+            },
+            createdAt: {
+              type: 'string',
+              format: 'datetime',
+            },
+            reviewRating: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 10,
+              description:
+                'Rating value from 1 to 10 (representing 1/2 to 5 stars).',
+            },
+            text: {
+              type: 'string',
+              maxLength: 2000,
+              description: 'The actual body of the review (reviewBody).',
+            },
+            embed: {
+              type: 'union',
+              refs: ['lex:app.bsky.embed.images', 'lex:app.bsky.embed.video'],
+              description:
+                'Any images or videos attached to this review (image).',
+            },
+            langs: {
+              type: 'array',
+              description:
+                'Indicates human language of post primary text content.',
+              maxLength: 3,
+              items: {
+                type: 'string',
+                format: 'language',
+              },
+            },
+            labels: {
+              type: 'union',
+              description:
+                'Self-label values for this post. Effectively content warnings.',
+              refs: ['lex:com.atproto.label.defs#selfLabels'],
+            },
+            tags: {
+              type: 'array',
+              description:
+                'Additional hashtags, in addition to any included in post text and facets.',
+              maxLength: 8,
+              items: {
+                type: 'string',
+                maxLength: 640,
+                maxGraphemes: 64,
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   ChatBskyActorDeclaration: {
     lexicon: 1,
     id: 'chat.bsky.actor.declaration',
@@ -14753,6 +14835,7 @@ export const ids = {
   AppFoodiosFeedDefs: 'app.foodios.feed.defs',
   AppFoodiosFeedRecipePost: 'app.foodios.feed.recipePost',
   AppFoodiosFeedRecipeRevision: 'app.foodios.feed.recipeRevision',
+  AppFoodiosFeedReviewRating: 'app.foodios.feed.reviewRating',
   ChatBskyActorDeclaration: 'chat.bsky.actor.declaration',
   ChatBskyActorDefs: 'chat.bsky.actor.defs',
   ChatBskyActorDeleteAccount: 'chat.bsky.actor.deleteAccount',

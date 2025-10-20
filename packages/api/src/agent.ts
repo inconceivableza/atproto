@@ -12,6 +12,7 @@ import {
   AppBskyActorProfile,
   AppBskyFeedPost,
   AppFoodiosFeedRecipePost,
+  AppFoodiosFeedReviewRating,
   AppBskyLabelerDefs,
   AppNS,
   ChatNS,
@@ -379,7 +380,7 @@ export class Agent extends XrpcClient {
 
   async recipePost(record: AppFoodiosFeedRecipePost.Record
   //   {
-  //   [K in keyof AppFoodiosFeedRecipePost.Record as K extends "createdAt" ? never : K]: AppFoodiosFeedRecipePost.Record[K] 
+  //   [K in keyof AppFoodiosFeedRecipePost.Record as K extends "createdAt" ? never : K]: AppFoodiosFeedRecipePost.Record[K]
   // } & Partial<Pick<AppFoodiosFeedRecipePost.Record, 'createdAt'>>
   ){
     return this.app.foodios.feed.recipePost.create({ repo: this.assertDid },
@@ -389,6 +390,16 @@ export class Agent extends XrpcClient {
 
   getRecipePost: typeof this.app.foodios.feed.recipePost.get = (params) => {
     return this.app.foodios.feed.recipePost.get(params)
+  }
+
+  async reviewRating(record: AppFoodiosFeedReviewRating.Record) {
+    return this.app.foodios.feed.reviewRating.create({ repo: this.assertDid },
+      record
+    )
+  }
+
+  getReviewRating: typeof this.app.foodios.feed.reviewRating.get = (params) => {
+    return this.app.foodios.feed.reviewRating.get(params)
   }
 
   async deletePost(postUri: string) {

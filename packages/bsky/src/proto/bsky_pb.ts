@@ -119,6 +119,11 @@ export enum FeedItemType {
    * @generated from enum value: FEED_ITEM_TYPE_RECIPE = 3;
    */
   RECIPE = 3,
+
+  /**
+   * @generated from enum value: FEED_ITEM_TYPE_REVIEW_RATING = 4;
+   */
+  REVIEW_RATING = 4,
 }
 // Retrieve enum metadata with: proto3.getEnumType(FeedItemType)
 proto3.util.setEnumType(FeedItemType, "bsky.FeedItemType", [
@@ -126,6 +131,7 @@ proto3.util.setEnumType(FeedItemType, "bsky.FeedItemType", [
   { no: 1, name: "FEED_ITEM_TYPE_POST" },
   { no: 2, name: "FEED_ITEM_TYPE_REPOST" },
   { no: 3, name: "FEED_ITEM_TYPE_RECIPE" },
+  { no: 4, name: "FEED_ITEM_TYPE_REVIEW_RATING" },
 ]);
 
 /**
@@ -2963,6 +2969,21 @@ export class GetInteractionCountsResponse extends Message<GetInteractionCountsRe
    */
   bookmarks: number[] = [];
 
+  /**
+   * @generated from field: repeated int32 ratingCount = 6;
+   */
+  ratingCount: number[] = [];
+
+  /**
+   * @generated from field: repeated float ratingAverage = 7;
+   */
+  ratingAverage: number[] = [];
+
+  /**
+   * @generated from field: repeated int32 reviewCount = 8;
+   */
+  reviewCount: number[] = [];
+
   constructor(data?: PartialMessage<GetInteractionCountsResponse>) {
     super();
     proto3.util.initPartial(data, this);
@@ -2976,6 +2997,9 @@ export class GetInteractionCountsResponse extends Message<GetInteractionCountsRe
     { no: 3, name: "replies", kind: "scalar", T: 5 /* ScalarType.INT32 */, repeated: true },
     { no: 4, name: "quotes", kind: "scalar", T: 5 /* ScalarType.INT32 */, repeated: true },
     { no: 5, name: "bookmarks", kind: "scalar", T: 5 /* ScalarType.INT32 */, repeated: true },
+    { no: 6, name: "ratingCount", kind: "scalar", T: 5 /* ScalarType.INT32 */, repeated: true },
+    { no: 7, name: "ratingAverage", kind: "scalar", T: 2 /* ScalarType.FLOAT */, repeated: true },
+    { no: 8, name: "reviewCount", kind: "scalar", T: 5 /* ScalarType.INT32 */, repeated: true },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): GetInteractionCountsResponse {
@@ -9772,6 +9796,171 @@ export class GetRecipeRecordsResponse extends Message<GetRecipeRecordsResponse> 
 
   static equals(a: GetRecipeRecordsResponse | PlainMessage<GetRecipeRecordsResponse> | undefined, b: GetRecipeRecordsResponse | PlainMessage<GetRecipeRecordsResponse> | undefined): boolean {
     return proto3.util.equals(GetRecipeRecordsResponse, a, b);
+  }
+}
+
+/**
+ * @generated from message bsky.ReviewRatingRecord
+ */
+export class ReviewRatingRecord extends Message<ReviewRatingRecord> {
+  /**
+   * @generated from field: bytes record = 1;
+   */
+  record = new Uint8Array(0);
+
+  /**
+   * @generated from field: string cid = 2;
+   */
+  cid = "";
+
+  /**
+   * @generated from field: google.protobuf.Timestamp indexed_at = 4;
+   */
+  indexedAt?: Timestamp;
+
+  /**
+   * @generated from field: bool taken_down = 5;
+   */
+  takenDown = false;
+
+  /**
+   * @generated from field: google.protobuf.Timestamp created_at = 6;
+   */
+  createdAt?: Timestamp;
+
+  /**
+   * @generated from field: google.protobuf.Timestamp sorted_at = 7;
+   */
+  sortedAt?: Timestamp;
+
+  /**
+   * @generated from field: string takedown_ref = 8;
+   */
+  takedownRef = "";
+
+  /**
+   * @generated from field: repeated string tags = 9;
+   */
+  tags: string[] = [];
+
+  /**
+   * @generated from field: bsky.RecordInfo record_info = 10;
+   */
+  recordInfo?: RecordInfo;
+
+  constructor(data?: PartialMessage<ReviewRatingRecord>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "bsky.ReviewRatingRecord";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "record", kind: "scalar", T: 12 /* ScalarType.BYTES */ },
+    { no: 2, name: "cid", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 4, name: "indexed_at", kind: "message", T: Timestamp },
+    { no: 5, name: "taken_down", kind: "scalar", T: 8 /* ScalarType.BOOL */ },
+    { no: 6, name: "created_at", kind: "message", T: Timestamp },
+    { no: 7, name: "sorted_at", kind: "message", T: Timestamp },
+    { no: 8, name: "takedown_ref", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 9, name: "tags", kind: "scalar", T: 9 /* ScalarType.STRING */, repeated: true },
+    { no: 10, name: "record_info", kind: "message", T: RecordInfo },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): ReviewRatingRecord {
+    return new ReviewRatingRecord().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): ReviewRatingRecord {
+    return new ReviewRatingRecord().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): ReviewRatingRecord {
+    return new ReviewRatingRecord().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: ReviewRatingRecord | PlainMessage<ReviewRatingRecord> | undefined, b: ReviewRatingRecord | PlainMessage<ReviewRatingRecord> | undefined): boolean {
+    return proto3.util.equals(ReviewRatingRecord, a, b);
+  }
+}
+
+/**
+ * @generated from message bsky.GetReviewRatingRecordsRequest
+ */
+export class GetReviewRatingRecordsRequest extends Message<GetReviewRatingRecordsRequest> {
+  /**
+   * @generated from field: repeated string uris = 1;
+   */
+  uris: string[] = [];
+
+  constructor(data?: PartialMessage<GetReviewRatingRecordsRequest>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "bsky.GetReviewRatingRecordsRequest";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "uris", kind: "scalar", T: 9 /* ScalarType.STRING */, repeated: true },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): GetReviewRatingRecordsRequest {
+    return new GetReviewRatingRecordsRequest().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): GetReviewRatingRecordsRequest {
+    return new GetReviewRatingRecordsRequest().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): GetReviewRatingRecordsRequest {
+    return new GetReviewRatingRecordsRequest().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: GetReviewRatingRecordsRequest | PlainMessage<GetReviewRatingRecordsRequest> | undefined, b: GetReviewRatingRecordsRequest | PlainMessage<GetReviewRatingRecordsRequest> | undefined): boolean {
+    return proto3.util.equals(GetReviewRatingRecordsRequest, a, b);
+  }
+}
+
+/**
+ * @generated from message bsky.GetReviewRatingRecordsResponse
+ */
+export class GetReviewRatingRecordsResponse extends Message<GetReviewRatingRecordsResponse> {
+  /**
+   * @generated from field: repeated bsky.ReviewRatingRecord records = 1;
+   */
+  records: ReviewRatingRecord[] = [];
+
+  /**
+   * @generated from field: repeated bsky.PostRecordMeta meta = 2;
+   */
+  meta: PostRecordMeta[] = [];
+
+  constructor(data?: PartialMessage<GetReviewRatingRecordsResponse>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "bsky.GetReviewRatingRecordsResponse";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "records", kind: "message", T: ReviewRatingRecord, repeated: true },
+    { no: 2, name: "meta", kind: "message", T: PostRecordMeta, repeated: true },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): GetReviewRatingRecordsResponse {
+    return new GetReviewRatingRecordsResponse().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): GetReviewRatingRecordsResponse {
+    return new GetReviewRatingRecordsResponse().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): GetReviewRatingRecordsResponse {
+    return new GetReviewRatingRecordsResponse().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: GetReviewRatingRecordsResponse | PlainMessage<GetReviewRatingRecordsResponse> | undefined, b: GetReviewRatingRecordsResponse | PlainMessage<GetReviewRatingRecordsResponse> | undefined): boolean {
+    return proto3.util.equals(GetReviewRatingRecordsResponse, a, b);
   }
 }
 

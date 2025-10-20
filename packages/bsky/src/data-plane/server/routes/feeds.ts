@@ -15,7 +15,8 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
     let builder = db.db
       .selectFrom('feed_item')
       .leftJoin('post', 'post.uri', 'feed_item.postUri')
-      .leftJoin('recipe_post', "recipe_post.uri", "feed_item.postUri")
+      .leftJoin('recipe_post', 'recipe_post.uri', 'feed_item.postUri')
+      .leftJoin('review_rating', 'review_rating.uri', 'feed_item.postUri')
       .selectAll('feed_item')
       .where('originatorDid', '=', actorDid)
 

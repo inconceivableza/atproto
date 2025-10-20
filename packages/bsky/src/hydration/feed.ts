@@ -8,6 +8,7 @@ import { Record as RepostRecord } from '../lexicon/types/app/bsky/feed/repost'
 import { Record as ThreadgateRecord } from '../lexicon/types/app/bsky/feed/threadgate'
 import { Record as RecipeRecord } from '../lexicon/types/app/foodios/feed/recipePost'
 import { Record as RecipeRevisionRecord } from '../lexicon/types/app/foodios/feed/recipeRevision'
+import { Record as ReviewRatingRecord } from '../lexicon/types/app/foodios/feed/reviewRating'
 import {
   postUriToPostgateUri,
   postUriToThreadgateUri,
@@ -18,13 +19,15 @@ import {
   ItemRef,
   RecordInfo,
   isValidRecord,
+  parseJsonBytes,
   parseRecord,
   parseRecordBytes,
   parseString,
   split,
 } from './util'
 import { FeedItemType } from '../proto/bsky_pb'
-import { stripSearchParams } from '@atproto/api'
+import { jsonToLex, lexicons, stripSearchParams } from '@atproto/api'
+import { hydrationLogger } from '../logger'
 
 export type Post = RecordInfo<PostRecord> & {
   violatesThreadGate: boolean
@@ -57,6 +60,9 @@ export type PostAgg = {
   reposts: number
   quotes: number
   bookmarks: number
+  ratingCount: number | null
+  ratingAverage: number | null
+  reviewCount: number | null
 }
 
 export type PostAggs = HydrationMap<PostAgg>
@@ -92,7 +98,15 @@ export type RecipeRevision = RecordInfo<RecipeRevisionRecord> & { uri: string }
 export type Recipe = RecordInfo<RecipeRecord> & {
   revisions: RecipeRevision[]
 }
-export type Recipes = HydrationMap<Recipe> 
+export type Recipes = HydrationMap<Recipe>
+export type ReviewRating = RecordInfo<ReviewRatingRecord> & {
+  violatesThreadGate: boolean
+  violatesEmbeddingRules: boolean
+  hasThreadGate: boolean
+  hasPostGate: boolean
+  tags: Set<string>
+}
+export type ReviewRatings = HydrationMap<ReviewRating>
 
 export type ThreadRef = ItemRef & { threadRoot: string }
 
@@ -154,6 +168,62 @@ export class FeedHydrator {
     })
 
     return result
+  }
+
+  async getReviewRatings(
+    uris: string[],
+    includeTakedowns = false,
+    given = new HydrationMap<ReviewRating>(),
+  ): Promise<ReviewRatings> {
+    const [have, need] = split(uris, (uri) => given.has(uri))
+    const base = have.reduce(
+      (acc, uri) => acc.set(uri, given.get(uri) ?? null),
+      new HydrationMap<ReviewRating>(),
+    )
+    if (!need.length) return base
+
+    const res = await this.dataplane.getReviewRatingRecords({ uris: need })
+    return need.reduce((acc, uri, i) => {
+      const item = res.records[i]
+      hydrationLogger.info({ item }, 'Processing review rating item')
+      if (!item.record) {
+        hydrationLogger.warn({ item }, 'Missing record for review rating')
+        return acc.set(uri, null)
+      }
+      const record = parseRecord<ReviewRatingRecord>(item, includeTakedowns)
+      hydrationLogger.info({ record }, "record")
+      if (!record) {
+        const jsonRecord = parseJsonBytes(item.record)
+        const parsedRecord = parseRecordBytes<ReviewRatingRecord>(item.record)
+        const lexRecord = jsonToLex(jsonRecord)
+        hydrationLogger.warn({ item, record, jsonRecord, parsedRecord, lexRecord }, 'Invalid review rating record')
+        if (typeof lexRecord?.['$type'] !== 'string') {
+          hydrationLogger.warn({ lexRecord }, 'type is not string')
+        }
+        try {
+          lexicons.assertValidRecord(lexRecord!['$type'], lexRecord)
+        } catch (e) {
+          hydrationLogger.warn({ lexRecord, e }, 'validation error')
+          return acc.set(uri, null)
+        }
+        hydrationLogger.warn({ lexRecord, jsonRecord, record }, 'Weirdly, isValidRecord failed but assertValidRecord succeeded')
+        return acc.set(uri, null)
+      }
+      const tags = new Set<string>(item.tags ?? [])
+      const reviewRating: ReviewRating = {
+        ...record,
+        cid: item.cid,
+        indexedAt: item.indexedAt?.toDate() ?? new Date(0),
+        sortedAt: item.sortedAt?.toDate() ?? new Date(),
+        takedownRef: item.takedownRef,
+        hasThreadGate: false,
+        hasPostGate: false,
+        violatesEmbeddingRules: false,
+        violatesThreadGate: false,
+        tags,
+      }
+      return acc.set(uri, reviewRating)
+    }, base)
   }
 
   async getPosts(
@@ -294,6 +364,9 @@ export class FeedHydrator {
         replies: counts.replies[i] ?? 0,
         quotes: counts.quotes[i] ?? 0,
         bookmarks: counts.bookmarks[i] ?? 0,
+        ratingCount: counts.ratingCount[i] ?? null,
+        ratingAverage: counts.ratingAverage[i] ?? null,
+        reviewCount: counts.reviewCount[i] ?? null,
       })
     }, new HydrationMap<PostAgg>())
   }
