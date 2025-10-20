@@ -44,6 +44,7 @@ import {
   isModEventTag,
   isModEventTakedown,
   isRecordEvent,
+  isScheduleTakedownEvent,
 } from '../lexicon/types/tools/ozone/moderation/defs'
 import { Un$Typed, asPredicate } from '../lexicon/util'
 import { dbLogger, httpLogger } from '../logger'
@@ -260,6 +261,12 @@ export class ModerationViews {
 
     if (isAgeAssuranceOverrideEvent(event)) {
       event.status = ifString(meta.status)!
+    }
+
+    if (isScheduleTakedownEvent(event)) {
+      event.executeAt = ifString(meta.executeAt)
+      event.executeAfter = ifString(meta.executeAfter)
+      event.executeUntil = ifString(meta.executeUntil)
     }
 
     return eventView
@@ -571,8 +578,8 @@ export class ModerationViews {
           'moderation_subject_status.blobCids',
         )} @> ${JSON.stringify(blobs.map((blob) => blob.ref.toString()))}`,
       )
-      .selectAll()
       .executeTakeFirst()
+
     const statusByCid = (modStatusResults?.blobCids || [])?.reduce(
       (acc, cur) => Object.assign(acc, { [cur]: modStatusResults }),
       {},
@@ -585,6 +592,7 @@ export class ModerationViews {
       const subjectStatus = statusByCid[cid]
         ? this.formatSubjectStatus(statusByCid[cid])
         : undefined
+
       return {
         cid,
         mimeType: blob.mimeType,
