@@ -263,7 +263,7 @@
                     "maxLength": 100
                 },
                 "carbohydrateContent": {
-                    "description": "Energy in kJ",
+                    "description": "Carbohydrate in g",
                     "type": "string",
                     "maxLength": 100
                 },
@@ -334,7 +334,8 @@
                         "app.foodios.feed.defs#licenseCreativeCommonsByNc",
                         "app.foodios.feed.defs#licenseCreativeCommonsByNcSa",
                         "app.foodios.feed.defs#licensePublicDomain"
-                    ]
+                    ],
+                    "closed": true
                 },
                 "url": {
                     "type": "string",
@@ -385,7 +386,8 @@
                     "refs": [
                         "app.foodios.feed.defs#publicationTypeBook",
                         "app.foodios.feed.defs#publicationTypeMagazine"
-                    ]
+                    ],
+                    "closed": true
                 },
                 "title": {
                     "type": "string",

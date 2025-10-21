@@ -159,7 +159,7 @@ export interface Nutrition {
   servingSize: QuantityAndUnit
   /** Energy in kJ */
   energy: string
-  /** Energy in kJ */
+  /** Carbohydrate in g */
   carbohydrateContent?: string
   /** Cholesterol in mg */
   cholesterolContent?: string
@@ -201,7 +201,6 @@ export interface OriginalAttribution {
     | $Typed<AppFoodiosFeedDefs.LicenseCreativeCommonsByNc>
     | $Typed<AppFoodiosFeedDefs.LicenseCreativeCommonsByNcSa>
     | $Typed<AppFoodiosFeedDefs.LicensePublicDomain>
-    | { $type: string }
   url?: string
 }
 
@@ -239,7 +238,6 @@ export interface PublicationAttribution {
   publicationType:
     | $Typed<AppFoodiosFeedDefs.PublicationTypeBook>
     | $Typed<AppFoodiosFeedDefs.PublicationTypeMagazine>
-    | { $type: string }
   title: string
   author: string
   publisher?: string
