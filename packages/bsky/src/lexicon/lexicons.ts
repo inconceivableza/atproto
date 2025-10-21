@@ -7946,6 +7946,7 @@ export const schemaDict = {
       },
       licenseAllRights: {
         type: 'object',
+        required: ['licenseType'],
         properties: {
           licenseType: {
             type: 'string',
@@ -7956,6 +7957,7 @@ export const schemaDict = {
       },
       licenseCreativeCommonsBy: {
         type: 'object',
+        required: ['licenseType'],
         properties: {
           licenseType: {
             type: 'string',
@@ -7966,6 +7968,7 @@ export const schemaDict = {
       },
       licenseCreativeCommonsBySa: {
         type: 'object',
+        required: ['licenseType'],
         properties: {
           licenseType: {
             type: 'string',
@@ -7976,6 +7979,7 @@ export const schemaDict = {
       },
       licenseCreativeCommonsByNc: {
         type: 'object',
+        required: ['licenseType'],
         properties: {
           licenseType: {
             type: 'string',
@@ -7987,6 +7991,7 @@ export const schemaDict = {
       },
       licenseCreativeCommonsByNcSa: {
         type: 'object',
+        required: ['licenseType'],
         properties: {
           licenseType: {
             type: 'string',
@@ -7998,6 +8003,7 @@ export const schemaDict = {
       },
       licensePublicDomain: {
         type: 'object',
+        required: ['licenseType'],
         properties: {
           licenseType: {
             type: 'string',
@@ -8008,6 +8014,7 @@ export const schemaDict = {
       },
       publicationTypeBook: {
         type: 'object',
+        required: ['publicationType'],
         properties: {
           publicationType: {
             type: 'string',
@@ -8018,6 +8025,7 @@ export const schemaDict = {
       },
       publicationTypeMagazine: {
         type: 'object',
+        required: ['publicationType'],
         properties: {
           publicationType: {
             type: 'string',
@@ -8301,7 +8309,7 @@ export const schemaDict = {
             maxLength: 100,
           },
           carbohydrateContent: {
-            description: 'Energy in kJ',
+            description: 'Carbohydrate in g',
             type: 'string',
             maxLength: 100,
           },
@@ -8370,6 +8378,7 @@ export const schemaDict = {
               'lex:app.foodios.feed.defs#licenseCreativeCommonsByNcSa',
               'lex:app.foodios.feed.defs#licensePublicDomain',
             ],
+            closed: true,
           },
           url: {
             type: 'string',
@@ -8413,6 +8422,7 @@ export const schemaDict = {
               'lex:app.foodios.feed.defs#publicationTypeBook',
               'lex:app.foodios.feed.defs#publicationTypeMagazine',
             ],
+            closed: true,
           },
           title: {
             type: 'string',

@@ -51,7 +51,7 @@ export function validateRevisionRef<V>(v: V) {
 export interface LicenseAllRights {
   $type?: 'app.foodios.feed.defs#licenseAllRights'
   /** All rights reserved by the creator. */
-  licenseType?: 'licenseAllRights'
+  licenseType: 'licenseAllRights'
 }
 
 const hashLicenseAllRights = 'licenseAllRights'
@@ -67,7 +67,7 @@ export function validateLicenseAllRights<V>(v: V) {
 export interface LicenseCreativeCommonsBy {
   $type?: 'app.foodios.feed.defs#licenseCreativeCommonsBy'
   /** Creative Commons Attribution 4.0 License. */
-  licenseType?: 'licenseCreativeCommonsBy'
+  licenseType: 'licenseCreativeCommonsBy'
 }
 
 const hashLicenseCreativeCommonsBy = 'licenseCreativeCommonsBy'
@@ -87,7 +87,7 @@ export function validateLicenseCreativeCommonsBy<V>(v: V) {
 export interface LicenseCreativeCommonsBySa {
   $type?: 'app.foodios.feed.defs#licenseCreativeCommonsBySa'
   /** Creative Commons Attribution-ShareAlike 4.0 License. */
-  licenseType?: 'licenseCreativeCommonsBySa'
+  licenseType: 'licenseCreativeCommonsBySa'
 }
 
 const hashLicenseCreativeCommonsBySa = 'licenseCreativeCommonsBySa'
@@ -107,7 +107,7 @@ export function validateLicenseCreativeCommonsBySa<V>(v: V) {
 export interface LicenseCreativeCommonsByNc {
   $type?: 'app.foodios.feed.defs#licenseCreativeCommonsByNc'
   /** Creative Commons Attribution-NonCommercial 4.0 License. */
-  licenseType?: 'licenseCreativeCommonsByNc'
+  licenseType: 'licenseCreativeCommonsByNc'
 }
 
 const hashLicenseCreativeCommonsByNc = 'licenseCreativeCommonsByNc'
@@ -127,7 +127,7 @@ export function validateLicenseCreativeCommonsByNc<V>(v: V) {
 export interface LicenseCreativeCommonsByNcSa {
   $type?: 'app.foodios.feed.defs#licenseCreativeCommonsByNcSa'
   /** Creative Commons Attribution-NonCommercial-ShareAlike 4.0 License. */
-  licenseType?: 'licenseCreativeCommonsByNcSa'
+  licenseType: 'licenseCreativeCommonsByNcSa'
 }
 
 const hashLicenseCreativeCommonsByNcSa = 'licenseCreativeCommonsByNcSa'
@@ -147,7 +147,7 @@ export function validateLicenseCreativeCommonsByNcSa<V>(v: V) {
 export interface LicensePublicDomain {
   $type?: 'app.foodios.feed.defs#licensePublicDomain'
   /** Work dedicated to the public domain. */
-  licenseType?: 'licensePublicDomain'
+  licenseType: 'licensePublicDomain'
 }
 
 const hashLicensePublicDomain = 'licensePublicDomain'
@@ -163,7 +163,7 @@ export function validateLicensePublicDomain<V>(v: V) {
 export interface PublicationTypeBook {
   $type?: 'app.foodios.feed.defs#publicationTypeBook'
   /** Recipe from a published book. */
-  publicationType?: 'publicationTypeBook'
+  publicationType: 'publicationTypeBook'
 }
 
 const hashPublicationTypeBook = 'publicationTypeBook'
@@ -179,7 +179,7 @@ export function validatePublicationTypeBook<V>(v: V) {
 export interface PublicationTypeMagazine {
   $type?: 'app.foodios.feed.defs#publicationTypeMagazine'
   /** Recipe from a magazine. */
-  publicationType?: 'publicationTypeMagazine'
+  publicationType: 'publicationTypeMagazine'
 }
 
 const hashPublicationTypeMagazine = 'publicationTypeMagazine'
