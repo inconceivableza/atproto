@@ -214,7 +214,7 @@ export class FeedHydrator {
         ...record,
         cid: item.cid,
         indexedAt: item.indexedAt?.toDate() ?? new Date(0),
-        sortedAt: item.sortedAt?.toDate() ?? new Date(),
+        sortedAt: item.sortedAt?.toDate() ?? new Date(0),
         takedownRef: item.takedownRef,
         hasThreadGate: false,
         hasPostGate: false,
