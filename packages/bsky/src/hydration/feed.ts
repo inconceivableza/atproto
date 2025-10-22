@@ -160,7 +160,7 @@ export class FeedHydrator {
       result.set(item.recordInfo.uri, {
         cid: item.recordInfo.cid,
         indexedAt: item.recordInfo.indexedAt?.toDate() ?? new Date(0),
-        sortedAt: item.recordInfo.sortedAt?.toDate() ?? new Date(),
+        sortedAt: item.recordInfo.sortedAt?.toDate() ?? new Date(0),
         takedownRef: item.recordInfo.takedownRef,
         record: recipeRecord,
         revisions
@@ -214,7 +214,7 @@ export class FeedHydrator {
         ...record,
         cid: item.cid,
         indexedAt: item.indexedAt?.toDate() ?? new Date(0),
-        sortedAt: item.sortedAt?.toDate() ?? new Date(),
+        sortedAt: item.sortedAt?.toDate() ?? new Date(0),
         takedownRef: item.takedownRef,
         hasThreadGate: false,
         hasPostGate: false,
