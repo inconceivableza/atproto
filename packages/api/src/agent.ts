@@ -36,17 +36,18 @@ import * as predicate from './predicate'
 import { SessionManager } from './session-manager'
 import {
   AtpAgentGlobalOpts,
+  AtprotoProxy,
   AtprotoServiceType,
   BskyFeedViewPreference,
   BskyInterestsPreference,
   BskyPreferences,
   BskyThreadViewPreference,
+  asAtprotoProxy,
+  asDid,
+  isDid,
 } from './types'
 import {
-  Did,
-  asDid,
   getSavedFeedType,
-  isDid,
   sanitizeMutedWordValue,
   savedFeedsToUriArrays,
   validateNux,
@@ -190,12 +191,11 @@ export class Agent extends XrpcClient {
 
   //#region ATPROTO proxy configuration utilities
 
-  proxy?: `${Did}#${AtprotoServiceType}`
+  proxy?: AtprotoProxy
 
-  configureProxy(value: `${Did}#${AtprotoServiceType}` | null) {
+  configureProxy(value: AtprotoProxy | null) {
     if (value === null) this.proxy = undefined
-    else if (isDid(value)) this.proxy = value
-    else throw new TypeError('Invalid proxy DID')
+    else this.proxy = asAtprotoProxy(value)
   }
 
   /** @deprecated use {@link configureProxy} instead */

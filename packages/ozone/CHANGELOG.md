@@ -1,5 +1,32 @@
 # @atproto/ozone
 
+## 0.1.149
+
+### Patch Changes
+
+- [#4274](https://github.com/bluesky-social/atproto/pull/4274) [`ca768fe1b`](https://github.com/bluesky-social/atproto/commit/ca768fe1b0ba1662140b6eea550683d8675fa56e) Thanks [@foysalit](https://github.com/foysalit)! - Fix fetching event detail for subject with blob
+
+- Updated dependencies [[`386f583cf`](https://github.com/bluesky-social/atproto/commit/386f583cffa2c596a12be4e98dde498f3b8670f6)]:
+  - @atproto/api@0.17.3
+
+## 0.1.148
+
+### Patch Changes
+
+- [#4262](https://github.com/bluesky-social/atproto/pull/4262) [`1cb5b9b80`](https://github.com/bluesky-social/atproto/commit/1cb5b9b80c20a054f7fbacd89d0d440dc2241d81) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Finalize report reason lexicons, update migration map in Ozone
+
+- Updated dependencies [[`1cb5b9b80`](https://github.com/bluesky-social/atproto/commit/1cb5b9b80c20a054f7fbacd89d0d440dc2241d81)]:
+  - @atproto/api@0.17.2
+
+## 0.1.147
+
+### Patch Changes
+
+- [#4241](https://github.com/bluesky-social/atproto/pull/4241) [`591de1952`](https://github.com/bluesky-social/atproto/commit/591de19524639341a7dd64ee75c482c645c186fd) Thanks [@foysalit](https://github.com/foysalit)! - Add scheduled action api to ozone
+
+- Updated dependencies [[`09439d7d6`](https://github.com/bluesky-social/atproto/commit/09439d7d688294ad1a0c78a74b901ba2f7c5f4c3), [`09439d7d6`](https://github.com/bluesky-social/atproto/commit/09439d7d688294ad1a0c78a74b901ba2f7c5f4c3), [`591de1952`](https://github.com/bluesky-social/atproto/commit/591de19524639341a7dd64ee75c482c645c186fd)]:
+  - @atproto/api@0.17.1
+
 ## 0.1.146
 
 ### Patch Changes

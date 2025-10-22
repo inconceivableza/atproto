@@ -257,6 +257,7 @@ import * as ToolsOzoneCommunicationDeleteTemplate from './types/tools/ozone/comm
 import * as ToolsOzoneCommunicationListTemplates from './types/tools/ozone/communication/listTemplates.js'
 import * as ToolsOzoneCommunicationUpdateTemplate from './types/tools/ozone/communication/updateTemplate.js'
 import * as ToolsOzoneHostingGetAccountHistory from './types/tools/ozone/hosting/getAccountHistory.js'
+import * as ToolsOzoneModerationCancelScheduledActions from './types/tools/ozone/moderation/cancelScheduledActions.js'
 import * as ToolsOzoneModerationDefs from './types/tools/ozone/moderation/defs.js'
 import * as ToolsOzoneModerationEmitEvent from './types/tools/ozone/moderation/emitEvent.js'
 import * as ToolsOzoneModerationGetAccountTimeline from './types/tools/ozone/moderation/getAccountTimeline.js'
@@ -267,8 +268,10 @@ import * as ToolsOzoneModerationGetRepo from './types/tools/ozone/moderation/get
 import * as ToolsOzoneModerationGetReporterStats from './types/tools/ozone/moderation/getReporterStats.js'
 import * as ToolsOzoneModerationGetRepos from './types/tools/ozone/moderation/getRepos.js'
 import * as ToolsOzoneModerationGetSubjects from './types/tools/ozone/moderation/getSubjects.js'
+import * as ToolsOzoneModerationListScheduledActions from './types/tools/ozone/moderation/listScheduledActions.js'
 import * as ToolsOzoneModerationQueryEvents from './types/tools/ozone/moderation/queryEvents.js'
 import * as ToolsOzoneModerationQueryStatuses from './types/tools/ozone/moderation/queryStatuses.js'
+import * as ToolsOzoneModerationScheduleAction from './types/tools/ozone/moderation/scheduleAction.js'
 import * as ToolsOzoneModerationSearchRepos from './types/tools/ozone/moderation/searchRepos.js'
 import * as ToolsOzoneReportDefs from './types/tools/ozone/report/defs.js'
 import * as ToolsOzoneSafelinkAddRule from './types/tools/ozone/safelink/addRule.js'
@@ -551,6 +554,7 @@ export * as ToolsOzoneCommunicationDeleteTemplate from './types/tools/ozone/comm
 export * as ToolsOzoneCommunicationListTemplates from './types/tools/ozone/communication/listTemplates.js'
 export * as ToolsOzoneCommunicationUpdateTemplate from './types/tools/ozone/communication/updateTemplate.js'
 export * as ToolsOzoneHostingGetAccountHistory from './types/tools/ozone/hosting/getAccountHistory.js'
+export * as ToolsOzoneModerationCancelScheduledActions from './types/tools/ozone/moderation/cancelScheduledActions.js'
 export * as ToolsOzoneModerationDefs from './types/tools/ozone/moderation/defs.js'
 export * as ToolsOzoneModerationEmitEvent from './types/tools/ozone/moderation/emitEvent.js'
 export * as ToolsOzoneModerationGetAccountTimeline from './types/tools/ozone/moderation/getAccountTimeline.js'
@@ -561,8 +565,10 @@ export * as ToolsOzoneModerationGetRepo from './types/tools/ozone/moderation/get
 export * as ToolsOzoneModerationGetReporterStats from './types/tools/ozone/moderation/getReporterStats.js'
 export * as ToolsOzoneModerationGetRepos from './types/tools/ozone/moderation/getRepos.js'
 export * as ToolsOzoneModerationGetSubjects from './types/tools/ozone/moderation/getSubjects.js'
+export * as ToolsOzoneModerationListScheduledActions from './types/tools/ozone/moderation/listScheduledActions.js'
 export * as ToolsOzoneModerationQueryEvents from './types/tools/ozone/moderation/queryEvents.js'
 export * as ToolsOzoneModerationQueryStatuses from './types/tools/ozone/moderation/queryStatuses.js'
+export * as ToolsOzoneModerationScheduleAction from './types/tools/ozone/moderation/scheduleAction.js'
 export * as ToolsOzoneModerationSearchRepos from './types/tools/ozone/moderation/searchRepos.js'
 export * as ToolsOzoneReportDefs from './types/tools/ozone/report/defs.js'
 export * as ToolsOzoneSafelinkAddRule from './types/tools/ozone/safelink/addRule.js'
@@ -644,12 +650,11 @@ export const TOOLS_OZONE_MODERATION = {
 }
 export const TOOLS_OZONE_REPORT = {
   DefsReasonAppeal: 'tools.ozone.report.defs#reasonAppeal',
-  DefsReasonViolenceAnimalWelfare:
-    'tools.ozone.report.defs#reasonViolenceAnimalWelfare',
+  DefsReasonOther: 'tools.ozone.report.defs#reasonOther',
+  DefsReasonViolenceAnimal: 'tools.ozone.report.defs#reasonViolenceAnimal',
   DefsReasonViolenceThreats: 'tools.ozone.report.defs#reasonViolenceThreats',
   DefsReasonViolenceGraphicContent:
     'tools.ozone.report.defs#reasonViolenceGraphicContent',
-  DefsReasonViolenceSelfHarm: 'tools.ozone.report.defs#reasonViolenceSelfHarm',
   DefsReasonViolenceGlorification:
     'tools.ozone.report.defs#reasonViolenceGlorification',
   DefsReasonViolenceExtremistContent:
@@ -660,21 +665,16 @@ export const TOOLS_OZONE_REPORT = {
   DefsReasonSexualAbuseContent:
     'tools.ozone.report.defs#reasonSexualAbuseContent',
   DefsReasonSexualNCII: 'tools.ozone.report.defs#reasonSexualNCII',
-  DefsReasonSexualSextortion: 'tools.ozone.report.defs#reasonSexualSextortion',
   DefsReasonSexualDeepfake: 'tools.ozone.report.defs#reasonSexualDeepfake',
   DefsReasonSexualAnimal: 'tools.ozone.report.defs#reasonSexualAnimal',
   DefsReasonSexualUnlabeled: 'tools.ozone.report.defs#reasonSexualUnlabeled',
   DefsReasonSexualOther: 'tools.ozone.report.defs#reasonSexualOther',
   DefsReasonChildSafetyCSAM: 'tools.ozone.report.defs#reasonChildSafetyCSAM',
   DefsReasonChildSafetyGroom: 'tools.ozone.report.defs#reasonChildSafetyGroom',
-  DefsReasonChildSafetyMinorPrivacy:
-    'tools.ozone.report.defs#reasonChildSafetyMinorPrivacy',
-  DefsReasonChildSafetyEndangerment:
-    'tools.ozone.report.defs#reasonChildSafetyEndangerment',
+  DefsReasonChildSafetyPrivacy:
+    'tools.ozone.report.defs#reasonChildSafetyPrivacy',
   DefsReasonChildSafetyHarassment:
     'tools.ozone.report.defs#reasonChildSafetyHarassment',
-  DefsReasonChildSafetyPromotion:
-    'tools.ozone.report.defs#reasonChildSafetyPromotion',
   DefsReasonChildSafetyOther: 'tools.ozone.report.defs#reasonChildSafetyOther',
   DefsReasonHarassmentTroll: 'tools.ozone.report.defs#reasonHarassmentTroll',
   DefsReasonHarassmentTargeted:
@@ -689,27 +689,20 @@ export const TOOLS_OZONE_REPORT = {
     'tools.ozone.report.defs#reasonMisleadingImpersonation',
   DefsReasonMisleadingSpam: 'tools.ozone.report.defs#reasonMisleadingSpam',
   DefsReasonMisleadingScam: 'tools.ozone.report.defs#reasonMisleadingScam',
-  DefsReasonMisleadingSyntheticContent:
-    'tools.ozone.report.defs#reasonMisleadingSyntheticContent',
-  DefsReasonMisleadingMisinformation:
-    'tools.ozone.report.defs#reasonMisleadingMisinformation',
+  DefsReasonMisleadingElections:
+    'tools.ozone.report.defs#reasonMisleadingElections',
   DefsReasonMisleadingOther: 'tools.ozone.report.defs#reasonMisleadingOther',
   DefsReasonRuleSiteSecurity: 'tools.ozone.report.defs#reasonRuleSiteSecurity',
-  DefsReasonRuleStolenContent:
-    'tools.ozone.report.defs#reasonRuleStolenContent',
   DefsReasonRuleProhibitedSales:
     'tools.ozone.report.defs#reasonRuleProhibitedSales',
   DefsReasonRuleBanEvasion: 'tools.ozone.report.defs#reasonRuleBanEvasion',
   DefsReasonRuleOther: 'tools.ozone.report.defs#reasonRuleOther',
-  DefsReasonCivicElectoralProcess:
-    'tools.ozone.report.defs#reasonCivicElectoralProcess',
-  DefsReasonCivicDisclosure: 'tools.ozone.report.defs#reasonCivicDisclosure',
-  DefsReasonCivicInterference:
-    'tools.ozone.report.defs#reasonCivicInterference',
-  DefsReasonCivicMisinformation:
-    'tools.ozone.report.defs#reasonCivicMisinformation',
-  DefsReasonCivicImpersonation:
-    'tools.ozone.report.defs#reasonCivicImpersonation',
+  DefsReasonSelfHarmContent: 'tools.ozone.report.defs#reasonSelfHarmContent',
+  DefsReasonSelfHarmED: 'tools.ozone.report.defs#reasonSelfHarmED',
+  DefsReasonSelfHarmStunts: 'tools.ozone.report.defs#reasonSelfHarmStunts',
+  DefsReasonSelfHarmSubstances:
+    'tools.ozone.report.defs#reasonSelfHarmSubstances',
+  DefsReasonSelfHarmOther: 'tools.ozone.report.defs#reasonSelfHarmOther',
 }
 export const TOOLS_OZONE_TEAM = {
   DefsRoleAdmin: 'tools.ozone.team.defs#roleAdmin',
@@ -5193,6 +5186,18 @@ export class ToolsOzoneModerationNS {
     this._client = client
   }
 
+  cancelScheduledActions(
+    data?: ToolsOzoneModerationCancelScheduledActions.InputSchema,
+    opts?: ToolsOzoneModerationCancelScheduledActions.CallOptions,
+  ): Promise<ToolsOzoneModerationCancelScheduledActions.Response> {
+    return this._client.call(
+      'tools.ozone.moderation.cancelScheduledActions',
+      opts?.qp,
+      data,
+      opts,
+    )
+  }
+
   emitEvent(
     data?: ToolsOzoneModerationEmitEvent.InputSchema,
     opts?: ToolsOzoneModerationEmitEvent.CallOptions,
@@ -5302,6 +5307,18 @@ export class ToolsOzoneModerationNS {
     )
   }
 
+  listScheduledActions(
+    data?: ToolsOzoneModerationListScheduledActions.InputSchema,
+    opts?: ToolsOzoneModerationListScheduledActions.CallOptions,
+  ): Promise<ToolsOzoneModerationListScheduledActions.Response> {
+    return this._client.call(
+      'tools.ozone.moderation.listScheduledActions',
+      opts?.qp,
+      data,
+      opts,
+    )
+  }
+
   queryEvents(
     params?: ToolsOzoneModerationQueryEvents.QueryParams,
     opts?: ToolsOzoneModerationQueryEvents.CallOptions,
@@ -5322,6 +5339,18 @@ export class ToolsOzoneModerationNS {
       'tools.ozone.moderation.queryStatuses',
       params,
       undefined,
+      opts,
+    )
+  }
+
+  scheduleAction(
+    data?: ToolsOzoneModerationScheduleAction.InputSchema,
+    opts?: ToolsOzoneModerationScheduleAction.CallOptions,
+  ): Promise<ToolsOzoneModerationScheduleAction.Response> {
+    return this._client.call(
+      'tools.ozone.moderation.scheduleAction',
+      opts?.qp,
+      data,
       opts,
     )
   }
