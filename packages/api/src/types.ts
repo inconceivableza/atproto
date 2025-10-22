@@ -1,4 +1,5 @@
 import { AppBskyActorDefs } from './client'
+export { ExpiredTokenError as ConfirmEmailExpiredTokenError } from './client/types/com/atproto/server/confirmEmail.js'
 import { ModerationPrefs } from './moderation/types'
 
 export type UnknownServiceType = string & NonNullable<unknown>
