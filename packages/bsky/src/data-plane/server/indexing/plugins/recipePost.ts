@@ -10,13 +10,8 @@ import * as lex from '../../../../lexicon/lexicons'
 import { normalizeDatetimeAlways } from '@atproto/syntax'
 
 type RecipePost = Selectable<DatabaseSchemaType['recipe_post']>
-// type PostIngredient = Selectable<DatabaseSchemaType['recipe_ingredient']>
-// type PostStep = Selectable<DatabaseSchemaType['recipe_step']>
-
 interface IndexedRecipePost {
     recipePost: RecipePost
-    // ingredients: PostIngredient[]
-    // steps: PostStep[]
 }
 
 export type PluginType = RecordProcessor<RecipeRecord, IndexedRecipePost>
@@ -28,8 +23,6 @@ const insertFn: Params["insertFn"] = async (db, uri, cid, obj, timestamp) => {
         cid: cid.toString(),
         uri: uri.toString(),
         creator: uri.host,
-        // text: obj.text,
-        // title: obj.text,
         createdAt: normalizeDatetimeAlways(obj.createdAt),
         indexedAt: timestamp,
     }).onConflict(oc => oc.doNothing())
@@ -51,35 +44,9 @@ const insertFn: Params["insertFn"] = async (db, uri, cid, obj, timestamp) => {
     }).onConflict((oc) => oc.doNothing())
         .execute()
 
-    // // TODO: validate quantity
-    // const [insertedIngredients, insertedSteps] = await Promise.all([
-    //     obj.ingredients.length ?
-    //         db.insertInto("recipe_ingredient").values(obj.ingredients.map(({ name, quantity, unit }, i) => ({
-    //             ingredient: name,
-    //             order: i,
-    //             quantity: Number(quantity),
-    //             recipePostURI: uri.toString(),
-    //             unit
-    //         }))).onConflict(oc => oc.doNothing())
-    //             .returningAll()
-    //             .execute() : [],
-    //     obj.steps.length ?
-    //         db.insertInto("recipe_step").values(obj.steps.map(({ text }, i) => ({
-    //             recipePostURI: uri.toString(),
-    //             order: i,
-    //             text
-    //         }))).onConflict(oc => oc.doNothing())
-    //             .returningAll()
-    //             .execute() : []
-    // ])
-
     return {
         recipePost: insertedRecipe,
-        // ingredients: insertedIngredients,
-        // steps: insertedSteps
     }
-
-
 }
 
 export const makePlugin = (
@@ -92,17 +59,13 @@ export const makePlugin = (
         // TODO: Determine whether we want this to work (posts table does the same thing)
         findDuplicate: async () => null,
         deleteFn: async (db, uri) => {
+            // TODO: update foreign key constraints to cascade deletes
+            await db.deleteFrom("recipe_head_revision")
+                .where("recipePostUri", "=", uri.toString()).execute()
 
-            // const [deletedSteps, deletedIngredients] = await Promise.all([
-            //     db.deleteFrom("recipe_step")
-            //         .where("recipePostURI", "=", uri.toString())
-            //         .returningAll()
-            //         .execute(),
-            //     db.deleteFrom("recipe_ingredient")
-            //         .where("recipePostURI", "=", uri.toString())
-            //         .returningAll()
-            //         .execute()
-            // ])
+            await db.deleteFrom("recipe_revision")
+                .where("recipePostUri", "=", uri.toString()).execute()
+
             const deletedPost = await db.deleteFrom("recipe_post")
                 .where("uri", "=", uri.toString())
                 .returningAll()
@@ -112,8 +75,6 @@ export const makePlugin = (
 
             return deletedPost ? {
                 recipePost: deletedPost,
-                // ingredients: deletedIngredients,
-                // steps: deletedSteps
             } : null
 
 
