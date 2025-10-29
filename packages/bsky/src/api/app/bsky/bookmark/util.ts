@@ -2,11 +2,13 @@ import { AtUri } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { ids } from '../../../../lexicon/lexicons'
 
+const validCollections = new Set<string>([ids.AppBskyFeedPost, ids.AppFoodiosFeedRecipePost, ids.AppFoodiosFeedReviewRating])
+
 export const validateUri = (uri: string) => {
   const atUri = new AtUri(uri)
-  if (atUri.collection !== ids.AppBskyFeedPost) {
+  if (!validCollections.has(atUri.collection)) {
     throw new InvalidRequestError(
-      `Only '${ids.AppBskyFeedPost}' records can be bookmarked`,
+      `Unsupported record type`,
       'UnsupportedCollection',
     )
   }

@@ -75,8 +75,6 @@ import {
   mergeManyMaps,
   mergeMaps,
   mergeNestedMaps,
-  parseRecord,
-  partition,
   partitionMap,
   urisByCollection,
 } from './util'
@@ -1169,14 +1167,15 @@ export class Hydrator {
       ],
     ])
 
-    // @NOTE: The `createBookmark` endpoint limits bookmarks to be of posts,
-    // so we can assume currently all subjects are posts.
-    const postsState = await this.hydratePosts(
-      bookmarks.map((bookmark) => ({ uri: bookmark.subjectUri })),
-      ctx,
-    )
+    const byCollection = urisByCollection(bookmarks.map(({ subjectUri }) => subjectUri))
 
-    return mergeStates(postsState, { bookmarks: bookmarksMap })
+    const mergedState = await Promise.all([
+      this.hydratePosts(byCollection.get(ids.AppBskyFeedPost)?.map(uri => ({ uri })) ?? [], ctx),
+      this.hydrateRecipes(byCollection.get(ids.AppFoodiosFeedRecipePost) ?? [], ctx),
+      this.hydrateReviewRatings(byCollection.get(ids.AppFoodiosFeedReviewRating) ?? [], ctx)
+    ]).then(states => mergeManyStates(...states, { bookmarks: bookmarksMap }))
+
+    return mergedState
   }
 
   // provides partial hydration state within getFollows / getFollowers, mainly for applying rules
