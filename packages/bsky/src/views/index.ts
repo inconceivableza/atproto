@@ -1257,8 +1257,6 @@ export class Views {
     if (!bookmark) return
 
     const atUri = new AtUri(bookmark.subjectUri)
-    if (atUri.collection !== ids.AppBskyFeedPost) return
-
     const item = this.maybePost(bookmark.subjectUri, state)
     return {
       createdAt: bookmark.indexedAt?.toDate().toISOString(),
