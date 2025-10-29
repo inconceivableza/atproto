@@ -21,7 +21,7 @@ import {
   ToolsNS,
   ComAtprotoRepoStrongRef,
 } from './client/index'
-import { schemas } from './client/lexicons'
+import { ids, schemas } from './client/lexicons'
 import { MutedWord, Nux } from './client/types/app/bsky/actor/defs'
 import { $Typed, Un$Typed } from './client/util'
 import { BSKY_LABELER_DID } from './const'
@@ -410,6 +410,29 @@ export class Agent extends XrpcClient {
       repo: postUrip.hostname,
       rkey: postUrip.rkey,
     })
+  }
+
+  async deleteRecord(uri: string) {
+    this.assertAuthenticated()
+    const atUri = new AtUri(uri)
+    switch (atUri.collection) {
+      case ids.AppBskyFeedPost:
+        return this.app.bsky.feed.post.delete({
+          repo: atUri.hostname,
+          rkey: atUri.rkey,
+        })
+      case ids.AppFoodiosFeedRecipePost:
+        return this.app.foodios.feed.recipePost.delete({
+          repo: atUri.hostname,
+          rkey: atUri.rkey
+        })
+      case ids.AppFoodiosFeedReviewRating:
+        return this.app.foodios.feed.reviewRating.delete({
+          repo: atUri.hostname,
+          rkey: atUri.rkey,
+        })
+    }
+    throw new Error("unknown record collection " + atUri.collection)
   }
 
   async like(subject: ComAtprotoRepoStrongRef.Main, via?: { uri: string; cid: string }) {
