@@ -8139,22 +8139,25 @@ export const schemaDict = {
               type: 'array',
               items: {
                 type: 'string',
-                maxLength: 100,
+                maxLength: 250,
               },
+              maxLength: 10,
             },
             recipeCuisine: {
               type: 'array',
               items: {
                 type: 'string',
-                maxLength: 100,
+                maxLength: 250,
               },
+              maxLength: 10,
             },
             suitableForDiet: {
               type: 'array',
               items: {
                 type: 'string',
-                maxLength: 100,
+                maxLength: 250,
               },
+              maxLength: 10,
             },
             recipeYield: {
               type: 'ref',
