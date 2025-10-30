@@ -39,6 +39,19 @@ const insertFn = async (
     .onConflict((oc) => oc.doNothing())
     .returningAll()
     .executeTakeFirst()
+
+  if (!inserted) return null;
+
+  await db.insertInto("feed_item").values({
+    type: "review",
+    cid: inserted.cid,
+    originatorDid: inserted.creator,
+    postUri: inserted.uri,
+    uri: inserted.uri,
+    sortAt:
+      inserted.indexedAt < inserted.createdAt ? inserted.indexedAt : inserted.createdAt,
+  }).onConflict((oc) => oc.doNothing())
+    .execute()
   return inserted || null
 }
 

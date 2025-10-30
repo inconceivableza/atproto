@@ -972,6 +972,7 @@ export class Views {
           replyDisabled: this.userReplyDisabled(uri, state),
           embeddingDisabled: this.userPostEmbeddingDisabled(uri, state),
           pinned: this.viewerPinned(uri, state, authorDid),
+          bookmarked: viewer.bookmarked
         }
         : undefined,
       ...ratingInfo,
@@ -1091,14 +1092,16 @@ export class Views {
       const recipePostView = this.recipeView({ uri: item.post.uri }, state)
       if (!recipePostView) return;
       return {
-        post: recipePostView
+        post: recipePostView,
+        reason: item.authorPinned ? this.reasonPin() : undefined
       }
     }
     if (item.itemType == FeedItemType.REVIEW_RATING) {
       const reviewPostView = this.reviewRatingView({ uri: item.post.uri }, state)
       if (!reviewPostView) return;
       return {
-        post: reviewPostView
+        post: reviewPostView,
+        reason: item.authorPinned ? this.reasonPin() : undefined
       }
     }
     if (item.repost && isRecipeURI(item.post.uri)) {
@@ -1256,7 +1259,6 @@ export class Views {
     const bookmark = state.bookmarks?.get(viewer)?.get(key)
     if (!bookmark) return
 
-    const atUri = new AtUri(bookmark.subjectUri)
     const item = this.maybePost(bookmark.subjectUri, state)
     return {
       createdAt: bookmark.indexedAt?.toDate().toISOString(),

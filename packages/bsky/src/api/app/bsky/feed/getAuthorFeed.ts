@@ -18,6 +18,8 @@ import { FeedItemType, FeedType } from '../../../../proto/bsky_pb'
 import { safePinnedPost, uriToDid } from '../../../../util/uris'
 import { Views } from '../../../../views'
 import { clearlyBadCursor, resHeaders } from '../../../util'
+import { AtUri } from '@atproto/syntax'
+import { ids } from '../../../../lexicon/lexicons'
 
 export default function (server: Server, ctx: AppContext) {
   const getAuthorFeed = createPipeline(
@@ -106,13 +108,17 @@ export const skeleton = async (inputs: {
   }))
 
   if (shouldInsertPinnedPost && pinnedPost) {
+    const pinnedAtUri = new AtUri(pinnedPost.uri)
+    const itemType = pinnedAtUri.collection === ids.AppFoodiosFeedRecipePost ? FeedItemType.RECIPE :
+      pinnedAtUri.collection === ids.AppFoodiosFeedReviewRating ? FeedItemType.REVIEW_RATING :
+        FeedItemType.POST 
     const pinnedItem: FeedItem = {
       post: {
         uri: pinnedPost.uri,
         cid: pinnedPost.cid,
       },
       authorPinned: true,
-      itemType: FeedItemType.POST // TODO: relax this assumption
+      itemType
     }
 
     items = items.filter((item) => item.post.uri !== pinnedItem.post.uri)
@@ -125,15 +131,6 @@ export const skeleton = async (inputs: {
     items,
     cursor: parseString(res.cursor),
   }
-}
-
-function groupBy<T, K extends string | number>(arr: T[], getKey: (val: T) => K) {
-  const result = {} as Partial<Record<K, T[]>>
-  arr.forEach(val => {
-    const group = result[getKey(val)] ??= []
-    group.push(val)
-  })
-  return result
 }
 
 const hydration = async (inputs: {

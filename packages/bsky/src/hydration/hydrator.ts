@@ -507,10 +507,6 @@ export class Hydrator {
     const embedPostUrisLayer2 =
       urisLayer2ByCollection.get(ids.AppBskyFeedPost) ?? []
     const embedRecipeUrisLayer2 = urisLayer2ByCollection.get(ids.AppFoodiosFeedRecipePost) ?? []
-    const reviewRatingsLayer2 = await this.feed.getReviewRatings(
-      embedRecipeUrisLayer1,
-      ctx.includeTakedowns,
-    )
 
     const [postsLayer2, threadgates] = await Promise.all([
       this.feed.getPosts(
@@ -525,12 +521,6 @@ export class Hydrator {
     const recipesLayer2 = await this.feed.getRecipes(embedRecipeUrisLayer2, ctx.includeTakedowns)
     const recipeState: HydrationState = {
       recipePosts: mergeManyMaps(state.recipePosts ?? new HydrationMap(), recipesLayer1, recipesLayer2)
-    }
-    const reviewRatingState: HydrationState = {
-      reviewRatings: mergeMaps(
-        state.reviewRatings ?? new HydrationMap<ReviewRating>(),
-        reviewRatingsLayer2,
-      ),
     }
 
     // collect list/feedgen embeds, lists in threadgates, post record hydration
@@ -606,7 +596,6 @@ export class Hydrator {
       labelerState,
       starterPackState,
       recipeState,
-      reviewRatingState,
       {
         posts,
         postAggs,
@@ -705,8 +694,9 @@ export class Hydrator {
         otherItems.push(item)
       }
     })
-
+    // TODO: hydration of skeleton recipes should then trigger hydration of replies, reviews
     const recipesState = await this.hydrateRecipes(recipeUris, ctx)
+    // TODO: hydration of skeletal recipes should trigger hydration of associated recipes
     const reviewRatingsState = await this.hydrateReviewRatings(
       reviewRatingUris,
       ctx,

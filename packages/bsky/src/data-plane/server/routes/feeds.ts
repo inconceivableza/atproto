@@ -52,6 +52,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
           .where('type', '=', 'repost')
           .orWhere('post.replyParent', 'is', null)
           .orWhere('post.replyRoot', 'like', `at://${actorDid}/%`)
+          .orWhere('review_rating.subject', 'like', `at://${actorDid}/%`)
       )
     }
 
