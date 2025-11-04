@@ -496,7 +496,7 @@ export class Hydrator {
     )
     addPostsToHydrationState(postsLayer1)
 
-    const recipesLayer1 = await this.feed.getRecipes(embedRecipeUrisLayer1, ctx.includeTakedowns)
+    const recipesLayer1 = await this.feed.getRecipes(embedRecipeUrisLayer1, ctx.includeTakedowns, state.recipePosts)
 
     // layer 2: second level embeds, ignoring any additional root uris we mixed-in to the previous layer
     const urisLayer2 = nestedRecordUrisFromPosts(
@@ -518,7 +518,7 @@ export class Hydrator {
     ])
     addPostsToHydrationState(postsLayer2)
 
-    const recipesLayer2 = await this.feed.getRecipes(embedRecipeUrisLayer2, ctx.includeTakedowns)
+    const recipesLayer2 = await this.feed.getRecipes(embedRecipeUrisLayer2, ctx.includeTakedowns, state.recipePosts)
     const recipeState: HydrationState = {
       recipePosts: mergeManyMaps(state.recipePosts ?? new HydrationMap(), recipesLayer1, recipesLayer2)
     }
@@ -694,9 +694,7 @@ export class Hydrator {
         otherItems.push(item)
       }
     })
-    // TODO: hydration of skeleton recipes should then trigger hydration of replies, reviews
     const recipesState = await this.hydrateRecipes(recipeUris, ctx)
-    // TODO: hydration of skeletal recipes should trigger hydration of associated recipes
     const reviewRatingsState = await this.hydrateReviewRatings(
       reviewRatingUris,
       ctx,
@@ -793,6 +791,15 @@ export class Hydrator {
       uris,
       ctx.includeTakedowns,
     )
+
+    const recipeIds = new Set<string>()
+    for (let [_, rating] of reviewRatings) {
+      if (rating) {
+        recipeIds.add(rating.record.subject.uri)
+      }
+    }
+    const recipePosts = await this.feed.getRecipes([...recipeIds])
+
     const postAggs = await this.feed.getPostAggregates(
       uris.map((uri) => ({ uri })),
       ctx.viewer,
@@ -809,6 +816,7 @@ export class Hydrator {
         reviewRatings,
         postAggs,
         postViewers,
+        recipePosts
       },
       profilesState,
     )

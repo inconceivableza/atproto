@@ -126,13 +126,15 @@ export type FeedItem = {
 export class FeedHydrator {
   constructor(public dataplane: DataPlaneClient) { }
 
-  async getRecipes(uris: string[], includeTakedowns = false): Promise<Recipes> {
+  async getRecipes(uris: string[], includeTakedowns = false, existing?: Recipes): Promise<Recipes> {
     // TODO: pass in existing state to avoid duplicate fetches
     // TODO: consider branding recipe URIs
+    const result = new HydrationMap<Recipe>(existing)
+    const required = uris.filter(uri => !result.has(stripSearchParams(uri)))
 
-    const { records } = await this.dataplane.getRecipeRecords({ uris: uris.map(stripSearchParams) })
+    const { records } = await this.dataplane.getRecipeRecords({ uris: required.map(stripSearchParams) })
 
-    const result = new HydrationMap<Recipe>()
+
     records.forEach(item => {
       if (!item.recordInfo) {
         return
