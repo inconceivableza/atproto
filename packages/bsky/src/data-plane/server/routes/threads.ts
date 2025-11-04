@@ -10,52 +10,39 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
     const { postUri, above, below } = req
     if (isReviewRatingURI(postUri)) {
       const uris = [postUri]
+
+      const replyPosts = await db.db
+        .selectFrom('post')
+        .select('uri')
+        .where('replyParent', '=', postUri)
+        .execute()
+
+      const replyDescs = await Promise.all(
+        replyPosts.map(({ uri }) =>
+          getDescendentsQb(db.db, {
+            uri,
+            depth: below - 1,
+          })
+            .selectFrom('descendent')
+            .innerJoin('post', 'post.uri', 'descendent.uri')
+            .orderBy('post.sortAt', 'desc')
+            .selectAll()
+            .execute(),
+        ),
+      )
+
       // the recipe this is a review of
       const recordsReviewed = await db.db
-        .selectFrom('recipe_head_revision')
-        .innerJoin(
-          'review_rating',
-          'recipe_head_revision.recipePostUri',
-          'review_rating.subject',
-        )
-        .select('recipe_head_revision.recipePostUri')
+        .selectFrom('review_rating')
+        .select("review_rating.subject")
         .where('review_rating.uri', '=', postUri)
         .execute()
 
-      if (recordsReviewed.length > 0) {
-        // other replies to the same subject
-        const descs = await Promise.all(
-          recordsReviewed.map(({ recipePostUri }) =>
-            getDescendentsQb(db.db, {
-              uri: recipePostUri,
-              depth: below - 1, // TODO: this ends up being 0
-            })
-              .selectFrom('descendent')
-              .innerJoin('post', 'post.uri', 'descendent.uri')
-              .orderBy('post.sortAt', 'desc')
-              .selectAll()
-              .execute(),
-          ),
-        )
-
-        // and other reviews of the same subject
-        const otherReviews = await db.db
-          .selectFrom('review_rating')
-          .select('uri')
-          .where(
-            'subject',
-            'in',
-            recordsReviewed.map(({ recipePostUri }) => recipePostUri),
-          )
-          .where('uri', '!=', postUri)
-          .execute()
-
-        uris.push(
-          ...recordsReviewed.map(({ recipePostUri }) => recipePostUri),
-          ...descs.flat().map(({ uri }) => uri),
-          ...otherReviews.map(({ uri }) => uri),
-        )
-      }
+      uris.push(
+        ...replyPosts.map(({ uri }) => uri),
+        ...replyDescs.flat().map(({ uri }) => uri),
+        ...recordsReviewed.map(r => r.subject)
+      ) 
       return {
         uris,
       }

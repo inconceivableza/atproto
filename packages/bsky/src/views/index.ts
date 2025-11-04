@@ -1101,7 +1101,8 @@ export class Views {
       if (!reviewPostView) return;
       return {
         post: reviewPostView,
-        reason: item.authorPinned ? this.reasonPin() : undefined
+        reason: item.authorPinned ? this.reasonPin() : undefined,
+        reply: this.replyRef(item.post.uri, state)
       }
     }
     if (item.repost && isRecipeURI(item.post.uri)) {
@@ -1150,12 +1151,28 @@ export class Views {
   }
 
   replyRef(uri: string, state: HydrationState): Un$Typed<ReplyRef> | undefined {
-    const postRecord = state.posts?.get(uri.toString())?.record
-    if (!postRecord?.reply) return
-    let root = this.maybePost(postRecord.reply.root.uri, state)
-    let parent = this.maybePost(postRecord.reply.parent.uri, state)
+    const collection = getURICollection(uri)
+    switch (collection) {
+      case ids.AppBskyFeedPost: {
+        const postRecord = state.posts?.get(uri)?.record
+        if (!postRecord?.reply) return
+        return this._replyRef(uri, postRecord.reply.root.uri, postRecord.reply.parent.uri, state)
+      }
+
+      case ids.AppFoodiosFeedReviewRating: {
+        const reviewRecord = state.reviewRatings?.get(uri)?.record
+        if (!reviewRecord) return
+        return this._replyRef(uri, reviewRecord.subject.uri, reviewRecord.subject.uri, state)
+      }
+    }
+
+  }
+
+  _replyRef(childUri: string, rootUri: string, parentUri: string, state: HydrationState): Un$Typed<ReplyRef> | undefined {
+    let root = this.maybePost(rootUri, state)
+    let parent = this.maybePost(parentUri, state)
     if (!state.ctx?.include3pBlocks) {
-      const childBlocks = state.postBlocks?.get(uri)
+      const childBlocks = state.postBlocks?.get(childUri)
       const parentBlocks = state.postBlocks?.get(parent.uri)
       // if child blocks parent, block parent
       if (isPostView(parent) && childBlocks?.parent) {
@@ -1595,7 +1612,6 @@ export class Views {
       return undefined
     }
 
-    const collection = getURICollection(childUri)
     const { postView, post, error, uri } = (() => {
       if (isReviewRatingURI(childUri)) {
         // review-ratings are always on a recipe that is the rootUri and is therefore their parent
