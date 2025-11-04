@@ -488,6 +488,7 @@ export class Hydrator {
       urisLayer1ByCollection.get(ids.AppBskyFeedPost) ?? []
     const embedRecipeUrisLayer1 =
       urisLayer1ByCollection.get(ids.AppFoodiosFeedRecipePost) ?? []
+    const embedReviewUrisLayer1 = urisLayer1ByCollection.get(ids.AppFoodiosFeedReviewRating) ?? []
 
     const postsLayer1 = await this.feed.getPosts(
       [...embedPostUrisLayer1, ...additionalRootUris],
@@ -495,9 +496,9 @@ export class Hydrator {
       state.posts,
     )
     addPostsToHydrationState(postsLayer1)
-
+    // Embedded recipes, reviews
     const recipesLayer1 = await this.feed.getRecipes(embedRecipeUrisLayer1, ctx.includeTakedowns, state.recipePosts)
-
+    const reviewsLayer1 = await this.feed.getReviewRatings(embedReviewUrisLayer1, ctx.includeTakedowns)
     // layer 2: second level embeds, ignoring any additional root uris we mixed-in to the previous layer
     const urisLayer2 = nestedRecordUrisFromPosts(
       postsLayer1,
@@ -605,6 +606,7 @@ export class Hydrator {
         threadgates,
         postgates,
         ctx,
+        reviewRatings: reviewsLayer1
       },
     )
   }
