@@ -1,4 +1,4 @@
-name: build-and-push-bsky-aws
+name: build-and-push-bsky
 on:
   workflow_dispatch
   # push:
