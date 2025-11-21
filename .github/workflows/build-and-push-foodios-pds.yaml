@@ -9,7 +9,7 @@ env:
   IMAGE_NAME: foodios-atproto-pds
 
 jobs:
-  pds-container-aws:
+  build-and-push-pds:
     if: github.repository == 'inconceivableza/atproto'
     runs-on: ubuntu-22.04
     steps:
