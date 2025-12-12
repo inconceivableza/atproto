@@ -13,6 +13,7 @@ import type * as ComAtprotoAdminDefs from '../../../com/atproto/admin/defs.js'
 import type * as ComAtprotoRepoStrongRef from '../../../com/atproto/repo/strongRef.js'
 import type * as ChatBskyConvoDefs from '../../../chat/bsky/convo/defs.js'
 import type * as ComAtprotoModerationDefs from '../../../com/atproto/moderation/defs.js'
+import type * as AppBskyAgeassuranceDefs from '../../../app/bsky/ageassurance/defs.js'
 import type * as ComAtprotoServerDefs from '../../../com/atproto/server/defs.js'
 import type * as ComAtprotoLabelDefs from '../../../com/atproto/label/defs.js'
 
@@ -157,6 +158,7 @@ export interface SubjectStatusView {
   tags?: string[]
   accountStats?: AccountStats
   recordsStats?: RecordsStats
+  accountStrike?: AccountStrike
   /** Current age assurance state of the subject. */
   ageAssuranceState?:
     | 'pending'
@@ -256,11 +258,34 @@ export function validateRecordsStats<V>(v: V) {
   return validate<RecordsStats & V>(v, id, hashRecordsStats)
 }
 
+/** Strike information for an account */
+export interface AccountStrike {
+  $type?: 'tools.ozone.moderation.defs#accountStrike'
+  /** Current number of active strikes (excluding expired strikes) */
+  activeStrikeCount?: number
+  /** Total number of strikes ever received (including expired strikes) */
+  totalStrikeCount?: number
+  /** Timestamp of the first strike received */
+  firstStrikeAt?: string
+  /** Timestamp of the most recent strike received */
+  lastStrikeAt?: string
+}
+
+const hashAccountStrike = 'accountStrike'
+
+export function isAccountStrike<V>(v: V) {
+  return is$typed(v, id, hashAccountStrike)
+}
+
+export function validateAccountStrike<V>(v: V) {
+  return validate<AccountStrike & V>(v, id, hashAccountStrike)
+}
+
 export type SubjectReviewState =
-  | 'lex:tools.ozone.moderation.defs#reviewOpen'
-  | 'lex:tools.ozone.moderation.defs#reviewEscalated'
-  | 'lex:tools.ozone.moderation.defs#reviewClosed'
-  | 'lex:tools.ozone.moderation.defs#reviewNone'
+  | 'tools.ozone.moderation.defs#reviewOpen'
+  | 'tools.ozone.moderation.defs#reviewEscalated'
+  | 'tools.ozone.moderation.defs#reviewClosed'
+  | 'tools.ozone.moderation.defs#reviewNone'
   | (string & {})
 
 /** Moderator review status of a subject: Open. Indicates that the subject needs to be reviewed by a moderator */
@@ -282,6 +307,14 @@ export interface ModEventTakedown {
   acknowledgeAccountSubjects?: boolean
   /** Names/Keywords of the policies that drove the decision. */
   policies?: string[]
+  /** Severity level of the violation (e.g., 'sev-0', 'sev-1', 'sev-2', etc.). */
+  severityLevel?: string
+  /** List of services where the takedown should be applied. If empty or not provided, takedown is applied on all configured services. */
+  targetServices?: ('appview' | 'pds' | (string & {}))[]
+  /** Number of strikes to assign to the user for this violation. */
+  strikeCount?: number
+  /** When the strike should expire. If not provided, the strike never expires. */
+  strikeExpiresAt?: string
 }
 
 const hashModEventTakedown = 'modEventTakedown'
@@ -299,6 +332,12 @@ export interface ModEventReverseTakedown {
   $type?: 'tools.ozone.moderation.defs#modEventReverseTakedown'
   /** Describe reasoning behind the reversal. */
   comment?: string
+  /** Names/Keywords of the policy infraction for which takedown is being reversed. */
+  policies?: string[]
+  /** Severity level of the violation. Usually set from the last policy infraction's severity. */
+  severityLevel?: string
+  /** Number of strikes to subtract from the user's strike count. Usually set from the last policy infraction's severity. */
+  strikeCount?: number
 }
 
 const hashModEventReverseTakedown = 'modEventReverseTakedown'
@@ -411,10 +450,15 @@ export interface AgeAssuranceEvent {
   $type?: 'tools.ozone.moderation.defs#ageAssuranceEvent'
   /** The date and time of this write operation. */
   createdAt: string
-  /** The status of the age assurance process. */
-  status: 'unknown' | 'pending' | 'assured' | (string & {})
   /** The unique identifier for this instance of the age assurance flow, in UUID format. */
   attemptId: string
+  /** The status of the Age Assurance process. */
+  status: 'unknown' | 'pending' | 'assured' | (string & {})
+  access?: AppBskyAgeassuranceDefs.Access
+  /** The ISO 3166-1 alpha-2 country code provided when beginning the Age Assurance flow. */
+  countryCode?: string
+  /** The ISO 3166-2 region code provided when beginning the Age Assurance flow. */
+  regionCode?: string
   /** The IP address used when initiating the AA flow. */
   initIp?: string
   /** The user agent used when initiating the AA flow. */
@@ -440,6 +484,7 @@ export interface AgeAssuranceOverrideEvent {
   $type?: 'tools.ozone.moderation.defs#ageAssuranceOverrideEvent'
   /** The status to be set for the user decided by a moderator, overriding whatever value the user had previously. Use reset to default to original state. */
   status: 'assured' | 'reset' | 'blocked' | (string & {})
+  access?: AppBskyAgeassuranceDefs.Access
   /** Comment describing the reason for the override. */
   comment: string
 }
@@ -590,6 +635,16 @@ export interface ModEventEmail {
   content?: string
   /** Additional comment about the outgoing comm. */
   comment?: string
+  /** Names/Keywords of the policies that necessitated the email. */
+  policies?: string[]
+  /** Severity level of the violation. Normally 'sev-1' that adds strike on repeat offense */
+  severityLevel?: string
+  /** Number of strikes to assign to the user for this violation. Normally 0 as an indicator of a warning and only added as a strike on a repeat offense. */
+  strikeCount?: number
+  /** When the strike should expire. If not provided, the strike never expires. */
+  strikeExpiresAt?: string
+  /** Indicates whether the email was successfully delivered to the user's inbox. */
+  isDelivered?: boolean
 }
 
 const hashModEventEmail = 'modEventEmail'

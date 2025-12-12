@@ -65,6 +65,10 @@ export const schemaDict = {
             type: 'ref',
             ref: 'lex:app.bsky.actor.defs#statusView',
           },
+          debug: {
+            type: 'unknown',
+            description: 'Debug information for internal development',
+          },
         },
       },
       profileView: {
@@ -126,6 +130,10 @@ export const schemaDict = {
           status: {
             type: 'ref',
             ref: 'lex:app.bsky.actor.defs#statusView',
+          },
+          debug: {
+            type: 'unknown',
+            description: 'Debug information for internal development',
           },
         },
       },
@@ -213,6 +221,10 @@ export const schemaDict = {
           status: {
             type: 'ref',
             ref: 'lex:app.bsky.actor.defs#statusView',
+          },
+          debug: {
+            type: 'unknown',
+            description: 'Debug information for internal development',
           },
         },
       },
@@ -542,10 +554,6 @@ export const schemaDict = {
               'random',
               'hotness',
             ],
-          },
-          prioritizeFollowedUsers: {
-            type: 'boolean',
-            description: 'Show followed users at the top of all replies.',
           },
         },
       },
@@ -1188,6 +1196,394 @@ export const schemaDict = {
       },
     },
   },
+  AppBskyAgeassuranceBegin: {
+    lexicon: 1,
+    id: 'app.bsky.ageassurance.begin',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: 'Initiate Age Assurance for an account.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['email', 'language', 'countryCode'],
+            properties: {
+              email: {
+                type: 'string',
+                description:
+                  "The user's email address to receive Age Assurance instructions.",
+              },
+              language: {
+                type: 'string',
+                description:
+                  "The user's preferred language for communication during the Age Assurance process.",
+              },
+              countryCode: {
+                type: 'string',
+                description:
+                  "An ISO 3166-1 alpha-2 code of the user's location.",
+              },
+              regionCode: {
+                type: 'string',
+                description:
+                  "An optional ISO 3166-2 code of the user's region or state within the country.",
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'ref',
+            ref: 'lex:app.bsky.ageassurance.defs#state',
+          },
+        },
+        errors: [
+          {
+            name: 'InvalidEmail',
+          },
+          {
+            name: 'DidTooLong',
+          },
+          {
+            name: 'InvalidInitiation',
+          },
+          {
+            name: 'RegionNotSupported',
+          },
+        ],
+      },
+    },
+  },
+  AppBskyAgeassuranceDefs: {
+    lexicon: 1,
+    id: 'app.bsky.ageassurance.defs',
+    defs: {
+      access: {
+        description:
+          "The access level granted based on Age Assurance data we've processed.",
+        type: 'string',
+        knownValues: ['unknown', 'none', 'safe', 'full'],
+      },
+      status: {
+        type: 'string',
+        description: 'The status of the Age Assurance process.',
+        knownValues: ['unknown', 'pending', 'assured', 'blocked'],
+      },
+      state: {
+        type: 'object',
+        description: "The user's computed Age Assurance state.",
+        required: ['status', 'access'],
+        properties: {
+          lastInitiatedAt: {
+            type: 'string',
+            format: 'datetime',
+            description: 'The timestamp when this state was last updated.',
+          },
+          status: {
+            type: 'ref',
+            ref: 'lex:app.bsky.ageassurance.defs#status',
+          },
+          access: {
+            type: 'ref',
+            ref: 'lex:app.bsky.ageassurance.defs#access',
+          },
+        },
+      },
+      stateMetadata: {
+        type: 'object',
+        description:
+          'Additional metadata needed to compute Age Assurance state client-side.',
+        required: [],
+        properties: {
+          accountCreatedAt: {
+            type: 'string',
+            format: 'datetime',
+            description: 'The account creation timestamp.',
+          },
+        },
+      },
+      config: {
+        type: 'object',
+        description: '',
+        required: ['regions'],
+        properties: {
+          regions: {
+            type: 'array',
+            description: 'The per-region Age Assurance configuration.',
+            items: {
+              type: 'ref',
+              ref: 'lex:app.bsky.ageassurance.defs#configRegion',
+            },
+          },
+        },
+      },
+      configRegion: {
+        type: 'object',
+        description: 'The Age Assurance configuration for a specific region.',
+        required: ['countryCode', 'rules'],
+        properties: {
+          countryCode: {
+            type: 'string',
+            description:
+              'The ISO 3166-1 alpha-2 country code this configuration applies to.',
+          },
+          regionCode: {
+            type: 'string',
+            description:
+              'The ISO 3166-2 region code this configuration applies to. If omitted, the configuration applies to the entire country.',
+          },
+          rules: {
+            type: 'array',
+            description:
+              'The ordered list of Age Assurance rules that apply to this region. Rules should be applied in order, and the first matching rule determines the access level granted. The rules array should always include a default rule as the last item.',
+            items: {
+              type: 'union',
+              refs: [
+                'lex:app.bsky.ageassurance.defs#configRegionRuleDefault',
+                'lex:app.bsky.ageassurance.defs#configRegionRuleIfDeclaredOverAge',
+                'lex:app.bsky.ageassurance.defs#configRegionRuleIfDeclaredUnderAge',
+                'lex:app.bsky.ageassurance.defs#configRegionRuleIfAssuredOverAge',
+                'lex:app.bsky.ageassurance.defs#configRegionRuleIfAssuredUnderAge',
+                'lex:app.bsky.ageassurance.defs#configRegionRuleIfAccountNewerThan',
+                'lex:app.bsky.ageassurance.defs#configRegionRuleIfAccountOlderThan',
+              ],
+            },
+          },
+        },
+      },
+      configRegionRuleDefault: {
+        type: 'object',
+        description: 'Age Assurance rule that applies by default.',
+        required: ['access'],
+        properties: {
+          access: {
+            type: 'ref',
+            ref: 'lex:app.bsky.ageassurance.defs#access',
+          },
+        },
+      },
+      configRegionRuleIfDeclaredOverAge: {
+        type: 'object',
+        description:
+          'Age Assurance rule that applies if the user has declared themselves equal-to or over a certain age.',
+        required: ['age', 'access'],
+        properties: {
+          age: {
+            type: 'integer',
+            description: 'The age threshold as a whole integer.',
+          },
+          access: {
+            type: 'ref',
+            ref: 'lex:app.bsky.ageassurance.defs#access',
+          },
+        },
+      },
+      configRegionRuleIfDeclaredUnderAge: {
+        type: 'object',
+        description:
+          'Age Assurance rule that applies if the user has declared themselves under a certain age.',
+        required: ['age', 'access'],
+        properties: {
+          age: {
+            type: 'integer',
+            description: 'The age threshold as a whole integer.',
+          },
+          access: {
+            type: 'ref',
+            ref: 'lex:app.bsky.ageassurance.defs#access',
+          },
+        },
+      },
+      configRegionRuleIfAssuredOverAge: {
+        type: 'object',
+        description:
+          'Age Assurance rule that applies if the user has been assured to be equal-to or over a certain age.',
+        required: ['age', 'access'],
+        properties: {
+          age: {
+            type: 'integer',
+            description: 'The age threshold as a whole integer.',
+          },
+          access: {
+            type: 'ref',
+            ref: 'lex:app.bsky.ageassurance.defs#access',
+          },
+        },
+      },
+      configRegionRuleIfAssuredUnderAge: {
+        type: 'object',
+        description:
+          'Age Assurance rule that applies if the user has been assured to be under a certain age.',
+        required: ['age', 'access'],
+        properties: {
+          age: {
+            type: 'integer',
+            description: 'The age threshold as a whole integer.',
+          },
+          access: {
+            type: 'ref',
+            ref: 'lex:app.bsky.ageassurance.defs#access',
+          },
+        },
+      },
+      configRegionRuleIfAccountNewerThan: {
+        type: 'object',
+        description:
+          'Age Assurance rule that applies if the account is equal-to or newer than a certain date.',
+        required: ['date', 'access'],
+        properties: {
+          date: {
+            type: 'string',
+            format: 'datetime',
+            description: 'The date threshold as a datetime string.',
+          },
+          access: {
+            type: 'ref',
+            ref: 'lex:app.bsky.ageassurance.defs#access',
+          },
+        },
+      },
+      configRegionRuleIfAccountOlderThan: {
+        type: 'object',
+        description:
+          'Age Assurance rule that applies if the account is older than a certain date.',
+        required: ['date', 'access'],
+        properties: {
+          date: {
+            type: 'string',
+            format: 'datetime',
+            description: 'The date threshold as a datetime string.',
+          },
+          access: {
+            type: 'ref',
+            ref: 'lex:app.bsky.ageassurance.defs#access',
+          },
+        },
+      },
+      event: {
+        type: 'object',
+        description: 'Object used to store Age Assurance data in stash.',
+        required: ['createdAt', 'status', 'access', 'attemptId', 'countryCode'],
+        properties: {
+          createdAt: {
+            type: 'string',
+            format: 'datetime',
+            description: 'The date and time of this write operation.',
+          },
+          attemptId: {
+            type: 'string',
+            description:
+              'The unique identifier for this instance of the Age Assurance flow, in UUID format.',
+          },
+          status: {
+            type: 'string',
+            description: 'The status of the Age Assurance process.',
+            knownValues: ['unknown', 'pending', 'assured', 'blocked'],
+          },
+          access: {
+            description:
+              "The access level granted based on Age Assurance data we've processed.",
+            type: 'string',
+            knownValues: ['unknown', 'none', 'safe', 'full'],
+          },
+          countryCode: {
+            type: 'string',
+            description:
+              'The ISO 3166-1 alpha-2 country code provided when beginning the Age Assurance flow.',
+          },
+          regionCode: {
+            type: 'string',
+            description:
+              'The ISO 3166-2 region code provided when beginning the Age Assurance flow.',
+          },
+          email: {
+            type: 'string',
+            description: 'The email used for Age Assurance.',
+          },
+          initIp: {
+            type: 'string',
+            description:
+              'The IP address used when initiating the Age Assurance flow.',
+          },
+          initUa: {
+            type: 'string',
+            description:
+              'The user agent used when initiating the Age Assurance flow.',
+          },
+          completeIp: {
+            type: 'string',
+            description:
+              'The IP address used when completing the Age Assurance flow.',
+          },
+          completeUa: {
+            type: 'string',
+            description:
+              'The user agent used when completing the Age Assurance flow.',
+          },
+        },
+      },
+    },
+  },
+  AppBskyAgeassuranceGetConfig: {
+    lexicon: 1,
+    id: 'app.bsky.ageassurance.getConfig',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Returns Age Assurance configuration for use on the client.',
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'ref',
+            ref: 'lex:app.bsky.ageassurance.defs#config',
+          },
+        },
+      },
+    },
+  },
+  AppBskyAgeassuranceGetState: {
+    lexicon: 1,
+    id: 'app.bsky.ageassurance.getState',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Returns server-computed Age Assurance state, if available, and any additional metadata needed to compute Age Assurance state client-side.',
+        parameters: {
+          type: 'params',
+          required: ['countryCode'],
+          properties: {
+            countryCode: {
+              type: 'string',
+            },
+            regionCode: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['state', 'metadata'],
+            properties: {
+              state: {
+                type: 'ref',
+                ref: 'lex:app.bsky.ageassurance.defs#state',
+              },
+              metadata: {
+                type: 'ref',
+                ref: 'lex:app.bsky.ageassurance.defs#stateMetadata',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   AppBskyBookmarkCreateBookmark: {
     lexicon: 1,
     id: 'app.bsky.bookmark.createBookmark',
@@ -1337,6 +1733,348 @@ export const schemaDict = {
             },
           },
         },
+      },
+    },
+  },
+  AppBskyContactDefs: {
+    lexicon: 1,
+    id: 'app.bsky.contact.defs',
+    defs: {
+      matchAndContactIndex: {
+        description:
+          'Associates a profile with the positional index of the contact import input in the call to `app.bsky.contact.importContacts`, so clients can know which phone caused a particular match.',
+        type: 'object',
+        required: ['match', 'contactIndex'],
+        properties: {
+          match: {
+            description: 'Profile of the matched user.',
+            type: 'ref',
+            ref: 'lex:app.bsky.actor.defs#profileView',
+          },
+          contactIndex: {
+            description: 'The index of this match in the import contact input.',
+            type: 'integer',
+            minimum: 0,
+            maximum: 999,
+          },
+        },
+      },
+      syncStatus: {
+        type: 'object',
+        required: ['syncedAt', 'matchesCount'],
+        properties: {
+          syncedAt: {
+            description: 'Last date when contacts where imported.',
+            type: 'string',
+            format: 'datetime',
+          },
+          matchesCount: {
+            description:
+              'Number of existing contact matches resulting of the user imports and of their imported contacts having imported the user. Matches stop being counted when the user either follows the matched contact or dismisses the match.',
+            type: 'integer',
+            minimum: 0,
+          },
+        },
+      },
+    },
+  },
+  AppBskyContactDismissMatch: {
+    lexicon: 1,
+    id: 'app.bsky.contact.dismissMatch',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          "WARNING: This is unstable and under active development, don't use it while this warning is here. Removes a match that was found via contact import. It shouldn't appear again if the same contact is re-imported. Requires authentication.",
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['subject'],
+            properties: {
+              subject: {
+                description: "The subject's DID to dismiss the match with.",
+                type: 'string',
+                format: 'did',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {},
+          },
+        },
+        errors: [
+          {
+            name: 'TODO',
+            description: 'TODO',
+          },
+        ],
+      },
+    },
+  },
+  AppBskyContactGetMatches: {
+    lexicon: 1,
+    id: 'app.bsky.contact.getMatches',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          "WARNING: This is unstable and under active development, don't use it while this warning is here. Returns the matched contacts (contacts that were mutually imported). Excludes dismissed matches. Requires authentication.",
+        parameters: {
+          type: 'params',
+          properties: {
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['matches'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              matches: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.actor.defs#profileView',
+                },
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'TODO',
+            description: 'TODO',
+          },
+        ],
+      },
+    },
+  },
+  AppBskyContactGetSyncStatus: {
+    lexicon: 1,
+    id: 'app.bsky.contact.getSyncStatus',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          "WARNING: This is unstable and under active development, don't use it while this warning is here. Gets the user's current contact import status. Requires authentication.",
+        parameters: {
+          type: 'params',
+          properties: {},
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {
+              syncStatus: {
+                description:
+                  "If present, indicates the user has imported their contacts. If not present, indicates the user never used the feature or called `app.bsky.contact.removeData` and didn't import again since.",
+                type: 'ref',
+                ref: 'lex:app.bsky.contact.defs#syncStatus',
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'TODO',
+            description: 'TODO',
+          },
+        ],
+      },
+    },
+  },
+  AppBskyContactImportContacts: {
+    lexicon: 1,
+    id: 'app.bsky.contact.importContacts',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          "WARNING: This is unstable and under active development, don't use it while this warning is here. Import contacts for securely matching with other users. This follows the protocol explained in https://docs.bsky.app/blog/contact-import-rfc. Requires authentication.",
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['token', 'contacts'],
+            properties: {
+              token: {
+                description:
+                  'JWT to authenticate the call. Use the JWT received as a response to the call to `app.bsky.contact.verifyPhone`.',
+                type: 'string',
+              },
+              contacts: {
+                description:
+                  "List of phone numbers in global E.164 format (e.g., '+12125550123'). Phone numbers that cannot be normalized into a valid phone number will be discarded. Should not repeat the 'phone' input used in `app.bsky.contact.verifyPhone`.",
+                type: 'array',
+                items: {
+                  type: 'string',
+                },
+                minLength: 1,
+                maxLength: 1000,
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['matchesAndContactIndexes'],
+            properties: {
+              matchesAndContactIndexes: {
+                description:
+                  'The users that matched during import and their indexes on the input contacts, so the client can correlate with its local list.',
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.contact.defs#matchAndContactIndex',
+                },
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'TODO',
+            description: 'TODO',
+          },
+        ],
+      },
+    },
+  },
+  AppBskyContactRemoveData: {
+    lexicon: 1,
+    id: 'app.bsky.contact.removeData',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          "WARNING: This is unstable and under active development, don't use it while this warning is here. Removes all stored hashes used for contact matching, existing matches, and sync status. Requires authentication.",
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {},
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {},
+          },
+        },
+        errors: [
+          {
+            name: 'TODO',
+            description: 'TODO',
+          },
+        ],
+      },
+    },
+  },
+  AppBskyContactStartPhoneVerification: {
+    lexicon: 1,
+    id: 'app.bsky.contact.startPhoneVerification',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          "WARNING: This is unstable and under active development, don't use it while this warning is here. Starts a phone verification flow. The phone passed will receive a code via SMS that should be passed to `app.bsky.contact.verifyPhone`. Requires authentication.",
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['phone'],
+            properties: {
+              phone: {
+                description: 'The phone number to receive the code via SMS.',
+                type: 'string',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {},
+          },
+        },
+        errors: [
+          {
+            name: 'TODO',
+            description: 'TODO',
+          },
+        ],
+      },
+    },
+  },
+  AppBskyContactVerifyPhone: {
+    lexicon: 1,
+    id: 'app.bsky.contact.verifyPhone',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          "WARNING: This is unstable and under active development, don't use it while this warning is here. Verifies control over a phone number with a code received via SMS and starts a contact import session. Requires authentication.",
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['phone', 'code'],
+            properties: {
+              phone: {
+                description:
+                  'The phone number to verify. Should be the same as the one passed to `app.bsky.contact.startPhoneVerification`.',
+                type: 'string',
+              },
+              code: {
+                description:
+                  'The code received via SMS as a result of the call to `app.bsky.contact.startPhoneVerification`.',
+                type: 'string',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['token'],
+            properties: {
+              token: {
+                description:
+                  'JWT to be used in a call to `app.bsky.contact.importContacts`. It is only valid for a single call.',
+                type: 'string',
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'TODO',
+            description: 'TODO',
+          },
+        ],
       },
     },
   },
@@ -1856,6 +2594,10 @@ export const schemaDict = {
           threadgate: {
             type: 'ref',
             ref: 'lex:app.bsky.feed.defs#threadgateView',
+          },
+          debug: {
+            type: 'unknown',
+            description: 'Debug information for internal development',
           },
         },
       },
@@ -4090,6 +4832,30 @@ export const schemaDict = {
             description:
               'if the actor is followed by this DID, contains the AT-URI of the follow record',
           },
+          blocking: {
+            type: 'string',
+            format: 'at-uri',
+            description:
+              'if the actor blocks this DID, this is the AT-URI of the block record',
+          },
+          blockedBy: {
+            type: 'string',
+            format: 'at-uri',
+            description:
+              'if the actor is blocked by this DID, contains the AT-URI of the block record',
+          },
+          blockingByList: {
+            type: 'string',
+            format: 'at-uri',
+            description:
+              'if the actor blocks this DID via a block list, this is the AT-URI of the listblock record',
+          },
+          blockedByList: {
+            type: 'string',
+            format: 'at-uri',
+            description:
+              'if the actor is blocked by this DID via a block list, contains the AT-URI of the listblock record',
+          },
         },
       },
     },
@@ -4114,6 +4880,10 @@ export const schemaDict = {
             createdAt: {
               type: 'string',
               format: 'datetime',
+            },
+            via: {
+              type: 'ref',
+              ref: 'lex:com.atproto.repo.strongRef',
             },
           },
         },
@@ -6808,12 +7578,6 @@ export const schemaDict = {
               description:
                 'Reference (AT-URI) to post record. This is the anchor post.',
             },
-            prioritizeFollowedUsers: {
-              type: 'boolean',
-              description:
-                'Whether to prioritize posts from followed users. It only has effect when the user is authenticated.',
-              default: false,
-            },
           },
         },
         output: {
@@ -6894,12 +7658,6 @@ export const schemaDict = {
               default: 10,
               minimum: 0,
               maximum: 100,
-            },
-            prioritizeFollowedUsers: {
-              type: 'boolean',
-              description:
-                'Whether to prioritize posts from followed users. It only has effect when the user is authenticated.',
-              default: false,
             },
             sort: {
               type: 'string',
@@ -11250,6 +12008,57 @@ export const schemaDict = {
       },
     },
   },
+  ComAtprotoLexiconResolveLexicon: {
+    lexicon: 1,
+    id: 'com.atproto.lexicon.resolveLexicon',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Resolves an atproto lexicon (NSID) to a schema.',
+        parameters: {
+          type: 'params',
+          properties: {
+            nsid: {
+              format: 'nsid',
+              type: 'string',
+              description: 'The lexicon NSID to resolve.',
+            },
+          },
+          required: ['nsid'],
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {
+              cid: {
+                type: 'string',
+                format: 'cid',
+                description: 'The CID of the lexicon schema record.',
+              },
+              schema: {
+                type: 'ref',
+                ref: 'lex:com.atproto.lexicon.schema#main',
+                description: 'The resolved lexicon schema record.',
+              },
+              uri: {
+                type: 'string',
+                format: 'at-uri',
+                description: 'The AT-URI of the lexicon schema record.',
+              },
+            },
+            required: ['uri', 'cid', 'schema'],
+          },
+        },
+        errors: [
+          {
+            description: 'No lexicon was resolved for the NSID.',
+            name: 'LexiconNotFound',
+          },
+        ],
+      },
+    },
+  },
   ComAtprotoLexiconSchema: {
     lexicon: 1,
     id: 'com.atproto.lexicon.schema',
@@ -15373,6 +16182,12 @@ export const schemaDict = {
             type: 'ref',
             ref: 'lex:tools.ozone.moderation.defs#recordsStats',
           },
+          accountStrike: {
+            description:
+              'Strike information for the account (account-level only)',
+            type: 'ref',
+            ref: 'lex:tools.ozone.moderation.defs#accountStrike',
+          },
           ageAssuranceState: {
             type: 'string',
             description: 'Current age assurance state of the subject.',
@@ -15485,13 +16300,39 @@ export const schemaDict = {
           },
         },
       },
+      accountStrike: {
+        description: 'Strike information for an account',
+        type: 'object',
+        properties: {
+          activeStrikeCount: {
+            description:
+              'Current number of active strikes (excluding expired strikes)',
+            type: 'integer',
+          },
+          totalStrikeCount: {
+            description:
+              'Total number of strikes ever received (including expired strikes)',
+            type: 'integer',
+          },
+          firstStrikeAt: {
+            description: 'Timestamp of the first strike received',
+            type: 'string',
+            format: 'datetime',
+          },
+          lastStrikeAt: {
+            description: 'Timestamp of the most recent strike received',
+            type: 'string',
+            format: 'datetime',
+          },
+        },
+      },
       subjectReviewState: {
         type: 'string',
         knownValues: [
-          'lex:tools.ozone.moderation.defs#reviewOpen',
-          'lex:tools.ozone.moderation.defs#reviewEscalated',
-          'lex:tools.ozone.moderation.defs#reviewClosed',
-          'lex:tools.ozone.moderation.defs#reviewNone',
+          'tools.ozone.moderation.defs#reviewOpen',
+          'tools.ozone.moderation.defs#reviewEscalated',
+          'tools.ozone.moderation.defs#reviewClosed',
+          'tools.ozone.moderation.defs#reviewNone',
         ],
       },
       reviewOpen: {
@@ -15540,6 +16381,31 @@ export const schemaDict = {
             description:
               'Names/Keywords of the policies that drove the decision.',
           },
+          severityLevel: {
+            type: 'string',
+            description:
+              "Severity level of the violation (e.g., 'sev-0', 'sev-1', 'sev-2', etc.).",
+          },
+          targetServices: {
+            type: 'array',
+            items: {
+              type: 'string',
+              knownValues: ['appview', 'pds'],
+            },
+            description:
+              'List of services where the takedown should be applied. If empty or not provided, takedown is applied on all configured services.',
+          },
+          strikeCount: {
+            type: 'integer',
+            description:
+              'Number of strikes to assign to the user for this violation.',
+          },
+          strikeExpiresAt: {
+            type: 'string',
+            format: 'datetime',
+            description:
+              'When the strike should expire. If not provided, the strike never expires.',
+          },
         },
       },
       modEventReverseTakedown: {
@@ -15549,6 +16415,25 @@ export const schemaDict = {
           comment: {
             type: 'string',
             description: 'Describe reasoning behind the reversal.',
+          },
+          policies: {
+            type: 'array',
+            maxLength: 5,
+            items: {
+              type: 'string',
+            },
+            description:
+              'Names/Keywords of the policy infraction for which takedown is being reversed.',
+          },
+          severityLevel: {
+            type: 'string',
+            description:
+              "Severity level of the violation. Usually set from the last policy infraction's severity.",
+          },
+          strikeCount: {
+            type: 'integer',
+            description:
+              "Number of strikes to subtract from the user's strike count. Usually set from the last policy infraction's severity.",
           },
         },
       },
@@ -15649,15 +16534,29 @@ export const schemaDict = {
             format: 'datetime',
             description: 'The date and time of this write operation.',
           },
-          status: {
-            type: 'string',
-            description: 'The status of the age assurance process.',
-            knownValues: ['unknown', 'pending', 'assured'],
-          },
           attemptId: {
             type: 'string',
             description:
               'The unique identifier for this instance of the age assurance flow, in UUID format.',
+          },
+          status: {
+            type: 'string',
+            description: 'The status of the Age Assurance process.',
+            knownValues: ['unknown', 'pending', 'assured'],
+          },
+          access: {
+            type: 'ref',
+            ref: 'lex:app.bsky.ageassurance.defs#access',
+          },
+          countryCode: {
+            type: 'string',
+            description:
+              'The ISO 3166-1 alpha-2 country code provided when beginning the Age Assurance flow.',
+          },
+          regionCode: {
+            type: 'string',
+            description:
+              'The ISO 3166-2 region code provided when beginning the Age Assurance flow.',
           },
           initIp: {
             type: 'string',
@@ -15689,8 +16588,13 @@ export const schemaDict = {
               'The status to be set for the user decided by a moderator, overriding whatever value the user had previously. Use reset to default to original state.',
             knownValues: ['assured', 'reset', 'blocked'],
           },
+          access: {
+            type: 'ref',
+            ref: 'lex:app.bsky.ageassurance.defs#access',
+          },
           comment: {
             type: 'string',
+            minLength: 1,
             description: 'Comment describing the reason for the override.',
           },
         },
@@ -15702,6 +16606,7 @@ export const schemaDict = {
         required: ['comment'],
         properties: {
           comment: {
+            minLength: 1,
             type: 'string',
             description: 'Comment describing the reason for the revocation.',
           },
@@ -15792,6 +16697,36 @@ export const schemaDict = {
           comment: {
             type: 'string',
             description: 'Additional comment about the outgoing comm.',
+          },
+          policies: {
+            type: 'array',
+            maxLength: 5,
+            items: {
+              type: 'string',
+            },
+            description:
+              'Names/Keywords of the policies that necessitated the email.',
+          },
+          severityLevel: {
+            type: 'string',
+            description:
+              "Severity level of the violation. Normally 'sev-1' that adds strike on repeat offense",
+          },
+          strikeCount: {
+            type: 'integer',
+            description:
+              'Number of strikes to assign to the user for this violation. Normally 0 as an indicator of a warning and only added as a strike on a repeat offense.',
+          },
+          strikeExpiresAt: {
+            type: 'string',
+            format: 'datetime',
+            description:
+              'When the strike should expire. If not provided, the strike never expires.',
+          },
+          isDelivered: {
+            type: 'boolean',
+            description:
+              "Indicates whether the email was successfully delivered to the user's inbox.",
           },
         },
       },
@@ -17191,6 +18126,11 @@ export const schemaDict = {
                 'blocked',
               ],
             },
+            withStrike: {
+              type: 'boolean',
+              description:
+                'If specified, only events where strikeCount value is set are returned.',
+            },
             cursor: {
               type: 'string',
             },
@@ -17321,6 +18261,12 @@ export const schemaDict = {
             reviewState: {
               type: 'string',
               description: 'Specify when fetching subjects in a certain state',
+              knownValues: [
+                'tools.ozone.moderation.defs#reviewOpen',
+                'tools.ozone.moderation.defs#reviewClosed',
+                'tools.ozone.moderation.defs#reviewEscalated',
+                'tools.ozone.moderation.defs#reviewNone',
+              ],
             },
             ignoreSubjects: {
               type: 'array',
@@ -17420,6 +18366,12 @@ export const schemaDict = {
               type: 'integer',
               description:
                 'If specified, only subjects that have priority score value above the given value will be returned.',
+            },
+            minStrikeCount: {
+              type: 'integer',
+              minimum: 1,
+              description:
+                'If specified, only subjects that belong to an account that has at least this many active strikes will be returned.',
             },
             ageAssuranceState: {
               type: 'string',
@@ -17534,6 +18486,31 @@ export const schemaDict = {
             },
             description:
               'Names/Keywords of the policies that drove the decision.',
+          },
+          severityLevel: {
+            type: 'string',
+            description:
+              "Severity level of the violation (e.g., 'sev-0', 'sev-1', 'sev-2', etc.).",
+          },
+          strikeCount: {
+            type: 'integer',
+            description:
+              'Number of strikes to assign to the user when takedown is applied.',
+          },
+          strikeExpiresAt: {
+            type: 'string',
+            format: 'datetime',
+            description:
+              'When the strike should expire. If not provided, the strike never expires.',
+          },
+          emailContent: {
+            type: 'string',
+            description: 'Email content to be sent to the user upon takedown.',
+          },
+          emailSubject: {
+            type: 'string',
+            description:
+              'Subject of the email to be sent to the user upon takedown.',
           },
         },
       },
@@ -19142,10 +20119,10 @@ export const schemaDict = {
           role: {
             type: 'string',
             knownValues: [
-              'lex:tools.ozone.team.defs#roleAdmin',
-              'lex:tools.ozone.team.defs#roleModerator',
-              'lex:tools.ozone.team.defs#roleTriage',
-              'lex:tools.ozone.team.defs#roleVerifier',
+              'tools.ozone.team.defs#roleAdmin',
+              'tools.ozone.team.defs#roleModerator',
+              'tools.ozone.team.defs#roleTriage',
+              'tools.ozone.team.defs#roleVerifier',
             ],
           },
         },
@@ -19701,10 +20678,23 @@ export const ids = {
   AppBskyActorSearchActors: 'app.bsky.actor.searchActors',
   AppBskyActorSearchActorsTypeahead: 'app.bsky.actor.searchActorsTypeahead',
   AppBskyActorStatus: 'app.bsky.actor.status',
+  AppBskyAgeassuranceBegin: 'app.bsky.ageassurance.begin',
+  AppBskyAgeassuranceDefs: 'app.bsky.ageassurance.defs',
+  AppBskyAgeassuranceGetConfig: 'app.bsky.ageassurance.getConfig',
+  AppBskyAgeassuranceGetState: 'app.bsky.ageassurance.getState',
   AppBskyBookmarkCreateBookmark: 'app.bsky.bookmark.createBookmark',
   AppBskyBookmarkDefs: 'app.bsky.bookmark.defs',
   AppBskyBookmarkDeleteBookmark: 'app.bsky.bookmark.deleteBookmark',
   AppBskyBookmarkGetBookmarks: 'app.bsky.bookmark.getBookmarks',
+  AppBskyContactDefs: 'app.bsky.contact.defs',
+  AppBskyContactDismissMatch: 'app.bsky.contact.dismissMatch',
+  AppBskyContactGetMatches: 'app.bsky.contact.getMatches',
+  AppBskyContactGetSyncStatus: 'app.bsky.contact.getSyncStatus',
+  AppBskyContactImportContacts: 'app.bsky.contact.importContacts',
+  AppBskyContactRemoveData: 'app.bsky.contact.removeData',
+  AppBskyContactStartPhoneVerification:
+    'app.bsky.contact.startPhoneVerification',
+  AppBskyContactVerifyPhone: 'app.bsky.contact.verifyPhone',
   AppBskyEmbedDefs: 'app.bsky.embed.defs',
   AppBskyEmbedExternal: 'app.bsky.embed.external',
   AppBskyEmbedImages: 'app.bsky.embed.images',
@@ -19892,6 +20882,7 @@ export const ids = {
   ComAtprotoLabelDefs: 'com.atproto.label.defs',
   ComAtprotoLabelQueryLabels: 'com.atproto.label.queryLabels',
   ComAtprotoLabelSubscribeLabels: 'com.atproto.label.subscribeLabels',
+  ComAtprotoLexiconResolveLexicon: 'com.atproto.lexicon.resolveLexicon',
   ComAtprotoLexiconSchema: 'com.atproto.lexicon.schema',
   ComAtprotoModerationCreateReport: 'com.atproto.moderation.createReport',
   ComAtprotoModerationDefs: 'com.atproto.moderation.defs',

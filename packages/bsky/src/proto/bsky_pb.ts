@@ -813,6 +813,16 @@ export class GetPostRecordsRequest extends Message<GetPostRecordsRequest> {
    */
   uris: string[] = [];
 
+  /**
+   * @generated from field: optional string process_dynamic_tags_for_view = 2;
+   */
+  processDynamicTagsForView?: string;
+
+  /**
+   * @generated from field: optional string viewer_did = 3;
+   */
+  viewerDid?: string;
+
   constructor(data?: PartialMessage<GetPostRecordsRequest>) {
     super();
     proto3.util.initPartial(data, this);
@@ -822,6 +832,8 @@ export class GetPostRecordsRequest extends Message<GetPostRecordsRequest> {
   static readonly typeName = "bsky.GetPostRecordsRequest";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
     { no: 1, name: "uris", kind: "scalar", T: 9 /* ScalarType.STRING */, repeated: true },
+    { no: 2, name: "process_dynamic_tags_for_view", kind: "scalar", T: 9 /* ScalarType.STRING */, opt: true },
+    { no: 3, name: "viewer_did", kind: "scalar", T: 9 /* ScalarType.STRING */, opt: true },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): GetPostRecordsRequest {
@@ -3900,6 +3912,11 @@ export class AgeAssuranceStatus extends Message<AgeAssuranceStatus> {
    */
   overrideApplied = false;
 
+  /**
+   * @generated from field: string access = 4;
+   */
+  access = "";
+
   constructor(data?: PartialMessage<AgeAssuranceStatus>) {
     super();
     proto3.util.initPartial(data, this);
@@ -3911,6 +3928,7 @@ export class AgeAssuranceStatus extends Message<AgeAssuranceStatus> {
     { no: 1, name: "status", kind: "scalar", T: 9 /* ScalarType.STRING */ },
     { no: 2, name: "last_initiated_at", kind: "message", T: Timestamp },
     { no: 3, name: "override_applied", kind: "scalar", T: 8 /* ScalarType.BOOL */ },
+    { no: 4, name: "access", kind: "scalar", T: 9 /* ScalarType.STRING */ },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): AgeAssuranceStatus {

@@ -67,6 +67,8 @@ export class TestNetwork extends TestNetworkNoAppView {
       port: bskyPort,
       plcUrl: plc.url,
       pdsPort,
+      rolodexUrl: process.env.BSKY_ROLODEX_URL,
+      rolodexIgnoreBadTls: true,
       repoProvider: `ws://localhost:${pdsPort}`,
       dbPostgresSchema: `appview_${dbPostgresSchema}`,
       dbPostgresUrl,
@@ -89,6 +91,9 @@ export class TestNetwork extends TestNetworkNoAppView {
       lexiconDidAuthority: lexiconAuthorityProfile.did,
       ...params.pds,
     })
+
+    // mock before any events start flowing from pds so that we don't miss e.g. any handle resolutions.
+    mockNetworkUtilities(pds, bsky)
 
     const ozone = await TestOzone.create({
       port: ozonePort,
@@ -115,8 +120,8 @@ export class TestNetwork extends TestNetworkNoAppView {
     await lexiconAuthorityProfile.createRecords()
 
     await ozone.addAdminDid(ozoneServiceProfile.did)
+    await ozone.createPolicies()
 
-    mockNetworkUtilities(pds, bsky)
     await thirdPartyPds.processAll()
     await pds.processAll()
     await ozone.processAll()

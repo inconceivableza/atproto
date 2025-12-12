@@ -13,8 +13,22 @@ export interface KwsConfig {
   clientId: string
   redirectUrl: string
   userAgent: string
+  /**
+   * V1 secret used to validate `adult-verifieid` redirects
+   */
   verificationSecret: string
+  /**
+   * V1 secret used to validate `adult-verified` webhooks
+   */
   webhookSecret: string
+  /**
+   * V2 secret used to validate `age-verified` webhooks
+   */
+  ageVerifiedWebhookSecret: string
+  /**
+   * V2 secret used to validate `age-verified` redirects
+   */
+  ageVerifiedRedirectSecret: string
 }
 
 export interface ServerConfigValues {
@@ -41,7 +55,12 @@ export interface ServerConfigValues {
   courierApiKey?: string
   courierHttpVersion?: '1.1' | '2'
   courierIgnoreBadTls?: boolean
+  rolodexUrl?: string
+  rolodexApiKey?: string
+  rolodexHttpVersion?: '1.1' | '2'
+  rolodexIgnoreBadTls?: boolean
   searchUrl?: string
+  searchTagsHide: Set<string>
   suggestionsUrl?: string
   suggestionsApiKey?: string
   topicsUrl?: string
@@ -70,6 +89,8 @@ export interface ServerConfigValues {
   maxThreadParents: number
   threadTagsHide: Set<string>
   threadTagsBumpDown: Set<string>
+  visibilityTagHide: string
+  visibilityTagRankPrefix: string
   // notifications
   notificationsDelayMs?: number
   // client config
@@ -84,6 +105,7 @@ export interface ServerConfigValues {
   proxyMaxRetries?: number
   proxyPreferCompressed?: boolean
   kws?: KwsConfig
+  debugFieldAllowedDids: Set<string>
 }
 
 export class ServerConfig {
@@ -132,6 +154,7 @@ export class ServerConfig {
       process.env.BSKY_SEARCH_URL ||
       process.env.BSKY_SEARCH_ENDPOINT ||
       undefined
+    const searchTagsHide = new Set(envList(process.env.BSKY_SEARCH_TAGS_HIDE))
     const suggestionsUrl = process.env.BSKY_SUGGESTIONS_URL || undefined
     const suggestionsApiKey = process.env.BSKY_SUGGESTIONS_API_KEY || undefined
     const topicsUrl = process.env.BSKY_TOPICS_URL || undefined
@@ -167,6 +190,12 @@ export class ServerConfig {
     const courierIgnoreBadTls =
       process.env.BSKY_COURIER_IGNORE_BAD_TLS === 'true'
     assert(courierHttpVersion === '1.1' || courierHttpVersion === '2')
+    const rolodexUrl = process.env.BSKY_ROLODEX_URL || undefined
+    const rolodexApiKey = process.env.BSKY_ROLODEX_API_KEY || undefined
+    const rolodexHttpVersion = process.env.BSKY_ROLODEX_HTTP_VERSION || '2'
+    const rolodexIgnoreBadTls =
+      process.env.BSKY_ROLODEX_IGNORE_BAD_TLS === 'true'
+    assert(rolodexHttpVersion === '1.1' || rolodexHttpVersion === '2')
     const blobRateLimitBypassKey =
       process.env.BSKY_BLOB_RATE_LIMIT_BYPASS_KEY || undefined
     // single domain would be e.g. "mypds.com", subdomains are supported with a leading dot e.g. ".mypds.com"
@@ -213,6 +242,9 @@ export class ServerConfig {
     const threadTagsBumpDown = new Set(
       envList(process.env.BSKY_THREAD_TAGS_BUMP_DOWN),
     )
+    const visibilityTagHide = process.env.BSKY_VISIBILITY_TAG_HIDE || ''
+    const visibilityTagRankPrefix =
+      process.env.BSKY_VISIBILITY_TAG_RANK_PREFIX || ''
 
     const notificationsDelayMs = process.env.BSKY_NOTIFICATIONS_DELAY_MS
       ? parseInt(process.env.BSKY_NOTIFICATIONS_DELAY_MS || '', 10)
@@ -243,6 +275,10 @@ export class ServerConfig {
     const kwsUserAgent = process.env.BSKY_KWS_USER_AGENT
     const kwsVerificationSecret = process.env.BSKY_KWS_VERIFICATION_SECRET
     const kwsWebhookSecret = process.env.BSKY_KWS_WEBHOOK_SECRET
+    const kwsAgeVerifiedWebhookSecret =
+      process.env.BSKY_KWS_AGE_VERIFIED_WEBHOOK_SECRET
+    const kwsAgeVerifiedRedirectSecret =
+      process.env.BSKY_KWS_AGE_VERIFIED_REDIRECT_SECRET
     if (
       kwsApiKey ||
       kwsApiOrigin ||
@@ -251,7 +287,9 @@ export class ServerConfig {
       kwsRedirectUrl ||
       kwsUserAgent ||
       kwsVerificationSecret ||
-      kwsWebhookSecret
+      kwsWebhookSecret ||
+      kwsAgeVerifiedWebhookSecret ||
+      kwsAgeVerifiedRedirectSecret
     ) {
       assert(
         kwsApiOrigin &&
@@ -261,7 +299,9 @@ export class ServerConfig {
           kwsUserAgent &&
           kwsVerificationSecret &&
           kwsWebhookSecret &&
-          kwsApiKey,
+          kwsApiKey &&
+          kwsAgeVerifiedWebhookSecret &&
+          kwsAgeVerifiedRedirectSecret,
         'all KWS environment variables must be set if any are set',
       )
       kws = {
@@ -273,8 +313,14 @@ export class ServerConfig {
         userAgent: kwsUserAgent,
         verificationSecret: kwsVerificationSecret,
         webhookSecret: kwsWebhookSecret,
+        ageVerifiedWebhookSecret: kwsAgeVerifiedWebhookSecret,
+        ageVerifiedRedirectSecret: kwsAgeVerifiedRedirectSecret,
       }
     }
+
+    const debugFieldAllowedDids = new Set(
+      envList(process.env.BSKY_DEBUG_FIELD_ALLOWED_DIDS),
+    )
 
     return new ServerConfig({
       version,
@@ -291,6 +337,7 @@ export class ServerConfig {
       dataplaneHttpVersion,
       dataplaneIgnoreBadTls,
       searchUrl,
+      searchTagsHide,
       suggestionsUrl,
       suggestionsApiKey,
       topicsUrl,
@@ -310,6 +357,10 @@ export class ServerConfig {
       courierApiKey,
       courierHttpVersion,
       courierIgnoreBadTls,
+      rolodexUrl,
+      rolodexApiKey,
+      rolodexHttpVersion,
+      rolodexIgnoreBadTls,
       blobRateLimitBypassKey,
       blobRateLimitBypassHostname,
       adminPasswords,
@@ -325,6 +376,8 @@ export class ServerConfig {
       maxThreadParents,
       threadTagsHide,
       threadTagsBumpDown,
+      visibilityTagHide,
+      visibilityTagRankPrefix,
       notificationsDelayMs,
       disableSsrfProtection,
       proxyAllowHTTP2,
@@ -334,6 +387,7 @@ export class ServerConfig {
       proxyMaxRetries,
       proxyPreferCompressed,
       kws,
+      debugFieldAllowedDids,
       ...stripUndefineds(overrides ?? {}),
     })
   }
@@ -430,8 +484,25 @@ export class ServerConfig {
     return this.cfg.courierIgnoreBadTls
   }
 
+  get rolodexUrl() {
+    return this.cfg.rolodexUrl
+  }
+  get rolodexApiKey() {
+    return this.cfg.rolodexApiKey
+  }
+  get rolodexHttpVersion() {
+    return this.cfg.rolodexHttpVersion
+  }
+  get rolodexIgnoreBadTls() {
+    return this.cfg.rolodexIgnoreBadTls
+  }
+
   get searchUrl() {
     return this.cfg.searchUrl
+  }
+
+  get searchTagsHide() {
+    return this.cfg.searchTagsHide
   }
 
   get suggestionsUrl() {
@@ -533,8 +604,17 @@ export class ServerConfig {
   get threadTagsHide() {
     return this.cfg.threadTagsHide
   }
+
   get threadTagsBumpDown() {
     return this.cfg.threadTagsBumpDown
+  }
+
+  get visibilityTagHide() {
+    return this.cfg.visibilityTagHide
+  }
+
+  get visibilityTagRankPrefix() {
+    return this.cfg.visibilityTagRankPrefix
   }
 
   get notificationsDelayMs() {
@@ -571,6 +651,10 @@ export class ServerConfig {
 
   get kws() {
     return this.cfg.kws
+  }
+
+  get debugFieldAllowedDids() {
+    return this.cfg.debugFieldAllowedDids
   }
 }
 

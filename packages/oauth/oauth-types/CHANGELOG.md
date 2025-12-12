@@ -1,5 +1,34 @@
 # @atproto/oauth-types
 
+## 0.5.2
+
+### Patch Changes
+
+- Updated dependencies [[`8012627`](https://github.com/bluesky-social/atproto/commit/8012627a1226cb2f1c753385ad2497b6b43ffd2e), [`d396de0`](https://github.com/bluesky-social/atproto/commit/d396de016d1d55d08cfad1dabd3ffd9eaeea76ea)]:
+  - @atproto/did@0.2.3
+
+## 0.5.1
+
+### Patch Changes
+
+- Updated dependencies [[`261968fd6`](https://github.com/bluesky-social/atproto/commit/261968fd65014ded613e2bf085d61a7864b8fba7)]:
+  - @atproto/did@0.2.2
+
+## 0.5.0
+
+### Minor Changes
+
+- [#4289](https://github.com/bluesky-social/atproto/pull/4289) [`8ff5ec4ca`](https://github.com/bluesky-social/atproto/commit/8ff5ec4caa9a1f5c1e453a416ba2af22d1ee4f58) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Remove exported `oauthHttpsRedirectURISchema` and `oauthPrivateUseRedirectURISchema` in favor of `oauthRedirectUriSchema` and `oauthLoopbackClientRedirectUriSchema`, which provide semantically meaningful groupings of redirect URIs based on OAuth client types.
+
+  `oauthHttpsRedirectURISchema` can still be accessed using `httpsUriSchema`.
+  `oauthPrivateUseRedirectURISchema` can still be accessed using `privateUseUriSchema`.
+
+- [#4289](https://github.com/bluesky-social/atproto/pull/4289) [`8ff5ec4ca`](https://github.com/bluesky-social/atproto/commit/8ff5ec4caa9a1f5c1e453a416ba2af22d1ee4f58) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Remove unused `isLoopbackUrl` utility
+
+### Patch Changes
+
+- [#4289](https://github.com/bluesky-social/atproto/pull/4289) [`8ff5ec4ca`](https://github.com/bluesky-social/atproto/commit/8ff5ec4caa9a1f5c1e453a416ba2af22d1ee4f58) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Enforce stronger validation of `privateUseUriSchema`
+
 ## 0.4.2
 
 ### Patch Changes

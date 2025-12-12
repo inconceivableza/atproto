@@ -35,6 +35,13 @@ export type Post = RecordInfo<PostRecord> & {
   hasThreadGate: boolean
   hasPostGate: boolean
   tags: Set<string>
+  /**
+   * Debug information for internal development
+   */
+  debug?: {
+    tags?: string[]
+    [key: string]: unknown
+  }
 }
 export type Posts = HydrationMap<Post>
 
@@ -121,6 +128,10 @@ export type FeedItem = {
    */
   authorPinned?: boolean
   itemType: FeedItemType
+}
+
+export type GetPostsHydrationOptions = {
+  processDynamicTagsForView?: 'thread' | 'search'
 }
 
 export class FeedHydrator {
@@ -232,6 +243,8 @@ export class FeedHydrator {
     uris: string[],
     includeTakedowns = false,
     given = new HydrationMap<Post>(),
+    viewer?: string | null,
+    options: GetPostsHydrationOptions = {},
   ): Promise<Posts> {
     const [have, need] = split(uris, (uri) => given.has(uri))
     const base = have.reduce(
@@ -239,7 +252,17 @@ export class FeedHydrator {
       new HydrationMap<Post>(),
     )
     if (!need.length) return base
-    const res = await this.dataplane.getPostRecords({ uris: need })
+    const res = await this.dataplane.getPostRecords(
+      options.processDynamicTagsForView
+        ? {
+            uris: need,
+            viewerDid: viewer ?? undefined,
+            processDynamicTagsForView: options.processDynamicTagsForView,
+          }
+        : {
+            uris: need,
+          },
+    )
 
     return need.reduce((acc, uri, i) => {
       const record = parseRecord<PostRecord>(res.records[i], includeTakedowns)
@@ -248,6 +271,7 @@ export class FeedHydrator {
       const hasThreadGate = res.meta[i].hasThreadGate
       const hasPostGate = res.meta[i].hasPostGate
       const tags = new Set<string>(res.records[i].tags ?? [])
+      const debug = { tags: Array.from(tags) }
       return acc.set(
         uri,
         record
@@ -258,6 +282,7 @@ export class FeedHydrator {
             hasThreadGate,
             hasPostGate,
             tags,
+              debug,
           }
           : null,
       )
