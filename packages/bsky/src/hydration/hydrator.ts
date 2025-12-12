@@ -865,8 +865,7 @@ export class Hydrator {
     const reviewRatingRefs = collectionRefsMap.get(ids.AppFoodiosFeedReviewRating) ?? []
     const postRefs = collectionRefsMap.get(ids.AppBskyFeedPost) ?? []
 
-    const postsState = await this.hydratePosts(postRefs, ctx)
-    const postsState = await this.hydratePosts(refs, ctx, undefined, {
+    const postsState = await this.hydratePosts(postRefs, ctx, undefined, {
       processDynamicTagsForView: ctx.featureGates.get(
         FeatureGateID.ThreadsV2ReplyRankingExploration,
       )
