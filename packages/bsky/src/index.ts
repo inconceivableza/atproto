@@ -30,6 +30,7 @@ import { ImageUriBuilder } from './image/uri'
 import { createKwsClient } from './kws'
 import { createServer } from './lexicon'
 import { loggerMiddleware } from './logger'
+import { authWithApiKey as rolodexAuth, createRolodexClient } from './rolodex'
 import { createStashClient } from './stash'
 import { Views } from './views'
 import { VideoUriBuilder } from './views/util'
@@ -123,13 +124,17 @@ export class BskyAppView {
       httpVersion: config.dataplaneHttpVersion,
       rejectUnauthorized: !config.dataplaneIgnoreBadTls,
     })
-    const hydrator = new Hydrator(dataplane, config.labelsFromIssuerDids)
+    const hydrator = new Hydrator(dataplane, config.labelsFromIssuerDids, {
+      debugFieldAllowedDids: config.debugFieldAllowedDids,
+    })
     const views = new Views({
       imgUriBuilder: imgUriBuilder,
       videoUriBuilder: videoUriBuilder,
       indexedAtEpoch: config.indexedAtEpoch,
       threadTagsBumpDown: [...config.threadTagsBumpDown],
       threadTagsHide: [...config.threadTagsHide],
+      visibilityTagHide: config.visibilityTagHide,
+      visibilityTagRankPrefix: config.visibilityTagRankPrefix,
     })
 
     const bsyncClient = createBsyncClient({
@@ -148,6 +153,17 @@ export class BskyAppView {
           nodeOptions: { rejectUnauthorized: !config.courierIgnoreBadTls },
           interceptors: config.courierApiKey
             ? [courierAuth(config.courierApiKey)]
+            : [],
+        })
+      : undefined
+
+    const rolodexClient = config.rolodexUrl
+      ? createRolodexClient({
+          baseUrl: config.rolodexUrl,
+          httpVersion: config.rolodexHttpVersion ?? '2',
+          nodeOptions: { rejectUnauthorized: !config.rolodexIgnoreBadTls },
+          interceptors: config.rolodexApiKey
+            ? [rolodexAuth(config.rolodexApiKey)]
             : [],
         })
       : undefined
@@ -187,6 +203,7 @@ export class BskyAppView {
       bsyncClient,
       stashClient,
       courierClient,
+      rolodexClient,
       authVerifier,
       featureGates,
       blobDispatcher,

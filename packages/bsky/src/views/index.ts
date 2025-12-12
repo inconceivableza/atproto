@@ -1,5 +1,6 @@
 import { HOUR, MINUTE, mapDefined } from '@atproto/common'
 import { AtUri, INVALID_HANDLE, normalizeDatetimeAlways } from '@atproto/syntax'
+import { FeatureGateID } from '../feature-gates'
 import { Actor, ProfileViewerState } from '../hydration/actor'
 import {
   FeedItem,
@@ -157,6 +158,8 @@ export class Views {
   public indexedAtEpoch: Date | undefined = this.opts.indexedAtEpoch
   private threadTagsBumpDown: readonly string[] = this.opts.threadTagsBumpDown
   private threadTagsHide: readonly string[] = this.opts.threadTagsHide
+  private visibilityTagHide: string = this.opts.visibilityTagHide
+  private visibilityTagRankPrefix: string = this.opts.visibilityTagRankPrefix
   constructor(
     private opts: {
       imgUriBuilder: ImageUriBuilder
@@ -164,6 +167,8 @@ export class Views {
       indexedAtEpoch: Date | undefined
       threadTagsBumpDown: readonly string[]
       threadTagsHide: readonly string[]
+      visibilityTagHide: string
+      visibilityTagRankPrefix: string
     },
   ) { }
 
@@ -385,6 +390,7 @@ export class Views {
       createdAt: actor.createdAt?.toISOString(),
       verification: this.verification(did, state),
       status: this.status(did, state),
+      debug: state.ctx?.includeDebugField ? actor.debug : undefined,
     }
   }
 
@@ -1081,6 +1087,9 @@ export class Views {
       threadgate: !post.record.reply // only hydrate gate on root post
         ? this.threadgate(threadgateUri, state)
         : undefined,
+      debug: state.ctx?.includeDebugField
+        ? { post: post.debug, author: author.debug }
+        : undefined,
     }
   }
 
@@ -1439,13 +1448,11 @@ export class Views {
       above,
       below,
       branchingFactor,
-      prioritizeFollowedUsers,
       sort,
     }: {
       above: number
       below: number
       branchingFactor: number
-      prioritizeFollowedUsers: boolean
       sort: GetPostThreadV2QueryParams['sort']
     },
   ): { hasOtherReplies: boolean; thread: ThreadItem[] } {
@@ -1552,7 +1559,6 @@ export class Views {
                 below,
                 depth: 1,
                 branchingFactor,
-                prioritizeFollowedUsers,
               },
               state,
             )
@@ -1575,15 +1581,21 @@ export class Views {
       }
     }
 
-    const thread = sortTrimFlattenThreadTree(anchorTree, {
-      opDid,
-      branchingFactor,
-      sort,
-      prioritizeFollowedUsers,
-      viewer: state.ctx?.viewer ?? null,
-      threadTagsBumpDown: this.threadTagsBumpDown,
-      threadTagsHide: this.threadTagsHide,
-    })
+    const thread = sortTrimFlattenThreadTree(
+      anchorTree,
+      {
+        opDid,
+        branchingFactor,
+        sort,
+        viewer: state.ctx?.viewer ?? null,
+        threadTagsBumpDown: this.threadTagsBumpDown,
+        threadTagsHide: this.threadTagsHide,
+        visibilityTagRankPrefix: this.visibilityTagRankPrefix,
+      },
+      state.ctx?.featureGates.get(
+        FeatureGateID.ThreadsV2ReplyRankingExploration,
+      ),
+    )
 
     return {
       hasOtherReplies,
@@ -1767,7 +1779,6 @@ export class Views {
       below,
       depth,
       branchingFactor,
-      prioritizeFollowedUsers,
     }: {
       parentUri: string
       isOPThread: boolean
@@ -1777,7 +1788,6 @@ export class Views {
       below: number
       depth: number
       branchingFactor: number
-      prioritizeFollowedUsers: boolean
     },
     state: HydrationState,
   ): { replies: ThreadTreeVisible[] | undefined; hasOtherReplies: boolean } {
@@ -1801,7 +1811,7 @@ export class Views {
 
       // Hidden.
       const { isOther } = this.isOtherThreadPost(
-        { post, postView, prioritizeFollowedUsers, rootUri, uri },
+        { post, postView, rootUri, uri },
         state,
       )
       if (isOther) {
@@ -1824,7 +1834,6 @@ export class Views {
           below,
           depth: depth + 1,
           branchingFactor,
-          prioritizeFollowedUsers,
         },
         state,
       )
@@ -1953,11 +1962,9 @@ export class Views {
     {
       below,
       branchingFactor,
-      prioritizeFollowedUsers,
     }: {
       below: number
       branchingFactor: number
-      prioritizeFollowedUsers: boolean
     },
   ): ThreadOtherItem[] {
     const { anchor: anchorUri, uris } = skeleton
@@ -1992,20 +1999,25 @@ export class Views {
           childrenByParentUri,
           below,
           depth: 1,
-          prioritizeFollowedUsers,
         },
         state,
       ),
     }
 
-    return sortTrimFlattenThreadTree(anchorTree, {
-      opDid,
-      branchingFactor,
-      prioritizeFollowedUsers: false,
-      viewer: state.ctx?.viewer ?? null,
-      threadTagsBumpDown: this.threadTagsBumpDown,
-      threadTagsHide: this.threadTagsHide,
-    })
+    return sortTrimFlattenThreadTree(
+      anchorTree,
+      {
+        opDid,
+        branchingFactor,
+        viewer: state.ctx?.viewer ?? null,
+        threadTagsBumpDown: this.threadTagsBumpDown,
+        threadTagsHide: this.threadTagsHide,
+        visibilityTagRankPrefix: this.visibilityTagRankPrefix,
+      },
+      state.ctx?.featureGates.get(
+        FeatureGateID.ThreadsV2ReplyRankingExploration,
+      ),
+    )
   }
 
   private threadOtherV2Replies(
@@ -2015,14 +2027,12 @@ export class Views {
       childrenByParentUri,
       below,
       depth,
-      prioritizeFollowedUsers,
     }: {
       parentUri: string
       rootUri: string
       childrenByParentUri: Record<string, string[]>
       below: number
       depth: number
-      prioritizeFollowedUsers: boolean
     },
     state: HydrationState,
   ): ThreadOtherPostNode[] | undefined {
@@ -2045,10 +2055,7 @@ export class Views {
 
       // Other posts to pull out
       const { isOther, hiddenByThreadgate, mutedByViewer } =
-        this.isOtherThreadPost(
-          { post, postView, rootUri, prioritizeFollowedUsers, uri },
-          state,
-        )
+        this.isOtherThreadPost({ post, postView, rootUri, uri }, state)
       if (isOther) {
         // Only show hidden anchor replies, not all hidden.
         if (depth > 1) {
@@ -2067,7 +2074,6 @@ export class Views {
           childrenByParentUri,
           below,
           depth: depth + 1,
-          prioritizeFollowedUsers,
         },
         state,
       )
@@ -2189,13 +2195,11 @@ export class Views {
     {
       post,
       postView,
-      prioritizeFollowedUsers,
       rootUri,
       uri,
     }: {
       post: Post | ReviewRating
       postView: PostView
-      prioritizeFollowedUsers: boolean
       rootUri: string
       uri: string
     },
@@ -2209,22 +2213,32 @@ export class Views {
     const opDid = creatorFromUri(rootUri)
     const authorDid = creatorFromUri(uri)
 
-    const showBecauseFollowing =
-      prioritizeFollowedUsers && !!postView.author.viewer?.following
-    const hiddenByTag =
-      authorDid !== opDid &&
-      authorDid !== state.ctx?.viewer &&
-      !showBecauseFollowing &&
-      this.threadTagsHide.some((t) => post.tags.has(t))
+    let hiddenByTag = false
+    if (
+      state.ctx?.featureGates.get(
+        FeatureGateID.ThreadsV2ReplyRankingExploration,
+      )
+    ) {
+      hiddenByTag = authorDid !== opDid && post.tags.has(this.visibilityTagHide)
+    } else {
+      const showBecauseFollowing = !!postView.author.viewer?.following
+      hiddenByTag =
+        authorDid !== opDid &&
+        authorDid !== state.ctx?.viewer &&
+        !showBecauseFollowing &&
+        this.threadTagsHide.some((t) => post.tags.has(t))
+    }
 
     const hiddenByThreadgate =
       state.ctx?.viewer !== authorDid &&
       this.replyIsHiddenByThreadgate(uri, rootUri, state)
 
     const mutedByViewer = this.viewerMuteExists(authorDid, state)
+    const isPushPin =
+      isPostRecord(post.record) && post.record.text.trim() === '📌'
 
     return {
-      isOther: hiddenByTag || hiddenByThreadgate || mutedByViewer,
+      isOther: hiddenByTag || hiddenByThreadgate || mutedByViewer || isPushPin,
       hiddenByTag,
       hiddenByThreadgate,
       mutedByViewer,

@@ -119,7 +119,6 @@ export interface BskyFeedViewPreference {
  */
 export interface BskyThreadViewPreference {
   sort: string
-  prioritizeFollowedUsers: boolean
   [key: string]: any
 }
 

@@ -36,6 +36,7 @@ import {
   isModEventMute,
   isModEventPriorityScore,
   isModEventReport,
+  isModEventReverseTakedown,
   isModEventTag,
   isModEventTakedown,
   isRecordEvent,
@@ -49,6 +50,7 @@ import {
   getStatusIdentifierFromSubject,
   moderationSubjectStatusQueryBuilder,
 } from './status'
+import { StrikeService, StrikeServiceCreator } from './strike'
 import {
   ModSubject,
   RecordSubject,
@@ -89,6 +91,7 @@ export class ModerationService {
       aud: string,
       method: string,
     ) => Promise<AuthHeaders>,
+    public strikeService: StrikeService,
     public imgInvalidator?: ImageInvalidator,
   ) {}
 
@@ -101,10 +104,12 @@ export class ModerationService {
     eventPusher: EventPusher,
     appviewAgent: AtpAgent,
     createAuthHeaders: (aud: string, method: string) => Promise<AuthHeaders>,
+    strikeServiceCreator: StrikeServiceCreator,
     imgInvalidator?: ImageInvalidator,
   ) {
-    return (db: Database) =>
-      new ModerationService(
+    return (db: Database) => {
+      const strikeService = strikeServiceCreator(db)
+      return new ModerationService(
         db,
         signingKey,
         signingKeyId,
@@ -114,8 +119,10 @@ export class ModerationService {
         eventPusher,
         appviewAgent,
         createAuthHeaders,
+        strikeService,
         imgInvalidator,
       )
+    }
   }
 
   views = new ModerationViews(
@@ -190,6 +197,7 @@ export class ModerationService {
     modTool?: string[]
     ageAssuranceState?: string
     batchId?: string
+    withStrike?: boolean
   }): Promise<{ cursor?: string; events: ModerationEventRow[] }> {
     const {
       subject,
@@ -214,6 +222,7 @@ export class ModerationService {
       modTool,
       ageAssuranceState,
       batchId,
+      withStrike,
     } = opts
     const { ref } = this.db.db.dynamic
     let builder = this.db.db.selectFrom('moderation_event').selectAll()
@@ -331,6 +340,10 @@ export class ModerationService {
           'tools.ozone.moderation.defs#ageAssuranceOverrideEvent',
         ])
         .where(sql`meta->>'status'`, '=', ageAssuranceState)
+    }
+
+    if (withStrike !== undefined) {
+      builder = builder.where('strikeCount', 'is not', null)
     }
 
     const keyset = new TimeIdKeyset(
@@ -481,8 +494,12 @@ export class ModerationService {
 
     if (isModEventEmail(event)) {
       meta.subjectLine = event.subjectLine
+      meta.isDelivered = !!event.isDelivered
       if (event.content) {
         meta.content = event.content
+      }
+      if (event.policies?.length) {
+        meta.policies = event.policies.join(',')
       }
     }
 
@@ -515,6 +532,9 @@ export class ModerationService {
       if (event.attemptId) {
         meta.attemptId = event.attemptId
       }
+      if (event.access) {
+        meta.access = event.access
+      }
       if (event.initIp) {
         meta.initIp = event.initIp
       }
@@ -531,6 +551,9 @@ export class ModerationService {
 
     if (isAgeAssuranceOverrideEvent(event)) {
       meta.status = event.status
+      if (event.access) {
+        meta.access = event.access
+      }
     }
 
     if (isScheduleTakedownEvent(event)) {
@@ -556,6 +579,10 @@ export class ModerationService {
       meta.policies = event.policies.join(',')
     }
 
+    if (isModEventTakedown(event) && event.targetServices?.length) {
+      meta.targetServices = event.targetServices.join(',')
+    }
+
     // Keep trace of reports that came in while the reporter was in muted stated
     if (isModEventReport(event)) {
       const isReportingMuted = await this.isReportingMutedForSubject(createdBy)
@@ -565,6 +592,32 @@ export class ModerationService {
     }
 
     const subjectInfo = subject.info()
+
+    // Store severityLevel, strikeCount, and strikeExpiresAt if provided
+    // These values should be calculated by the client based on configuration
+    // processNewEvent will update the account_strike table with the new strike count
+    let severityLevel: string | null = null
+    let strikeCount: number | null = null
+    let strikeExpiresAt: string | null = null
+
+    if (
+      isModEventTakedown(event) ||
+      isModEventEmail(event) ||
+      isModEventReverseTakedown(event)
+    ) {
+      // Store severityLevel if provided (for display/tracking)
+      if (event.severityLevel) {
+        severityLevel = event.severityLevel
+      }
+      // Store explicit strikeCount if provided
+      if (event.strikeCount !== undefined) {
+        strikeCount = event.strikeCount
+      }
+      // Store strikeExpiresAt if provided by client
+      if ('strikeExpiresAt' in event && event.strikeExpiresAt) {
+        strikeExpiresAt = event.strikeExpiresAt
+      }
+    }
 
     const modEvent = await this.db.db
       .insertInto('moderation_event')
@@ -599,6 +652,9 @@ export class ModerationService {
         subjectMessageId: subjectInfo.subjectMessageId,
         modTool: modTool ? jsonb(modTool) : null,
         externalId: externalId ?? null,
+        severityLevel,
+        strikeCount,
+        strikeExpiresAt,
       })
       .returningAll()
       .executeTakeFirstOrThrow()
@@ -608,6 +664,19 @@ export class ModerationService {
       modEvent,
       subject.blobCids,
     )
+
+    // Updates are only needed if strikeCount is numeric (in some cases even 0)
+    if (modEvent.strikeCount !== null) {
+      try {
+        await this.strikeService.updateSubjectStrikeCount(modEvent.subjectDid)
+      } catch (error) {
+        // Log error but don't fail the entire operation to ensure that events are logged even if updating strike count fails
+        log.error(
+          { err: error, modEventId: modEvent.id },
+          'Error processing strikes for moderation event',
+        )
+      }
+    }
 
     return { event: modEvent, subjectStatus }
   }
@@ -715,17 +784,20 @@ export class ModerationService {
   async takedownRepo(
     subject: RepoSubject,
     takedownId: number,
+    targetServices: Set<string>,
     isSuspend = false,
   ) {
     const takedownRef = `BSKY-${
       isSuspend ? 'SUSPEND' : 'TAKEDOWN'
     }-${takedownId}`
 
-    const values = this.eventPusher.takedowns.map((eventType) => ({
-      eventType,
-      subjectDid: subject.did,
-      takedownRef,
-    }))
+    const values = this.eventPusher
+      .getTakedownServices(targetServices)
+      .map((eventType) => ({
+        eventType,
+        subjectDid: subject.did,
+        takedownRef,
+      }))
 
     const repoEvts = await this.db.db
       .insertInto('repo_push_event')
@@ -791,7 +863,11 @@ export class ModerationService {
     })
   }
 
-  async takedownRecord(subject: RecordSubject, takedownId: number) {
+  async takedownRecord(
+    subject: RecordSubject,
+    takedownId: number,
+    targetServices: Set<string>,
+  ) {
     this.db.assertTransaction()
     await this.formatAndCreateLabels(subject.uri, subject.cid, {
       create: [TAKEDOWN_LABEL],
@@ -801,7 +877,9 @@ export class ModerationService {
     const blobCids = subject.blobCids
     if (blobCids && blobCids.length > 0) {
       const blobValues: Insertable<BlobPushEvent>[] = []
-      for (const eventType of this.eventPusher.takedowns) {
+      for (const eventType of this.eventPusher.getTakedownServices(
+        targetServices,
+      )) {
         for (const cid of blobCids) {
           blobValues.push({
             eventType,
@@ -959,6 +1037,7 @@ export class ModerationService {
     minReportedRecordsCount,
     minTakendownRecordsCount,
     minPriorityScore,
+    minStrikeCount,
     ageAssuranceState,
   }: QueryStatusParams): Promise<{
     statuses: ModerationSubjectStatusRowWithHandle[]
@@ -1224,6 +1303,14 @@ export class ModerationService {
       )
     }
 
+    if (minStrikeCount != null && minStrikeCount >= 0) {
+      builder = builder.where(
+        'account_strike.activeStrikeCount',
+        '>=',
+        minStrikeCount,
+      )
+    }
+
     if (ageAssuranceState) {
       builder = builder.where(
         'moderation_subject_status.ageAssuranceState',
@@ -1329,7 +1416,6 @@ export class ModerationService {
     )
     const dbVals = signedLabels.map((l) => formatLabelRow(l, this.signingKeyId))
     const { ref } = this.db.db.dynamic
-    await sql`notify ${ref(LabelChannel)}`.execute(this.db.db)
     const excluded = (col: string) => ref(`excluded.${col}`)
     const res = await this.db.db
       .insertInto('label')
@@ -1346,6 +1432,7 @@ export class ModerationService {
       )
       .returningAll()
       .execute()
+    await sql`notify ${ref(LabelChannel)}`.execute(this.db.db)
     return res.map((row) => formatLabel(row))
   }
 

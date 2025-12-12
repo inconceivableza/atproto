@@ -58,3 +58,4 @@ export * as _20250813T174955711Z from './20250813T174955711Z-add-post-agg-bookma
 export * as _20250909T113942313Z from './20250909T113942313Z-recipe-revision'
 export * as _20251008T152735000Z from './20251008T152735000Z-review-rating'
 export * as _20251014T133935487Z from './20251014T133935487Z-rating-agg'
+export * as _20251120T004738098Z from './20251120T004738098Z-update-actor-age-assurance-v2'
