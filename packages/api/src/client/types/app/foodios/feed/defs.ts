@@ -19,7 +19,7 @@ export interface RecipeRevisionView {
   $type?: 'app.foodios.feed.defs#recipeRevisionView'
   selectedRevisionUri: string
   revisionRefs: RevisionRef[]
-  revisionContent: AppFoodiosFeedRecipeRevision.Record
+  revisionContent: AppFoodiosFeedRecipeRevision.Main
 }
 
 const hashRecipeRevisionView = 'recipeRevisionView'
