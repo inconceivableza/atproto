@@ -23,7 +23,7 @@
                 },
                 "revisionContent": {
                     "type": "ref",
-                    "ref": "app.foodios.feed.recipeRevision#Record"
+                    "ref": "app.foodios.feed.recipeRevision"
                 }
             }
         },
