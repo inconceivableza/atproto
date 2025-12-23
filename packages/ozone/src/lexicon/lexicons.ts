@@ -8684,7 +8684,7 @@ export const schemaDict = {
           },
           revisionContent: {
             type: 'ref',
-            ref: 'lex:app.foodios.feed.recipeRevision#Record',
+            ref: 'lex:app.foodios.feed.recipeRevision',
           },
         },
       },
