@@ -45,11 +45,11 @@
                             "ref": "app.bsky.richtext.facet"
                         }
                     },
-                    "ingredients": {
+                    "ingredientSections": {
                         "type": "array",
                         "items": {
                             "type": "ref",
-                            "ref": "#ingredient"
+                            "ref": "#ingredientSection"
                         }
                     },
                     "instructionSections": {
@@ -104,15 +104,15 @@
                     "attribution": {
                         "type": "union",
                         "refs": [
-                        "#originalAttribution",
-                        "#personAttribution",
-                        "#publicationAttribution",
-                        "#websiteAttribution",
-                        "#showAttribution",
-                        "#productAttribution"
-                    ],
-                    "closed": true
-                },
+                            "#originalAttribution",
+                            "#personAttribution",
+                            "#publicationAttribution",
+                            "#websiteAttribution",
+                            "#showAttribution",
+                            "#productAttribution"
+                        ],
+                        "closed": true
+                    },
                     "labels": {
                         "type": "union",
                         "description": "Self-label values for this post. Effectively content warnings.",
@@ -153,6 +153,25 @@
                             "app.bsky.embed.record",
                             "app.bsky.embed.recordWithMedia"
                         ]
+                    }
+                }
+            }
+        },
+        "ingredientSection": {
+            "type": "object",
+            "required": [
+                "ingredients"
+            ],
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "maxLength": 1000
+                },
+                "instructions": {
+                    "type": "array",
+                    "items": {
+                        "type": "ref",
+                        "ref": "#ingredient"
                     }
                 }
             }
@@ -251,8 +270,7 @@
         "nutrition": {
             "type": "object",
             "required": [
-                "servingSize",
-                "energy"
+                "servingSize"
             ],
             "properties": {
                 "servingSize": {
@@ -440,6 +458,18 @@
                 "url": {
                     "type": "string",
                     "format": "uri"
+                },
+                "license": {
+                    "type": "union",
+                    "refs": [
+                        "app.foodios.feed.defs#licenseAllRights",
+                        "app.foodios.feed.defs#licenseCreativeCommonsBy",
+                        "app.foodios.feed.defs#licenseCreativeCommonsBySa",
+                        "app.foodios.feed.defs#licenseCreativeCommonsByNc",
+                        "app.foodios.feed.defs#licenseCreativeCommonsByNcSa",
+                        "app.foodios.feed.defs#licensePublicDomain"
+                    ],
+                    "closed": true
                 },
                 "notes": {
                     "type": "string",
