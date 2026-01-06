@@ -12,7 +12,7 @@
                     "recipePostRef",
                     "name",
                     "text",
-                    "ingredients",
+                    "ingredientSections",
                     "instructionSections",
                     "createdAt"
                 ],
@@ -167,7 +167,7 @@
                     "type": "string",
                     "maxLength": 1000
                 },
-                "instructions": {
+                "ingredients": {
                     "type": "array",
                     "items": {
                         "type": "ref",
