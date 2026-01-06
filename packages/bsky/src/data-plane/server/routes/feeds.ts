@@ -162,6 +162,58 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       cursor: keyset.packFromResult(feedItems),
     }
   },
+
+  async getEverythingFeed(req) {
+    const { cursor, limit } = req
+    const { ref } = db.db.dynamic
+
+    const keyset = new TimeCidKeyset(
+      ref('feed_item.sortAt'),
+      ref('feed_item.cid'),
+    )
+
+    let feedQb = paginate(db.db
+      .selectFrom('feed_item')
+      .selectAll('feed_item'), {
+      limit,
+      cursor,
+      keyset,
+      tryIndex: true
+    }
+    )
+    const feedItems = await feedQb.execute()
+
+    return {
+      items: feedItems.map(feedItemFromRow),
+      cursor: keyset.packFromResult(feedItems)
+    }
+  },
+
+  async getRecipesFeed(req) {
+    const { cursor, limit } = req
+    const { ref } = db.db.dynamic
+
+    const keyset = new TimeCidKeyset(
+      ref('feed_item.sortAt'),
+      ref('feed_item.cid'),
+    )
+
+    let feedQb = paginate(db.db
+      .selectFrom('feed_item')
+      .select(['uri', 'cid', 'sortAt'])
+      .where('feed_item.type', '=', "recipe"), {
+      limit,
+      cursor,
+      keyset,
+      tryIndex: true
+    })
+    const feedItems = await feedQb.execute()
+
+    return {
+      items: feedItems,
+      cursor: keyset.packFromResult(feedItems)
+    }
+  }
 })
 
 // @NOTE does not support additional fields in the protos specific to author feeds
@@ -187,3 +239,5 @@ function feedItemType(value: string): FeedItemType {
   }
   return FeedItemType.UNSPECIFIED
 }
+
+
