@@ -1071,6 +1071,32 @@ message GetListFeedResponse {
   string cursor = 2;
 }
 
+message GetEverythingFeedRequest {
+  int32 limit = 1;
+  string cursor = 2;
+}
+
+message GetEverythingFeedResponse {
+  repeated TimelineFeedItem items = 1;
+  string cursor = 2;
+}
+
+message GetRecipesFeedRequest {
+  int32 limit = 1;
+  string cursor = 2;
+}
+
+message GetRecipesFeedResponse {
+  repeated TimelineFeedItem items = 1;
+  string cursor = 2;
+}
+
+// TODO: consider if we want to include reposts/quotes of recipes
+message RecipesFeedItem {
+  string uri = 1;
+  string cid = 2;
+}
+
 //
 // Threads
 //
@@ -1498,6 +1524,8 @@ service Service {
   rpc GetAuthorFeed(GetAuthorFeedRequest) returns (GetAuthorFeedResponse);
   rpc GetTimeline(GetTimelineRequest) returns (GetTimelineResponse);
   rpc GetListFeed(GetListFeedRequest) returns (GetListFeedResponse);
+  rpc GetEverythingFeed(GetEverythingFeedRequest) returns (GetEverythingFeedResponse);
+  rpc GetRecipesFeed(GetRecipesFeedRequest) returns (GetRecipesFeedResponse);
 
   // Threads
   rpc GetThread(GetThreadRequest) returns (GetThreadResponse);
