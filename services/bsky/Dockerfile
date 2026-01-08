@@ -1,33 +1,11 @@
-FROM node:20.11-alpine AS package-json-extractor
-
-WORKDIR /source
-# Copy only what we need to extract package.json files
-COPY ./package.json ./pnpm-lock.yaml ./pnpm-workspace.yaml ./
-COPY ./packages ./packages
-COPY ./services/bsky/package.json ./services/bsky/package.json
-
-# Extract only package.json files to /out, preserving directory structure
-RUN mkdir -p /out && \
-    find . -name "package.json" | while read file; do \
-      mkdir -p "/out/$(dirname "$file")" && \
-      cp "$file" "/out/$file"; \
-    done && \
-    cp pnpm-lock.yaml pnpm-workspace.yaml /out/
-
 FROM node:20.11-alpine AS build
 
 RUN corepack enable
 
 WORKDIR /app
 
-# Copy only package.json files from extractor stage
-COPY --from=package-json-extractor /out ./
+COPY ./package.json ./
 RUN corepack prepare --activate
-
-COPY ./tsconfig ./tsconfig
-
-# install all deps
-RUN pnpm install --frozen-lockfile
 
 # Move files into the image and install
 COPY ./*.* ./
@@ -70,7 +48,10 @@ COPY ./packages/xrpc ./packages/xrpc
 COPY ./packages/xrpc-server ./packages/xrpc-server
 
 COPY ./services/bsky ./services/bsky
-# build all dependent packages with external node_modules
+
+# install all deps
+RUN pnpm install --frozen-lockfile
+# build all packages with external node_modules
 RUN pnpm run --recursive --stream --filter '@atproto/crypto...' build
 RUN pnpm run --recursive --stream --filter '@atproto/bsky...' build
 # clean up
