@@ -1,34 +1,30 @@
+FROM node:20.11-alpine AS package-json-extractor
+
+WORKDIR /source
+# Copy only what we need to extract package.json files
+COPY ./package.json ./pnpm-lock.yaml ./pnpm-workspace.yaml ./
+COPY ./packages ./packages
+COPY ./services/bsky/package.json ./services/bsky/package.json
+
+# Extract only package.json files to /out, preserving directory structure
+RUN mkdir -p /out && \
+    find . -name "package.json" | while read file; do \
+      mkdir -p "/out/$(dirname "$file")" && \
+      cp "$file" "/out/$file"; \
+    done && \
+    cp pnpm-lock.yaml pnpm-workspace.yaml /out/
+
 FROM node:20.11-alpine AS build
 
 RUN corepack enable
 
 WORKDIR /app
 
-COPY ./package.json ./
+# Copy only package.json files from extractor stage
+COPY --from=package-json-extractor /out ./
 RUN corepack prepare --activate
 
 COPY ./tsconfig ./tsconfig
-COPY ./packages/bsky/package.json ./packages/bsky/package.json
-COPY ./packages/api/package.json ./packages/api/package.json
-COPY ./packages/common/package.json ./packages/common/package.json
-COPY ./packages/common-web/package.json ./packages/common-web/package.json
-COPY ./packages/crypto/package.json ./packages/crypto/package.json
-COPY ./packages/did/package.json ./packages/did/package.json
-COPY ./packages/identity/package.json ./packages/identity/package.json
-COPY ./packages/sync/package.json ./packages/sync/package.json
-COPY ./packages/syntax/package.json ./packages/syntax/package.json
-COPY ./packages/lexicon/package.json ./packages/lexicon/package.json
-COPY ./packages/repo/package.json ./packages/repo/package.json
-COPY ./packages/xrpc/package.json ./packages/xrpc/package.json
-COPY ./packages/xrpc-server/package.json ./packages/xrpc-server/package.json
-COPY ./packages/internal/fetch-node/package.json ./packages/internal/fetch-node/package.json
-COPY ./packages/internal/fetch/package.json ./packages/internal/fetch/package.json
-COPY ./packages/internal/pipe/package.json ./packages/internal/pipe/package.json
-COPY ./packages/internal/xrpc-utils/package.json ./packages/internal/xrpc-utils/package.json
-COPY ./services/bsky/package.json ./services/bsky/package.json
-COPY ./package.json ./package.json
-COPY ./pnpm-lock.yaml ./pnpm-lock.yaml
-COPY ./pnpm-workspace.yaml ./pnpm-workspace.yaml 
 
 # install all deps
 RUN pnpm install --frozen-lockfile
