@@ -57,6 +57,8 @@ RUN pnpm run --recursive --stream --filter '@atproto/bsky...' build
 # clean up
 RUN rm -rf node_modules
 # install only prod deps, hoisted to root node_modules dir
+# Set NODE_ENV to skip prepare scripts that install dev dependencies (e.g., puppeteer browsers)
+ENV NODE_ENV=production
 RUN pnpm install --prod --shamefully-hoist --frozen-lockfile --prefer-offline
 
 WORKDIR services/bsky
