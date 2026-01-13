@@ -23,6 +23,7 @@ import {
 import { uriToDid as creatorFromUri } from '../../../../util/uris'
 import { Views } from '../../../../views'
 import { resHeaders } from '../../../util'
+import { isRecipeURI } from '../../../../util'
 
 export default function (server: Server, ctx: AppContext) {
   const searchPosts = createPipeline(
@@ -136,7 +137,7 @@ const noBlocksOrTagged = (inputs: RulesFnInput<Context, Params, Skeleton>) => {
   const { parsedQuery } = skeleton
 
   skeleton.posts = skeleton.posts.filter((uri) => {
-    const post = hydration.posts?.get(uri)
+    const post = isRecipeURI(uri) ? hydration.recipePosts?.get(uri)?.revisions.at(-1) : hydration.posts?.get(uri)
     if (!post) return
 
     const creator = creatorFromUri(uri)
@@ -149,7 +150,6 @@ const noBlocksOrTagged = (inputs: RulesFnInput<Context, Params, Skeleton>) => {
 
     // Cases to never show.
     if (ctx.views.viewerBlockExists(creator, hydration)) return false
-
     let tagged = false
     if (
       params.hydrateCtx.featureGates.get(
