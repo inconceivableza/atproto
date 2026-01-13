@@ -58,6 +58,7 @@ RUN pnpm run --recursive --stream --filter '@atproto/pds...' build
 # clean up
 RUN rm -rf node_modules
 # install only prod deps, hoisted to root node_modules dir
+ENV NODE_ENV=production
 RUN pnpm install --prod --shamefully-hoist --frozen-lockfile --prefer-offline
 
 WORKDIR services/pds
