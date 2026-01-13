@@ -174,9 +174,6 @@ const presentation = (
 ) => {
   const { ctx, skeleton, hydration } = inputs
   const posts = mapDefined(skeleton.posts, (uri) => {
-    const post = hydration.posts?.get(uri)
-    if (!post) return
-
     return ctx.views.post(uri, hydration)
   })
   return {
