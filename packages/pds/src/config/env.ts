@@ -48,8 +48,8 @@ export function readEnv() {
 
     // app branding
     socialAppName: branding.naming?.app_name || 'Bluesky',
-    socialAppDescription: branding.verbage?.description || "the social internet",
-    socialAppEmoji: branding.verbage?.emoji || "🦋",
+    socialAppDescription: branding.verbage?.app_description || "the social internet",
+    socialAppEmoji: branding.verbage?.app_emoji || "🦋",
     socialAppUrl: envStr('PDS_SOCIAL_APP_URL'),
 
     // branding
