@@ -3,7 +3,7 @@ import fs from 'fs'
 
 const envContentFilenames = {
   production: '../../env-content.production.json',
-  test: '../../env-content.test.json',
+  staging: '../../env-content.test.json',
   development: '../../env-content.json',
 }
 
@@ -14,7 +14,7 @@ export function readEnv() {
     JSON.parse(fs.readFileSync(envContentFile, {encoding: 'utf-8'}))
     : {}
   const policyBaseUrl = envContent.links?.policyBase
-  const supportUrl = envContent.links?.pdsSupport || envContent.links.helpDesk
+  const supportUrl = envContent.links?.pdsSupport ?? envContent.links?.helpDesk
   const brandingFile = envStr('PDS_BRANDING_FILE') || 'branding.json'
   const branding = fs.existsSync(brandingFile) ?
     JSON.parse(fs.readFileSync(brandingFile, {encoding: 'utf-8'}))
