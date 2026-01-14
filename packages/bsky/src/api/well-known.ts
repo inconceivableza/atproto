@@ -61,33 +61,23 @@ export const createRouter = (ctx: AppContext): Router => {
   return router
 }
 
+const envContentFilenames = {
+  production: '../../env-content.production.json',
+  staging: '../../env-content.test.json',
+  development: '../../env-content.json',
+}
+
 function findEnvContentFile(): string | null {
-  // Check for custom file first
   const customFile = process.env.APPVIEW_ENV_CONTENT_FILE
-  let filenames: string[]
 
-  if (customFile) {
-    filenames = [customFile]
-  } else {
-    // Fall back to standard files in order: production -> test -> development
-    filenames = [
-      'env-content.production.json',
-      'env-content.test.json',
-      'env-content.json',
-    ]
-  }
+  const nodeEnv = process.env['NODE_ENV'] || 'development'
+  const envContentFilename = customFile || envContentFilenames[nodeEnv] || 'env-content.json'
 
-  for (const filename of filenames) {
-    try {
-      const filePath = path.resolve(filename)
-      if (fs.existsSync(filePath)) {
-        return filePath
-      }
-    } catch (err) {
-      console.warn(`Failed to access env-content file ${filename}:`, err)
-      continue
-    }
+  const filePath = path.resolve(envContentFilename)
+  if (fs.existsSync(filePath)) {
+    return filePath
   }
+  console.warn(`Failed to find env-content file ${envContentFilename} (file env ${process.env.APPVIEW_ENV_CONTENT_FILE}, nodeEnv ${nodeEnv})`)
 
   return null
 }
