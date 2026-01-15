@@ -108,6 +108,8 @@ const deleteFn = async (
     .where("uri", "=", uri.toString())
     .execute()
 
+  // TODO: update aggregates
+
   return deleted || null
 }
 
