@@ -105,7 +105,7 @@ const deleteFn = async (
     .executeTakeFirst()
 
   await db.deleteFrom("feed_item")
-    .where("uri", "=", uri.toString())
+    .where("postUri", "=", uri.toString())
     .execute()
 
   // TODO: update aggregates
