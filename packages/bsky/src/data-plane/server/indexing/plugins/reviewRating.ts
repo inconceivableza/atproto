@@ -103,6 +103,11 @@ const deleteFn = async (
     .where('uri', '=', uri.toString())
     .returningAll()
     .executeTakeFirst()
+
+  await db.deleteFrom("feed_item")
+    .where("uri", "=", uri.toString())
+    .execute()
+
   return deleted || null
 }
 
