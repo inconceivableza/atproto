@@ -8,16 +8,18 @@ import {
   HydrateCtx,
   HydrationState,
   Hydrator,
-  mergeStates,
+  mergeStates
 } from '../../../../hydration/hydrator'
 import { parseString } from '../../../../hydration/util'
 import { Server } from '../../../../lexicon'
 import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/getAuthorFeed'
 import { createPipeline } from '../../../../pipeline'
-import { FeedType } from '../../../../proto/bsky_pb'
+import { FeedItemType, FeedType } from '../../../../proto/bsky_pb'
 import { safePinnedPost, uriToDid } from '../../../../util/uris'
 import { Views } from '../../../../views'
 import { clearlyBadCursor, resHeaders } from '../../../util'
+import { AtUri } from '@atproto/syntax'
+import { ids } from '../../../../lexicon/lexicons'
 
 export default function (server: Server, ctx: AppContext) {
   const getAuthorFeed = createPipeline(
@@ -98,19 +100,25 @@ export const skeleton = async (inputs: {
   })
 
   let items: FeedItem[] = res.items.map((item) => ({
-    post: { uri: item.uri, cid: item.cid || undefined },
+    post: { uri: item.uri },
     repost: item.repost
-      ? { uri: item.repost, cid: item.repostCid || undefined }
+      ? { uri: item.repost }
       : undefined,
+    itemType: item.itemType
   }))
 
   if (shouldInsertPinnedPost && pinnedPost) {
-    const pinnedItem = {
+    const pinnedAtUri = new AtUri(pinnedPost.uri)
+    const itemType = pinnedAtUri.collection === ids.AppFoodiosFeedRecipePost ? FeedItemType.RECIPE :
+      pinnedAtUri.collection === ids.AppFoodiosFeedReviewRating ? FeedItemType.REVIEW_RATING :
+        FeedItemType.POST 
+    const pinnedItem: FeedItem = {
       post: {
         uri: pinnedPost.uri,
         cid: pinnedPost.cid,
       },
       authorPinned: true,
+      itemType
     }
 
     items = items.filter((item) => item.post.uri !== pinnedItem.post.uri)
@@ -131,10 +139,12 @@ const hydration = async (inputs: {
   skeleton: Skeleton
 }): Promise<HydrationState> => {
   const { ctx, params, skeleton } = inputs
+
   const [feedPostState, profileViewerState] = await Promise.all([
     ctx.hydrator.hydrateFeedItems(skeleton.items, params.hydrateCtx),
     ctx.hydrator.hydrateProfileViewers([skeleton.actor.did], params.hydrateCtx),
   ])
+
   return mergeStates(feedPostState, profileViewerState)
 }
 
@@ -197,7 +207,7 @@ const presentation = (inputs: {
 }) => {
   const { ctx, skeleton, hydration } = inputs
   const feed = mapDefined(skeleton.items, (item) =>
-    ctx.views.feedViewPost(item, hydration),
+    ctx.views.feedViewPostUnion(item, hydration),
   )
   return { feed, cursor: skeleton.cursor }
 }
@@ -257,6 +267,15 @@ class SelfThreadTracker {
     if (!this.feedUris.has(uri)) {
       return false
     }
+
+    if (this.hydration.recipePosts?.get(uri)) {
+      return true
+    }
+
+    if (this.hydration.reviewRatings?.get(uri)) {
+      return true
+    }
+
     // must be hydratable to be part of self-thread
     const post = this.hydration.posts?.get(uri)
     if (!post) {

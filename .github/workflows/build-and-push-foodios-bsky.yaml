@@ -9,16 +9,70 @@ env:
   IMAGE_NAME: foodios-atproto-bsky
 
 jobs:
-  build-and-push-bsky:
+  build:
     if: github.repository == 'inconceivableza/atproto'
-    runs-on: ubuntu-22.04
-
+    runs-on: ${{ matrix.platform == 'linux/arm64' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
+    strategy:
+      matrix:
+        platform:
+          - linux/amd64
+          - linux/arm64
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Setup Docker buildx
-        uses: docker/setup-buildx-action@v2
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log into dockerhub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USER }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Prepare platform tag
+        id: platform
+        run: |
+          platform=${{ matrix.platform }}
+          echo "tag=${platform//\//-}" >> $GITHUB_OUTPUT
+
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: |
+            ${{ env.DOCKERHUB_REPO }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=sha,enable=true,priority=100,prefix=,suffix=-${{ steps.platform.outputs.tag }},format=long
+
+      - name: Build and push Docker image
+        id: build-and-push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: ${{ matrix.platform }}
+          push: ${{ github.event_name != 'pull_request' }}
+          file: ./services/bsky/Dockerfile
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: |
+            type=registry,ref=${{ env.DOCKERHUB_REPO }}/${{ env.IMAGE_NAME }}:buildcache-${{ steps.platform.outputs.tag }}
+            type=registry,ref=${{ env.DOCKERHUB_REPO }}/${{ env.IMAGE_NAME }}:buildcache
+          cache-to: type=registry,ref=${{ env.DOCKERHUB_REPO }}/${{ env.IMAGE_NAME }}:buildcache-${{ steps.platform.outputs.tag }},mode=max
+    outputs:
+      digest-amd64: ${{ matrix.platform == 'linux/amd64' && steps.build-and-push.outputs.digest || '' }}
+      digest-arm64: ${{ matrix.platform == 'linux/arm64' && steps.build-and-push.outputs.digest || '' }}
+
+  create-manifest:
+    if: github.repository == 'inconceivableza/atproto' && github.event_name != 'pull_request'
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Docker buildx
+        uses: docker/setup-buildx-action@v3
 
       - name: Log into dockerhub
         uses: docker/login-action@v3
@@ -28,30 +82,22 @@ jobs:
 
       - name: Extract Docker metadata
         id: meta
-        uses: docker/metadata-action@v4
+        uses: docker/metadata-action@v5
         with:
           images: |
             ${{ env.DOCKERHUB_REPO }}/${{ env.IMAGE_NAME }}
           tags: |
             type=sha,enable=true,priority=100,prefix=,suffix=,format=long
 
-      - name: Build and push Docker image
-        id: build-and-push
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          push: ${{ github.event_name != 'pull_request' }}
-          file: ./services/bsky/Dockerfile
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-      # - name: Deploy image
-      #   uses: appleboy/ssh-action@v1
-      #   with:
-      #     host: ${{ secrets.HOST }}
-      #     username: ${{ secrets.REMOTE_USER }}
-      #     key: ${{ secrets.PRIVATE_KEY }}
-      #     script: |
-      #       docker login --username ${{ secrets.DOCKERHUB_USER }} --password ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Create and push multi-platform manifest
+        run: |
+          # Get the tag without platform suffix
+          TAG=$(echo "${{ steps.meta.outputs.tags }}" | head -n 1)
+
+          # Create manifest from platform-specific images
+          docker buildx imagetools create -t ${TAG} \
+            ${{ env.DOCKERHUB_REPO }}/${{ env.IMAGE_NAME }}:$(git rev-parse HEAD)-linux-amd64 \
+            ${{ env.DOCKERHUB_REPO }}/${{ env.IMAGE_NAME }}:$(git rev-parse HEAD)-linux-arm64
+
+          echo "Created multi-platform manifest: ${TAG}"
 

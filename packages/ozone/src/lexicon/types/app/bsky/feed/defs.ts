@@ -41,10 +41,17 @@ export interface PostView {
   repostCount?: number
   likeCount?: number
   quoteCount?: number
+  ratingCount?: number
+  /** Average rating * 100 */
+  ratingAverage100?: number
+  /** Number of review/ratings with non-empty text */
+  reviewCount?: number
   indexedAt: string
   viewer?: ViewerState
   labels?: ComAtprotoLabelDefs.Label[]
   threadgate?: ThreadgateView
+  /** Debug information for internal development */
+  debug?: { [_ in string]: unknown }
 }
 
 const hashPostView = 'postView'

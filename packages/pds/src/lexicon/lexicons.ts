@@ -65,6 +65,10 @@ export const schemaDict = {
             type: 'ref',
             ref: 'lex:app.bsky.actor.defs#statusView',
           },
+          debug: {
+            type: 'unknown',
+            description: 'Debug information for internal development',
+          },
         },
       },
       profileView: {
@@ -126,6 +130,10 @@ export const schemaDict = {
           status: {
             type: 'ref',
             ref: 'lex:app.bsky.actor.defs#statusView',
+          },
+          debug: {
+            type: 'unknown',
+            description: 'Debug information for internal development',
           },
         },
       },
@@ -213,6 +221,10 @@ export const schemaDict = {
           status: {
             type: 'ref',
             ref: 'lex:app.bsky.actor.defs#statusView',
+          },
+          debug: {
+            type: 'unknown',
+            description: 'Debug information for internal development',
           },
         },
       },
@@ -542,10 +554,6 @@ export const schemaDict = {
               'random',
               'hotness',
             ],
-          },
-          prioritizeFollowedUsers: {
-            type: 'boolean',
-            description: 'Show followed users at the top of all replies.',
           },
         },
       },
@@ -1188,6 +1196,394 @@ export const schemaDict = {
       },
     },
   },
+  AppBskyAgeassuranceBegin: {
+    lexicon: 1,
+    id: 'app.bsky.ageassurance.begin',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: 'Initiate Age Assurance for an account.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['email', 'language', 'countryCode'],
+            properties: {
+              email: {
+                type: 'string',
+                description:
+                  "The user's email address to receive Age Assurance instructions.",
+              },
+              language: {
+                type: 'string',
+                description:
+                  "The user's preferred language for communication during the Age Assurance process.",
+              },
+              countryCode: {
+                type: 'string',
+                description:
+                  "An ISO 3166-1 alpha-2 code of the user's location.",
+              },
+              regionCode: {
+                type: 'string',
+                description:
+                  "An optional ISO 3166-2 code of the user's region or state within the country.",
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'ref',
+            ref: 'lex:app.bsky.ageassurance.defs#state',
+          },
+        },
+        errors: [
+          {
+            name: 'InvalidEmail',
+          },
+          {
+            name: 'DidTooLong',
+          },
+          {
+            name: 'InvalidInitiation',
+          },
+          {
+            name: 'RegionNotSupported',
+          },
+        ],
+      },
+    },
+  },
+  AppBskyAgeassuranceDefs: {
+    lexicon: 1,
+    id: 'app.bsky.ageassurance.defs',
+    defs: {
+      access: {
+        description:
+          "The access level granted based on Age Assurance data we've processed.",
+        type: 'string',
+        knownValues: ['unknown', 'none', 'safe', 'full'],
+      },
+      status: {
+        type: 'string',
+        description: 'The status of the Age Assurance process.',
+        knownValues: ['unknown', 'pending', 'assured', 'blocked'],
+      },
+      state: {
+        type: 'object',
+        description: "The user's computed Age Assurance state.",
+        required: ['status', 'access'],
+        properties: {
+          lastInitiatedAt: {
+            type: 'string',
+            format: 'datetime',
+            description: 'The timestamp when this state was last updated.',
+          },
+          status: {
+            type: 'ref',
+            ref: 'lex:app.bsky.ageassurance.defs#status',
+          },
+          access: {
+            type: 'ref',
+            ref: 'lex:app.bsky.ageassurance.defs#access',
+          },
+        },
+      },
+      stateMetadata: {
+        type: 'object',
+        description:
+          'Additional metadata needed to compute Age Assurance state client-side.',
+        required: [],
+        properties: {
+          accountCreatedAt: {
+            type: 'string',
+            format: 'datetime',
+            description: 'The account creation timestamp.',
+          },
+        },
+      },
+      config: {
+        type: 'object',
+        description: '',
+        required: ['regions'],
+        properties: {
+          regions: {
+            type: 'array',
+            description: 'The per-region Age Assurance configuration.',
+            items: {
+              type: 'ref',
+              ref: 'lex:app.bsky.ageassurance.defs#configRegion',
+            },
+          },
+        },
+      },
+      configRegion: {
+        type: 'object',
+        description: 'The Age Assurance configuration for a specific region.',
+        required: ['countryCode', 'rules'],
+        properties: {
+          countryCode: {
+            type: 'string',
+            description:
+              'The ISO 3166-1 alpha-2 country code this configuration applies to.',
+          },
+          regionCode: {
+            type: 'string',
+            description:
+              'The ISO 3166-2 region code this configuration applies to. If omitted, the configuration applies to the entire country.',
+          },
+          rules: {
+            type: 'array',
+            description:
+              'The ordered list of Age Assurance rules that apply to this region. Rules should be applied in order, and the first matching rule determines the access level granted. The rules array should always include a default rule as the last item.',
+            items: {
+              type: 'union',
+              refs: [
+                'lex:app.bsky.ageassurance.defs#configRegionRuleDefault',
+                'lex:app.bsky.ageassurance.defs#configRegionRuleIfDeclaredOverAge',
+                'lex:app.bsky.ageassurance.defs#configRegionRuleIfDeclaredUnderAge',
+                'lex:app.bsky.ageassurance.defs#configRegionRuleIfAssuredOverAge',
+                'lex:app.bsky.ageassurance.defs#configRegionRuleIfAssuredUnderAge',
+                'lex:app.bsky.ageassurance.defs#configRegionRuleIfAccountNewerThan',
+                'lex:app.bsky.ageassurance.defs#configRegionRuleIfAccountOlderThan',
+              ],
+            },
+          },
+        },
+      },
+      configRegionRuleDefault: {
+        type: 'object',
+        description: 'Age Assurance rule that applies by default.',
+        required: ['access'],
+        properties: {
+          access: {
+            type: 'ref',
+            ref: 'lex:app.bsky.ageassurance.defs#access',
+          },
+        },
+      },
+      configRegionRuleIfDeclaredOverAge: {
+        type: 'object',
+        description:
+          'Age Assurance rule that applies if the user has declared themselves equal-to or over a certain age.',
+        required: ['age', 'access'],
+        properties: {
+          age: {
+            type: 'integer',
+            description: 'The age threshold as a whole integer.',
+          },
+          access: {
+            type: 'ref',
+            ref: 'lex:app.bsky.ageassurance.defs#access',
+          },
+        },
+      },
+      configRegionRuleIfDeclaredUnderAge: {
+        type: 'object',
+        description:
+          'Age Assurance rule that applies if the user has declared themselves under a certain age.',
+        required: ['age', 'access'],
+        properties: {
+          age: {
+            type: 'integer',
+            description: 'The age threshold as a whole integer.',
+          },
+          access: {
+            type: 'ref',
+            ref: 'lex:app.bsky.ageassurance.defs#access',
+          },
+        },
+      },
+      configRegionRuleIfAssuredOverAge: {
+        type: 'object',
+        description:
+          'Age Assurance rule that applies if the user has been assured to be equal-to or over a certain age.',
+        required: ['age', 'access'],
+        properties: {
+          age: {
+            type: 'integer',
+            description: 'The age threshold as a whole integer.',
+          },
+          access: {
+            type: 'ref',
+            ref: 'lex:app.bsky.ageassurance.defs#access',
+          },
+        },
+      },
+      configRegionRuleIfAssuredUnderAge: {
+        type: 'object',
+        description:
+          'Age Assurance rule that applies if the user has been assured to be under a certain age.',
+        required: ['age', 'access'],
+        properties: {
+          age: {
+            type: 'integer',
+            description: 'The age threshold as a whole integer.',
+          },
+          access: {
+            type: 'ref',
+            ref: 'lex:app.bsky.ageassurance.defs#access',
+          },
+        },
+      },
+      configRegionRuleIfAccountNewerThan: {
+        type: 'object',
+        description:
+          'Age Assurance rule that applies if the account is equal-to or newer than a certain date.',
+        required: ['date', 'access'],
+        properties: {
+          date: {
+            type: 'string',
+            format: 'datetime',
+            description: 'The date threshold as a datetime string.',
+          },
+          access: {
+            type: 'ref',
+            ref: 'lex:app.bsky.ageassurance.defs#access',
+          },
+        },
+      },
+      configRegionRuleIfAccountOlderThan: {
+        type: 'object',
+        description:
+          'Age Assurance rule that applies if the account is older than a certain date.',
+        required: ['date', 'access'],
+        properties: {
+          date: {
+            type: 'string',
+            format: 'datetime',
+            description: 'The date threshold as a datetime string.',
+          },
+          access: {
+            type: 'ref',
+            ref: 'lex:app.bsky.ageassurance.defs#access',
+          },
+        },
+      },
+      event: {
+        type: 'object',
+        description: 'Object used to store Age Assurance data in stash.',
+        required: ['createdAt', 'status', 'access', 'attemptId', 'countryCode'],
+        properties: {
+          createdAt: {
+            type: 'string',
+            format: 'datetime',
+            description: 'The date and time of this write operation.',
+          },
+          attemptId: {
+            type: 'string',
+            description:
+              'The unique identifier for this instance of the Age Assurance flow, in UUID format.',
+          },
+          status: {
+            type: 'string',
+            description: 'The status of the Age Assurance process.',
+            knownValues: ['unknown', 'pending', 'assured', 'blocked'],
+          },
+          access: {
+            description:
+              "The access level granted based on Age Assurance data we've processed.",
+            type: 'string',
+            knownValues: ['unknown', 'none', 'safe', 'full'],
+          },
+          countryCode: {
+            type: 'string',
+            description:
+              'The ISO 3166-1 alpha-2 country code provided when beginning the Age Assurance flow.',
+          },
+          regionCode: {
+            type: 'string',
+            description:
+              'The ISO 3166-2 region code provided when beginning the Age Assurance flow.',
+          },
+          email: {
+            type: 'string',
+            description: 'The email used for Age Assurance.',
+          },
+          initIp: {
+            type: 'string',
+            description:
+              'The IP address used when initiating the Age Assurance flow.',
+          },
+          initUa: {
+            type: 'string',
+            description:
+              'The user agent used when initiating the Age Assurance flow.',
+          },
+          completeIp: {
+            type: 'string',
+            description:
+              'The IP address used when completing the Age Assurance flow.',
+          },
+          completeUa: {
+            type: 'string',
+            description:
+              'The user agent used when completing the Age Assurance flow.',
+          },
+        },
+      },
+    },
+  },
+  AppBskyAgeassuranceGetConfig: {
+    lexicon: 1,
+    id: 'app.bsky.ageassurance.getConfig',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Returns Age Assurance configuration for use on the client.',
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'ref',
+            ref: 'lex:app.bsky.ageassurance.defs#config',
+          },
+        },
+      },
+    },
+  },
+  AppBskyAgeassuranceGetState: {
+    lexicon: 1,
+    id: 'app.bsky.ageassurance.getState',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Returns server-computed Age Assurance state, if available, and any additional metadata needed to compute Age Assurance state client-side.',
+        parameters: {
+          type: 'params',
+          required: ['countryCode'],
+          properties: {
+            countryCode: {
+              type: 'string',
+            },
+            regionCode: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['state', 'metadata'],
+            properties: {
+              state: {
+                type: 'ref',
+                ref: 'lex:app.bsky.ageassurance.defs#state',
+              },
+              metadata: {
+                type: 'ref',
+                ref: 'lex:app.bsky.ageassurance.defs#stateMetadata',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   AppBskyBookmarkCreateBookmark: {
     lexicon: 1,
     id: 'app.bsky.bookmark.createBookmark',
@@ -1337,6 +1733,348 @@ export const schemaDict = {
             },
           },
         },
+      },
+    },
+  },
+  AppBskyContactDefs: {
+    lexicon: 1,
+    id: 'app.bsky.contact.defs',
+    defs: {
+      matchAndContactIndex: {
+        description:
+          'Associates a profile with the positional index of the contact import input in the call to `app.bsky.contact.importContacts`, so clients can know which phone caused a particular match.',
+        type: 'object',
+        required: ['match', 'contactIndex'],
+        properties: {
+          match: {
+            description: 'Profile of the matched user.',
+            type: 'ref',
+            ref: 'lex:app.bsky.actor.defs#profileView',
+          },
+          contactIndex: {
+            description: 'The index of this match in the import contact input.',
+            type: 'integer',
+            minimum: 0,
+            maximum: 999,
+          },
+        },
+      },
+      syncStatus: {
+        type: 'object',
+        required: ['syncedAt', 'matchesCount'],
+        properties: {
+          syncedAt: {
+            description: 'Last date when contacts where imported.',
+            type: 'string',
+            format: 'datetime',
+          },
+          matchesCount: {
+            description:
+              'Number of existing contact matches resulting of the user imports and of their imported contacts having imported the user. Matches stop being counted when the user either follows the matched contact or dismisses the match.',
+            type: 'integer',
+            minimum: 0,
+          },
+        },
+      },
+    },
+  },
+  AppBskyContactDismissMatch: {
+    lexicon: 1,
+    id: 'app.bsky.contact.dismissMatch',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          "WARNING: This is unstable and under active development, don't use it while this warning is here. Removes a match that was found via contact import. It shouldn't appear again if the same contact is re-imported. Requires authentication.",
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['subject'],
+            properties: {
+              subject: {
+                description: "The subject's DID to dismiss the match with.",
+                type: 'string',
+                format: 'did',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {},
+          },
+        },
+        errors: [
+          {
+            name: 'TODO',
+            description: 'TODO',
+          },
+        ],
+      },
+    },
+  },
+  AppBskyContactGetMatches: {
+    lexicon: 1,
+    id: 'app.bsky.contact.getMatches',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          "WARNING: This is unstable and under active development, don't use it while this warning is here. Returns the matched contacts (contacts that were mutually imported). Excludes dismissed matches. Requires authentication.",
+        parameters: {
+          type: 'params',
+          properties: {
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['matches'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              matches: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.actor.defs#profileView',
+                },
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'TODO',
+            description: 'TODO',
+          },
+        ],
+      },
+    },
+  },
+  AppBskyContactGetSyncStatus: {
+    lexicon: 1,
+    id: 'app.bsky.contact.getSyncStatus',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          "WARNING: This is unstable and under active development, don't use it while this warning is here. Gets the user's current contact import status. Requires authentication.",
+        parameters: {
+          type: 'params',
+          properties: {},
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {
+              syncStatus: {
+                description:
+                  "If present, indicates the user has imported their contacts. If not present, indicates the user never used the feature or called `app.bsky.contact.removeData` and didn't import again since.",
+                type: 'ref',
+                ref: 'lex:app.bsky.contact.defs#syncStatus',
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'TODO',
+            description: 'TODO',
+          },
+        ],
+      },
+    },
+  },
+  AppBskyContactImportContacts: {
+    lexicon: 1,
+    id: 'app.bsky.contact.importContacts',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          "WARNING: This is unstable and under active development, don't use it while this warning is here. Import contacts for securely matching with other users. This follows the protocol explained in https://docs.bsky.app/blog/contact-import-rfc. Requires authentication.",
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['token', 'contacts'],
+            properties: {
+              token: {
+                description:
+                  'JWT to authenticate the call. Use the JWT received as a response to the call to `app.bsky.contact.verifyPhone`.',
+                type: 'string',
+              },
+              contacts: {
+                description:
+                  "List of phone numbers in global E.164 format (e.g., '+12125550123'). Phone numbers that cannot be normalized into a valid phone number will be discarded. Should not repeat the 'phone' input used in `app.bsky.contact.verifyPhone`.",
+                type: 'array',
+                items: {
+                  type: 'string',
+                },
+                minLength: 1,
+                maxLength: 1000,
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['matchesAndContactIndexes'],
+            properties: {
+              matchesAndContactIndexes: {
+                description:
+                  'The users that matched during import and their indexes on the input contacts, so the client can correlate with its local list.',
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.contact.defs#matchAndContactIndex',
+                },
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'TODO',
+            description: 'TODO',
+          },
+        ],
+      },
+    },
+  },
+  AppBskyContactRemoveData: {
+    lexicon: 1,
+    id: 'app.bsky.contact.removeData',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          "WARNING: This is unstable and under active development, don't use it while this warning is here. Removes all stored hashes used for contact matching, existing matches, and sync status. Requires authentication.",
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {},
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {},
+          },
+        },
+        errors: [
+          {
+            name: 'TODO',
+            description: 'TODO',
+          },
+        ],
+      },
+    },
+  },
+  AppBskyContactStartPhoneVerification: {
+    lexicon: 1,
+    id: 'app.bsky.contact.startPhoneVerification',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          "WARNING: This is unstable and under active development, don't use it while this warning is here. Starts a phone verification flow. The phone passed will receive a code via SMS that should be passed to `app.bsky.contact.verifyPhone`. Requires authentication.",
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['phone'],
+            properties: {
+              phone: {
+                description: 'The phone number to receive the code via SMS.',
+                type: 'string',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {},
+          },
+        },
+        errors: [
+          {
+            name: 'TODO',
+            description: 'TODO',
+          },
+        ],
+      },
+    },
+  },
+  AppBskyContactVerifyPhone: {
+    lexicon: 1,
+    id: 'app.bsky.contact.verifyPhone',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          "WARNING: This is unstable and under active development, don't use it while this warning is here. Verifies control over a phone number with a code received via SMS and starts a contact import session. Requires authentication.",
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['phone', 'code'],
+            properties: {
+              phone: {
+                description:
+                  'The phone number to verify. Should be the same as the one passed to `app.bsky.contact.startPhoneVerification`.',
+                type: 'string',
+              },
+              code: {
+                description:
+                  'The code received via SMS as a result of the call to `app.bsky.contact.startPhoneVerification`.',
+                type: 'string',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['token'],
+            properties: {
+              token: {
+                description:
+                  'JWT to be used in a call to `app.bsky.contact.importContacts`. It is only valid for a single call.',
+                type: 'string',
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'TODO',
+            description: 'TODO',
+          },
+        ],
       },
     },
   },
@@ -1827,6 +2565,17 @@ export const schemaDict = {
           quoteCount: {
             type: 'integer',
           },
+          ratingCount: {
+            type: 'integer',
+          },
+          ratingAverage100: {
+            type: 'integer',
+            description: 'Average rating * 100',
+          },
+          reviewCount: {
+            type: 'integer',
+            description: 'Number of review/ratings with non-empty text',
+          },
           indexedAt: {
             type: 'string',
             format: 'datetime',
@@ -1845,6 +2594,10 @@ export const schemaDict = {
           threadgate: {
             type: 'ref',
             ref: 'lex:app.bsky.feed.defs#threadgateView',
+          },
+          debug: {
+            type: 'unknown',
+            description: 'Debug information for internal development',
           },
         },
       },
@@ -2873,6 +3626,10 @@ export const schemaDict = {
             type: 'ref',
             ref: 'lex:app.bsky.actor.defs#profileView',
           },
+          revisionUri: {
+            type: 'string',
+            format: 'at-uri',
+          },
         },
       },
     },
@@ -3155,10 +3912,24 @@ export const schemaDict = {
                 type: 'array',
                 items: {
                   type: 'ref',
-                  ref: 'lex:app.bsky.actor.defs#profileView',
+                  ref: 'lex:app.bsky.feed.getRepostedBy#repostInfo',
                 },
               },
             },
+          },
+        },
+      },
+      repostInfo: {
+        type: 'object',
+        required: ['profileView'],
+        properties: {
+          profileView: {
+            type: 'ref',
+            ref: 'lex:app.bsky.actor.defs#profileView',
+          },
+          revisionUri: {
+            type: 'string',
+            format: 'at-uri',
           },
         },
       },
@@ -3694,7 +4465,7 @@ export const schemaDict = {
             },
             hiddenReplies: {
               type: 'array',
-              maxLength: 50,
+              maxLength: 300,
               items: {
                 type: 'string',
                 format: 'at-uri',
@@ -4061,6 +4832,30 @@ export const schemaDict = {
             description:
               'if the actor is followed by this DID, contains the AT-URI of the follow record',
           },
+          blocking: {
+            type: 'string',
+            format: 'at-uri',
+            description:
+              'if the actor blocks this DID, this is the AT-URI of the block record',
+          },
+          blockedBy: {
+            type: 'string',
+            format: 'at-uri',
+            description:
+              'if the actor is blocked by this DID, contains the AT-URI of the block record',
+          },
+          blockingByList: {
+            type: 'string',
+            format: 'at-uri',
+            description:
+              'if the actor blocks this DID via a block list, this is the AT-URI of the listblock record',
+          },
+          blockedByList: {
+            type: 'string',
+            format: 'at-uri',
+            description:
+              'if the actor is blocked by this DID via a block list, contains the AT-URI of the listblock record',
+          },
         },
       },
     },
@@ -4085,6 +4880,10 @@ export const schemaDict = {
             createdAt: {
               type: 'string',
               format: 'datetime',
+            },
+            via: {
+              type: 'ref',
+              ref: 'lex:com.atproto.repo.strongRef',
             },
           },
         },
@@ -6779,12 +7578,6 @@ export const schemaDict = {
               description:
                 'Reference (AT-URI) to post record. This is the anchor post.',
             },
-            prioritizeFollowedUsers: {
-              type: 'boolean',
-              description:
-                'Whether to prioritize posts from followed users. It only has effect when the user is authenticated.',
-              default: false,
-            },
           },
         },
         output: {
@@ -6865,12 +7658,6 @@ export const schemaDict = {
               default: 10,
               minimum: 0,
               maximum: 100,
-            },
-            prioritizeFollowedUsers: {
-              type: 'boolean',
-              description:
-                'Whether to prioritize posts from followed users. It only has effect when the user is authenticated.',
-              default: false,
             },
             sort: {
               type: 'string',
@@ -7869,6 +8656,745 @@ export const schemaDict = {
               jobStatus: {
                 type: 'ref',
                 ref: 'lex:app.bsky.video.defs#jobStatus',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  AppFoodiosFeedDefs: {
+    lexicon: 1,
+    id: 'app.foodios.feed.defs',
+    defs: {
+      recipeRevisionView: {
+        type: 'object',
+        required: ['selectedRevisionUri', 'revisionRefs', 'revisionContent'],
+        properties: {
+          selectedRevisionUri: {
+            type: 'string',
+            format: 'at-uri',
+          },
+          revisionRefs: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:app.foodios.feed.defs#revisionRef',
+            },
+          },
+          revisionContent: {
+            type: 'ref',
+            ref: 'lex:app.foodios.feed.recipeRevision',
+          },
+        },
+      },
+      revisionRef: {
+        type: 'object',
+        required: ['uri', 'createdAt'],
+        properties: {
+          uri: {
+            type: 'string',
+            format: 'at-uri',
+          },
+          createdAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+        },
+      },
+      licenseAllRights: {
+        type: 'object',
+        required: ['licenseType'],
+        properties: {
+          licenseType: {
+            type: 'string',
+            const: 'licenseAllRights',
+            description: 'All rights reserved by the creator.',
+          },
+        },
+      },
+      licenseCreativeCommonsBy: {
+        type: 'object',
+        required: ['licenseType'],
+        properties: {
+          licenseType: {
+            type: 'string',
+            const: 'licenseCreativeCommonsBy',
+            description: 'Creative Commons Attribution 4.0 License.',
+          },
+        },
+      },
+      licenseCreativeCommonsBySa: {
+        type: 'object',
+        required: ['licenseType'],
+        properties: {
+          licenseType: {
+            type: 'string',
+            const: 'licenseCreativeCommonsBySa',
+            description: 'Creative Commons Attribution-ShareAlike 4.0 License.',
+          },
+        },
+      },
+      licenseCreativeCommonsByNc: {
+        type: 'object',
+        required: ['licenseType'],
+        properties: {
+          licenseType: {
+            type: 'string',
+            const: 'licenseCreativeCommonsByNc',
+            description:
+              'Creative Commons Attribution-NonCommercial 4.0 License.',
+          },
+        },
+      },
+      licenseCreativeCommonsByNcSa: {
+        type: 'object',
+        required: ['licenseType'],
+        properties: {
+          licenseType: {
+            type: 'string',
+            const: 'licenseCreativeCommonsByNcSa',
+            description:
+              'Creative Commons Attribution-NonCommercial-ShareAlike 4.0 License.',
+          },
+        },
+      },
+      licensePublicDomain: {
+        type: 'object',
+        required: ['licenseType'],
+        properties: {
+          licenseType: {
+            type: 'string',
+            const: 'licensePublicDomain',
+            description: 'Work dedicated to the public domain.',
+          },
+        },
+      },
+      publicationTypeBook: {
+        type: 'object',
+        required: ['publicationType'],
+        properties: {
+          publicationType: {
+            type: 'string',
+            const: 'publicationTypeBook',
+            description: 'Recipe from a published book.',
+          },
+        },
+      },
+      publicationTypeMagazine: {
+        type: 'object',
+        required: ['publicationType'],
+        properties: {
+          publicationType: {
+            type: 'string',
+            const: 'publicationTypeMagazine',
+            description: 'Recipe from a magazine.',
+          },
+        },
+      },
+    },
+  },
+  AppFoodiosFeedRecipePost: {
+    lexicon: 1,
+    id: 'app.foodios.feed.recipePost',
+    defs: {
+      main: {
+        type: 'record',
+        description:
+          'Record containing metadata for a recipe post. Referred to by recipeRevisions.',
+        key: 'tid',
+        record: {
+          type: 'object',
+          required: ['createdAt'],
+          properties: {
+            createdAt: {
+              type: 'string',
+              format: 'datetime',
+              description:
+                'Client-declared timestamp when this post was originally created.',
+            },
+          },
+        },
+      },
+    },
+  },
+  AppFoodiosFeedRecipeRevision: {
+    lexicon: 1,
+    id: 'app.foodios.feed.recipeRevision',
+    defs: {
+      main: {
+        type: 'record',
+        description:
+          'Record containing the original content of a recipe or a revision.',
+        key: 'tid',
+        record: {
+          type: 'object',
+          required: [
+            'recipePostRef',
+            'name',
+            'text',
+            'ingredientSections',
+            'instructionSections',
+            'createdAt',
+          ],
+          properties: {
+            recipePostRef: {
+              description:
+                'Reference to the recipe post record for which this is a revision',
+              type: 'ref',
+              ref: 'lex:com.atproto.repo.strongRef',
+            },
+            parentRevisionRef: {
+              description:
+                'Reference to the revision preceding this one (empty for the first revision)',
+              type: 'ref',
+              ref: 'lex:com.atproto.repo.strongRef',
+            },
+            name: {
+              description: 'The name/title of the recipe',
+              type: 'string',
+              maxLength: 500,
+            },
+            text: {
+              description: 'Body providing a description of the recipe',
+              type: 'string',
+              maxLength: 10000,
+            },
+            facets: {
+              type: 'array',
+              description:
+                'Annotations of text (mentions, URLs, hashtags, etc)',
+              items: {
+                type: 'ref',
+                ref: 'lex:app.bsky.richtext.facet',
+              },
+            },
+            ingredientSections: {
+              type: 'array',
+              items: {
+                type: 'ref',
+                ref: 'lex:app.foodios.feed.recipeRevision#ingredientSection',
+              },
+            },
+            instructionSections: {
+              type: 'array',
+              items: {
+                type: 'ref',
+                ref: 'lex:app.foodios.feed.recipeRevision#instructionSection',
+              },
+            },
+            prepTime: {
+              description: 'Preparation time in minutes',
+              type: 'string',
+              maxLength: 100,
+            },
+            cookingTime: {
+              description: 'Preparation time in minutes',
+              type: 'string',
+              maxLength: 100,
+            },
+            recipeCategory: {
+              type: 'array',
+              items: {
+                type: 'string',
+                maxLength: 250,
+              },
+              maxLength: 10,
+            },
+            recipeCuisine: {
+              type: 'array',
+              items: {
+                type: 'string',
+                maxLength: 250,
+              },
+              maxLength: 10,
+            },
+            suitableForDiet: {
+              type: 'array',
+              items: {
+                type: 'string',
+                maxLength: 250,
+              },
+              maxLength: 10,
+            },
+            recipeYield: {
+              type: 'ref',
+              ref: 'lex:app.foodios.feed.recipeRevision#quantityAndUnit',
+            },
+            nutrition: {
+              type: 'ref',
+              ref: 'lex:app.foodios.feed.recipeRevision#nutrition',
+            },
+            attribution: {
+              type: 'union',
+              refs: [
+                'lex:app.foodios.feed.recipeRevision#originalAttribution',
+                'lex:app.foodios.feed.recipeRevision#personAttribution',
+                'lex:app.foodios.feed.recipeRevision#publicationAttribution',
+                'lex:app.foodios.feed.recipeRevision#websiteAttribution',
+                'lex:app.foodios.feed.recipeRevision#showAttribution',
+                'lex:app.foodios.feed.recipeRevision#productAttribution',
+              ],
+              closed: true,
+            },
+            labels: {
+              type: 'union',
+              description:
+                'Self-label values for this post. Effectively content warnings.',
+              refs: ['lex:com.atproto.label.defs#selfLabels'],
+            },
+            langs: {
+              type: 'array',
+              description:
+                'Indicates human language of post primary text content.',
+              maxLength: 3,
+              items: {
+                type: 'string',
+                format: 'language',
+              },
+            },
+            tags: {
+              type: 'array',
+              description:
+                'Additional hashtags, in addition to any included in post text and facets.',
+              maxLength: 8,
+              items: {
+                type: 'string',
+                maxLength: 640,
+                maxGraphemes: 64,
+              },
+            },
+            createdAt: {
+              type: 'string',
+              format: 'datetime',
+              description:
+                'Client-declared timestamp when this post was originally created.',
+            },
+            embed: {
+              type: 'union',
+              refs: [
+                'lex:app.bsky.embed.images',
+                'lex:app.bsky.embed.video',
+                'lex:app.bsky.embed.external',
+                'lex:app.bsky.embed.record',
+                'lex:app.bsky.embed.recordWithMedia',
+              ],
+            },
+          },
+        },
+      },
+      ingredientSection: {
+        type: 'object',
+        required: ['ingredients'],
+        properties: {
+          name: {
+            type: 'string',
+            maxLength: 1000,
+          },
+          ingredients: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:app.foodios.feed.recipeRevision#ingredient',
+            },
+          },
+        },
+      },
+      instructionSection: {
+        type: 'object',
+        required: ['instructions'],
+        properties: {
+          name: {
+            type: 'string',
+            maxLength: 1000,
+          },
+          instructions: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:app.foodios.feed.recipeRevision#instruction',
+            },
+          },
+          images: {
+            type: 'union',
+            refs: ['lex:app.bsky.embed.images', 'lex:app.bsky.embed.video'],
+          },
+        },
+      },
+      instruction: {
+        type: 'object',
+        required: ['text'],
+        properties: {
+          text: {
+            type: 'string',
+            maxLength: 2000,
+          },
+          images: {
+            type: 'union',
+            refs: ['lex:app.bsky.embed.images', 'lex:app.bsky.embed.video'],
+          },
+        },
+      },
+      ingredient: {
+        type: 'object',
+        required: ['name', 'quantity', 'unit'],
+        properties: {
+          name: {
+            type: 'string',
+            maxLength: 500,
+          },
+          quantity: {
+            type: 'string',
+            maxLength: 100,
+          },
+          unit: {
+            type: 'string',
+            maxLength: 100,
+          },
+          images: {
+            type: 'union',
+            refs: ['lex:app.bsky.embed.images', 'lex:app.bsky.embed.video'],
+          },
+        },
+      },
+      quantityAndUnit: {
+        type: 'object',
+        required: ['quantity', 'unit'],
+        properties: {
+          quantity: {
+            type: 'string',
+            maxLength: 100,
+          },
+          unit: {
+            type: 'string',
+            maxLength: 100,
+          },
+        },
+      },
+      nutrition: {
+        type: 'object',
+        required: ['servingSize'],
+        properties: {
+          servingSize: {
+            description:
+              'The serving size, in terms of the number of volume or mass.',
+            type: 'ref',
+            ref: 'lex:app.foodios.feed.recipeRevision#quantityAndUnit',
+          },
+          energy: {
+            description: 'Energy in kJ',
+            type: 'string',
+            maxLength: 100,
+          },
+          carbohydrateContent: {
+            description: 'Carbohydrate in g',
+            type: 'string',
+            maxLength: 100,
+          },
+          cholesterolContent: {
+            description: 'Cholesterol in mg',
+            type: 'string',
+            maxLength: 100,
+          },
+          fatContent: {
+            description: 'Fat per serving in g',
+            type: 'string',
+            maxLength: 100,
+          },
+          fiberContent: {
+            description: 'Fat per serving in g',
+            type: 'string',
+            maxLength: 100,
+          },
+          proteinContent: {
+            description: 'Protein per serving in g',
+            type: 'string',
+            maxLength: 100,
+          },
+          saturatedFatContent: {
+            description: 'Saturated per serving fat in g',
+            type: 'string',
+            maxLength: 100,
+          },
+          sodiumContent: {
+            description: 'Sodium in mg',
+            type: 'string',
+            maxLength: 100,
+          },
+          sugarContent: {
+            description: 'Sugar in g',
+            type: 'string',
+            maxLength: 100,
+          },
+          transFatContent: {
+            description: 'Trans fat in g',
+            type: 'string',
+            maxLength: 100,
+          },
+          unsaturatedFatContent: {
+            description: 'Unsaturated fat in g',
+            type: 'string',
+            maxLength: 100,
+          },
+        },
+      },
+      originalAttribution: {
+        type: 'object',
+        required: ['type', 'license'],
+        properties: {
+          type: {
+            type: 'string',
+            const: 'original',
+          },
+          license: {
+            type: 'union',
+            refs: [
+              'lex:app.foodios.feed.defs#licenseAllRights',
+              'lex:app.foodios.feed.defs#licenseCreativeCommonsBy',
+              'lex:app.foodios.feed.defs#licenseCreativeCommonsBySa',
+              'lex:app.foodios.feed.defs#licenseCreativeCommonsByNc',
+              'lex:app.foodios.feed.defs#licenseCreativeCommonsByNcSa',
+              'lex:app.foodios.feed.defs#licensePublicDomain',
+            ],
+            closed: true,
+          },
+          url: {
+            type: 'string',
+            format: 'uri',
+          },
+        },
+      },
+      personAttribution: {
+        type: 'object',
+        required: ['type', 'name'],
+        properties: {
+          type: {
+            type: 'string',
+            const: 'person',
+          },
+          name: {
+            type: 'string',
+            maxLength: 255,
+          },
+          url: {
+            type: 'string',
+            format: 'uri',
+          },
+          notes: {
+            type: 'string',
+            maxLength: 1000,
+          },
+        },
+      },
+      publicationAttribution: {
+        type: 'object',
+        required: ['type', 'publicationType', 'title', 'author'],
+        properties: {
+          type: {
+            type: 'string',
+            const: 'publication',
+          },
+          publicationType: {
+            type: 'union',
+            refs: [
+              'lex:app.foodios.feed.defs#publicationTypeBook',
+              'lex:app.foodios.feed.defs#publicationTypeMagazine',
+            ],
+            closed: true,
+          },
+          title: {
+            type: 'string',
+            maxLength: 255,
+          },
+          author: {
+            type: 'string',
+            maxLength: 255,
+          },
+          publisher: {
+            type: 'string',
+            maxLength: 255,
+          },
+          isbn: {
+            type: 'string',
+            maxLength: 13,
+          },
+          page: {
+            type: 'integer',
+          },
+          url: {
+            type: 'string',
+            format: 'uri',
+          },
+          notes: {
+            type: 'string',
+            maxLength: 1000,
+          },
+        },
+      },
+      websiteAttribution: {
+        type: 'object',
+        required: ['type', 'name', 'url'],
+        properties: {
+          type: {
+            type: 'string',
+            const: 'website',
+          },
+          name: {
+            type: 'string',
+            maxLength: 255,
+          },
+          url: {
+            type: 'string',
+            format: 'uri',
+          },
+          license: {
+            type: 'union',
+            refs: [
+              'lex:app.foodios.feed.defs#licenseAllRights',
+              'lex:app.foodios.feed.defs#licenseCreativeCommonsBy',
+              'lex:app.foodios.feed.defs#licenseCreativeCommonsBySa',
+              'lex:app.foodios.feed.defs#licenseCreativeCommonsByNc',
+              'lex:app.foodios.feed.defs#licenseCreativeCommonsByNcSa',
+              'lex:app.foodios.feed.defs#licensePublicDomain',
+            ],
+            closed: true,
+          },
+          notes: {
+            type: 'string',
+            maxLength: 1000,
+          },
+        },
+      },
+      showAttribution: {
+        type: 'object',
+        required: ['type', 'title', 'network'],
+        properties: {
+          type: {
+            type: 'string',
+            const: 'show',
+          },
+          title: {
+            type: 'string',
+            maxLength: 255,
+          },
+          episode: {
+            type: 'string',
+            maxLength: 255,
+          },
+          network: {
+            type: 'string',
+            maxLength: 255,
+          },
+          airDate: {
+            type: 'string',
+            format: 'datetime',
+          },
+          url: {
+            type: 'string',
+            format: 'uri',
+          },
+          notes: {
+            type: 'string',
+            maxLength: 1000,
+          },
+        },
+      },
+      productAttribution: {
+        type: 'object',
+        required: ['type', 'brand', 'name'],
+        properties: {
+          type: {
+            type: 'string',
+            const: 'product',
+          },
+          brand: {
+            type: 'string',
+            maxLength: 255,
+          },
+          name: {
+            type: 'string',
+            maxLength: 255,
+          },
+          upc: {
+            type: 'string',
+            maxLength: 13,
+          },
+          url: {
+            type: 'string',
+            format: 'uri',
+          },
+          notes: {
+            type: 'string',
+            maxLength: 1000,
+          },
+        },
+      },
+    },
+  },
+  AppFoodiosFeedReviewRating: {
+    lexicon: 1,
+    id: 'app.foodios.feed.reviewRating',
+    defs: {
+      main: {
+        type: 'record',
+        description:
+          "Record declaring a 'rating' and/or 'review' of a piece of subject content. Minimally based on schema.org Review and Rating",
+        key: 'tid',
+        record: {
+          type: 'object',
+          required: ['subject', 'createdAt'],
+          properties: {
+            subject: {
+              type: 'ref',
+              ref: 'lex:com.atproto.repo.strongRef',
+            },
+            createdAt: {
+              type: 'string',
+              format: 'datetime',
+            },
+            reviewRating: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 10,
+              description:
+                'Rating value from 1 to 10 (representing 1/2 to 5 stars).',
+            },
+            text: {
+              type: 'string',
+              maxLength: 2000,
+              description: 'The actual body of the review (reviewBody).',
+            },
+            embed: {
+              type: 'union',
+              refs: ['lex:app.bsky.embed.images', 'lex:app.bsky.embed.video'],
+              description:
+                'Any images or videos attached to this review (image).',
+            },
+            langs: {
+              type: 'array',
+              description:
+                'Indicates human language of post primary text content.',
+              maxLength: 3,
+              items: {
+                type: 'string',
+                format: 'language',
+              },
+            },
+            labels: {
+              type: 'union',
+              description:
+                'Self-label values for this post. Effectively content warnings.',
+              refs: ['lex:com.atproto.label.defs#selfLabels'],
+            },
+            tags: {
+              type: 'array',
+              description:
+                'Additional hashtags, in addition to any included in post text and facets.',
+              maxLength: 8,
+              items: {
+                type: 'string',
+                maxLength: 640,
+                maxGraphemes: 64,
               },
             },
           },
@@ -10511,6 +12037,57 @@ export const schemaDict = {
       },
     },
   },
+  ComAtprotoLexiconResolveLexicon: {
+    lexicon: 1,
+    id: 'com.atproto.lexicon.resolveLexicon',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Resolves an atproto lexicon (NSID) to a schema.',
+        parameters: {
+          type: 'params',
+          properties: {
+            nsid: {
+              format: 'nsid',
+              type: 'string',
+              description: 'The lexicon NSID to resolve.',
+            },
+          },
+          required: ['nsid'],
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {
+              cid: {
+                type: 'string',
+                format: 'cid',
+                description: 'The CID of the lexicon schema record.',
+              },
+              schema: {
+                type: 'ref',
+                ref: 'lex:com.atproto.lexicon.schema#main',
+                description: 'The resolved lexicon schema record.',
+              },
+              uri: {
+                type: 'string',
+                format: 'at-uri',
+                description: 'The AT-URI of the lexicon schema record.',
+              },
+            },
+            required: ['uri', 'cid', 'schema'],
+          },
+        },
+        errors: [
+          {
+            description: 'No lexicon was resolved for the NSID.',
+            name: 'LexiconNotFound',
+          },
+        ],
+      },
+    },
+  },
   ComAtprotoLexiconSchema: {
     lexicon: 1,
     id: 'com.atproto.lexicon.schema',
@@ -10652,27 +12229,24 @@ export const schemaDict = {
           'com.atproto.moderation.defs#reasonOther',
           'com.atproto.moderation.defs#reasonAppeal',
           'tools.ozone.report.defs#reasonAppeal',
-          'tools.ozone.report.defs#reasonViolenceAnimalWelfare',
+          'tools.ozone.report.defs#reasonOther',
+          'tools.ozone.report.defs#reasonViolenceAnimal',
           'tools.ozone.report.defs#reasonViolenceThreats',
           'tools.ozone.report.defs#reasonViolenceGraphicContent',
-          'tools.ozone.report.defs#reasonViolenceSelfHarm',
           'tools.ozone.report.defs#reasonViolenceGlorification',
           'tools.ozone.report.defs#reasonViolenceExtremistContent',
           'tools.ozone.report.defs#reasonViolenceTrafficking',
           'tools.ozone.report.defs#reasonViolenceOther',
           'tools.ozone.report.defs#reasonSexualAbuseContent',
           'tools.ozone.report.defs#reasonSexualNCII',
-          'tools.ozone.report.defs#reasonSexualSextortion',
           'tools.ozone.report.defs#reasonSexualDeepfake',
           'tools.ozone.report.defs#reasonSexualAnimal',
           'tools.ozone.report.defs#reasonSexualUnlabeled',
           'tools.ozone.report.defs#reasonSexualOther',
           'tools.ozone.report.defs#reasonChildSafetyCSAM',
           'tools.ozone.report.defs#reasonChildSafetyGroom',
-          'tools.ozone.report.defs#reasonChildSafetyMinorPrivacy',
-          'tools.ozone.report.defs#reasonChildSafetyEndangerment',
+          'tools.ozone.report.defs#reasonChildSafetyPrivacy',
           'tools.ozone.report.defs#reasonChildSafetyHarassment',
-          'tools.ozone.report.defs#reasonChildSafetyPromotion',
           'tools.ozone.report.defs#reasonChildSafetyOther',
           'tools.ozone.report.defs#reasonHarassmentTroll',
           'tools.ozone.report.defs#reasonHarassmentTargeted',
@@ -10683,19 +12257,17 @@ export const schemaDict = {
           'tools.ozone.report.defs#reasonMisleadingImpersonation',
           'tools.ozone.report.defs#reasonMisleadingSpam',
           'tools.ozone.report.defs#reasonMisleadingScam',
-          'tools.ozone.report.defs#reasonMisleadingSyntheticContent',
-          'tools.ozone.report.defs#reasonMisleadingMisinformation',
+          'tools.ozone.report.defs#reasonMisleadingElections',
           'tools.ozone.report.defs#reasonMisleadingOther',
           'tools.ozone.report.defs#reasonRuleSiteSecurity',
-          'tools.ozone.report.defs#reasonRuleStolenContent',
           'tools.ozone.report.defs#reasonRuleProhibitedSales',
           'tools.ozone.report.defs#reasonRuleBanEvasion',
           'tools.ozone.report.defs#reasonRuleOther',
-          'tools.ozone.report.defs#reasonCivicElectoralProcess',
-          'tools.ozone.report.defs#reasonCivicDisclosure',
-          'tools.ozone.report.defs#reasonCivicInterference',
-          'tools.ozone.report.defs#reasonCivicMisinformation',
-          'tools.ozone.report.defs#reasonCivicImpersonation',
+          'tools.ozone.report.defs#reasonSelfHarmContent',
+          'tools.ozone.report.defs#reasonSelfHarmED',
+          'tools.ozone.report.defs#reasonSelfHarmStunts',
+          'tools.ozone.report.defs#reasonSelfHarmSubstances',
+          'tools.ozone.report.defs#reasonSelfHarmOther',
         ],
       },
       reasonSpam: {
@@ -10726,7 +12298,7 @@ export const schemaDict = {
       reasonOther: {
         type: 'token',
         description:
-          'Reports not falling under another report category. Prefer new lexicon definition `tools.ozone.report.defs#reasonRuleOther`.',
+          'Reports not falling under another report category. Prefer new lexicon definition `tools.ozone.report.defs#reasonOther`.',
       },
       reasonAppeal: {
         type: 'token',
@@ -11464,6 +13036,10 @@ export const schemaDict = {
           cid: {
             type: 'string',
             format: 'cid',
+          },
+          revisionUri: {
+            type: 'string',
+            format: 'at-uri',
           },
         },
       },
@@ -14285,6 +15861,88 @@ export const schemaDict = {
       },
     },
   },
+  ToolsOzoneModerationCancelScheduledActions: {
+    lexicon: 1,
+    id: 'tools.ozone.moderation.cancelScheduledActions',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Cancel all pending scheduled moderation actions for specified subjects',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['subjects'],
+            properties: {
+              subjects: {
+                type: 'array',
+                maxLength: 100,
+                items: {
+                  type: 'string',
+                  format: 'did',
+                },
+                description:
+                  'Array of DID subjects to cancel scheduled actions for',
+              },
+              comment: {
+                type: 'string',
+                description:
+                  'Optional comment describing the reason for cancellation',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'ref',
+            ref: 'lex:tools.ozone.moderation.cancelScheduledActions#cancellationResults',
+          },
+        },
+      },
+      cancellationResults: {
+        type: 'object',
+        required: ['succeeded', 'failed'],
+        properties: {
+          succeeded: {
+            type: 'array',
+            items: {
+              type: 'string',
+              format: 'did',
+            },
+            description:
+              'DIDs for which all pending scheduled actions were successfully cancelled',
+          },
+          failed: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:tools.ozone.moderation.cancelScheduledActions#failedCancellation',
+            },
+            description:
+              'DIDs for which cancellation failed with error details',
+          },
+        },
+      },
+      failedCancellation: {
+        type: 'object',
+        required: ['did', 'error'],
+        properties: {
+          did: {
+            type: 'string',
+            format: 'did',
+          },
+          error: {
+            type: 'string',
+          },
+          errorCode: {
+            type: 'string',
+          },
+        },
+      },
+    },
+  },
   ToolsOzoneModerationDefs: {
     lexicon: 1,
     id: 'tools.ozone.moderation.defs',
@@ -14328,6 +15986,8 @@ export const schemaDict = {
               'lex:tools.ozone.moderation.defs#ageAssuranceEvent',
               'lex:tools.ozone.moderation.defs#ageAssuranceOverrideEvent',
               'lex:tools.ozone.moderation.defs#revokeAccountCredentialsEvent',
+              'lex:tools.ozone.moderation.defs#scheduleTakedownEvent',
+              'lex:tools.ozone.moderation.defs#cancelScheduledTakedownEvent',
             ],
           },
           subject: {
@@ -14403,6 +16063,8 @@ export const schemaDict = {
               'lex:tools.ozone.moderation.defs#ageAssuranceEvent',
               'lex:tools.ozone.moderation.defs#ageAssuranceOverrideEvent',
               'lex:tools.ozone.moderation.defs#revokeAccountCredentialsEvent',
+              'lex:tools.ozone.moderation.defs#scheduleTakedownEvent',
+              'lex:tools.ozone.moderation.defs#cancelScheduledTakedownEvent',
             ],
           },
           subject: {
@@ -14549,6 +16211,12 @@ export const schemaDict = {
             type: 'ref',
             ref: 'lex:tools.ozone.moderation.defs#recordsStats',
           },
+          accountStrike: {
+            description:
+              'Strike information for the account (account-level only)',
+            type: 'ref',
+            ref: 'lex:tools.ozone.moderation.defs#accountStrike',
+          },
           ageAssuranceState: {
             type: 'string',
             description: 'Current age assurance state of the subject.',
@@ -14661,13 +16329,39 @@ export const schemaDict = {
           },
         },
       },
+      accountStrike: {
+        description: 'Strike information for an account',
+        type: 'object',
+        properties: {
+          activeStrikeCount: {
+            description:
+              'Current number of active strikes (excluding expired strikes)',
+            type: 'integer',
+          },
+          totalStrikeCount: {
+            description:
+              'Total number of strikes ever received (including expired strikes)',
+            type: 'integer',
+          },
+          firstStrikeAt: {
+            description: 'Timestamp of the first strike received',
+            type: 'string',
+            format: 'datetime',
+          },
+          lastStrikeAt: {
+            description: 'Timestamp of the most recent strike received',
+            type: 'string',
+            format: 'datetime',
+          },
+        },
+      },
       subjectReviewState: {
         type: 'string',
         knownValues: [
-          'lex:tools.ozone.moderation.defs#reviewOpen',
-          'lex:tools.ozone.moderation.defs#reviewEscalated',
-          'lex:tools.ozone.moderation.defs#reviewClosed',
-          'lex:tools.ozone.moderation.defs#reviewNone',
+          'tools.ozone.moderation.defs#reviewOpen',
+          'tools.ozone.moderation.defs#reviewEscalated',
+          'tools.ozone.moderation.defs#reviewClosed',
+          'tools.ozone.moderation.defs#reviewNone',
         ],
       },
       reviewOpen: {
@@ -14716,6 +16410,31 @@ export const schemaDict = {
             description:
               'Names/Keywords of the policies that drove the decision.',
           },
+          severityLevel: {
+            type: 'string',
+            description:
+              "Severity level of the violation (e.g., 'sev-0', 'sev-1', 'sev-2', etc.).",
+          },
+          targetServices: {
+            type: 'array',
+            items: {
+              type: 'string',
+              knownValues: ['appview', 'pds'],
+            },
+            description:
+              'List of services where the takedown should be applied. If empty or not provided, takedown is applied on all configured services.',
+          },
+          strikeCount: {
+            type: 'integer',
+            description:
+              'Number of strikes to assign to the user for this violation.',
+          },
+          strikeExpiresAt: {
+            type: 'string',
+            format: 'datetime',
+            description:
+              'When the strike should expire. If not provided, the strike never expires.',
+          },
         },
       },
       modEventReverseTakedown: {
@@ -14725,6 +16444,25 @@ export const schemaDict = {
           comment: {
             type: 'string',
             description: 'Describe reasoning behind the reversal.',
+          },
+          policies: {
+            type: 'array',
+            maxLength: 5,
+            items: {
+              type: 'string',
+            },
+            description:
+              'Names/Keywords of the policy infraction for which takedown is being reversed.',
+          },
+          severityLevel: {
+            type: 'string',
+            description:
+              "Severity level of the violation. Usually set from the last policy infraction's severity.",
+          },
+          strikeCount: {
+            type: 'integer',
+            description:
+              "Number of strikes to subtract from the user's strike count. Usually set from the last policy infraction's severity.",
           },
         },
       },
@@ -14825,15 +16563,29 @@ export const schemaDict = {
             format: 'datetime',
             description: 'The date and time of this write operation.',
           },
-          status: {
-            type: 'string',
-            description: 'The status of the age assurance process.',
-            knownValues: ['unknown', 'pending', 'assured'],
-          },
           attemptId: {
             type: 'string',
             description:
               'The unique identifier for this instance of the age assurance flow, in UUID format.',
+          },
+          status: {
+            type: 'string',
+            description: 'The status of the Age Assurance process.',
+            knownValues: ['unknown', 'pending', 'assured'],
+          },
+          access: {
+            type: 'ref',
+            ref: 'lex:app.bsky.ageassurance.defs#access',
+          },
+          countryCode: {
+            type: 'string',
+            description:
+              'The ISO 3166-1 alpha-2 country code provided when beginning the Age Assurance flow.',
+          },
+          regionCode: {
+            type: 'string',
+            description:
+              'The ISO 3166-2 region code provided when beginning the Age Assurance flow.',
           },
           initIp: {
             type: 'string',
@@ -14865,8 +16617,13 @@ export const schemaDict = {
               'The status to be set for the user decided by a moderator, overriding whatever value the user had previously. Use reset to default to original state.',
             knownValues: ['assured', 'reset', 'blocked'],
           },
+          access: {
+            type: 'ref',
+            ref: 'lex:app.bsky.ageassurance.defs#access',
+          },
           comment: {
             type: 'string',
+            minLength: 1,
             description: 'Comment describing the reason for the override.',
           },
         },
@@ -14878,6 +16635,7 @@ export const schemaDict = {
         required: ['comment'],
         properties: {
           comment: {
+            minLength: 1,
             type: 'string',
             description: 'Comment describing the reason for the revocation.',
           },
@@ -14968,6 +16726,36 @@ export const schemaDict = {
           comment: {
             type: 'string',
             description: 'Additional comment about the outgoing comm.',
+          },
+          policies: {
+            type: 'array',
+            maxLength: 5,
+            items: {
+              type: 'string',
+            },
+            description:
+              'Names/Keywords of the policies that necessitated the email.',
+          },
+          severityLevel: {
+            type: 'string',
+            description:
+              "Severity level of the violation. Normally 'sev-1' that adds strike on repeat offense",
+          },
+          strikeCount: {
+            type: 'integer',
+            description:
+              'Number of strikes to assign to the user for this violation. Normally 0 as an indicator of a warning and only added as a strike on a repeat offense.',
+          },
+          strikeExpiresAt: {
+            type: 'string',
+            format: 'datetime',
+            description:
+              'When the strike should expire. If not provided, the strike never expires.',
+          },
+          isDelivered: {
+            type: 'boolean',
+            description:
+              "Indicates whether the email was successfully delivered to the user's inbox.",
           },
         },
       },
@@ -15085,6 +16873,37 @@ export const schemaDict = {
           timestamp: {
             type: 'string',
             format: 'datetime',
+          },
+        },
+      },
+      scheduleTakedownEvent: {
+        type: 'object',
+        description: 'Logs a scheduled takedown action for an account.',
+        properties: {
+          comment: {
+            type: 'string',
+          },
+          executeAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+          executeAfter: {
+            type: 'string',
+            format: 'datetime',
+          },
+          executeUntil: {
+            type: 'string',
+            format: 'datetime',
+          },
+        },
+      },
+      cancelScheduledTakedownEvent: {
+        type: 'object',
+        description:
+          'Logs cancellation of a scheduled takedown action for an account.',
+        properties: {
+          comment: {
+            type: 'string',
           },
         },
       },
@@ -15561,6 +17380,88 @@ export const schemaDict = {
         description:
           'Moderation event timeline event for a PLC tombstone operation',
       },
+      scheduledActionView: {
+        type: 'object',
+        description: 'View of a scheduled moderation action',
+        required: ['id', 'action', 'did', 'createdBy', 'createdAt', 'status'],
+        properties: {
+          id: {
+            type: 'integer',
+            description: 'Auto-incrementing row ID',
+          },
+          action: {
+            type: 'string',
+            knownValues: ['takedown'],
+            description: 'Type of action to be executed',
+          },
+          eventData: {
+            type: 'unknown',
+            description:
+              'Serialized event object that will be propagated to the event when performed',
+          },
+          did: {
+            type: 'string',
+            format: 'did',
+            description: 'Subject DID for the action',
+          },
+          executeAt: {
+            type: 'string',
+            format: 'datetime',
+            description: 'Exact time to execute the action',
+          },
+          executeAfter: {
+            type: 'string',
+            format: 'datetime',
+            description:
+              'Earliest time to execute the action (for randomized scheduling)',
+          },
+          executeUntil: {
+            type: 'string',
+            format: 'datetime',
+            description:
+              'Latest time to execute the action (for randomized scheduling)',
+          },
+          randomizeExecution: {
+            type: 'boolean',
+            description:
+              'Whether execution time should be randomized within the specified range',
+          },
+          createdBy: {
+            type: 'string',
+            format: 'did',
+            description: 'DID of the user who created this scheduled action',
+          },
+          createdAt: {
+            type: 'string',
+            format: 'datetime',
+            description: 'When the scheduled action was created',
+          },
+          updatedAt: {
+            type: 'string',
+            format: 'datetime',
+            description: 'When the scheduled action was last updated',
+          },
+          status: {
+            type: 'string',
+            knownValues: ['pending', 'executed', 'cancelled', 'failed'],
+            description: 'Current status of the scheduled action',
+          },
+          lastExecutedAt: {
+            type: 'string',
+            format: 'datetime',
+            description: 'When the action was last attempted to be executed',
+          },
+          lastFailureReason: {
+            type: 'string',
+            description: 'Reason for the last execution failure',
+          },
+          executionEventId: {
+            type: 'integer',
+            description:
+              'ID of the moderation event created when action was successfully executed',
+          },
+        },
+      },
     },
   },
   ToolsOzoneModerationEmitEvent: {
@@ -15601,6 +17502,8 @@ export const schemaDict = {
                   'lex:tools.ozone.moderation.defs#ageAssuranceEvent',
                   'lex:tools.ozone.moderation.defs#ageAssuranceOverrideEvent',
                   'lex:tools.ozone.moderation.defs#revokeAccountCredentialsEvent',
+                  'lex:tools.ozone.moderation.defs#scheduleTakedownEvent',
+                  'lex:tools.ozone.moderation.defs#cancelScheduledTakedownEvent',
                 ],
               },
               subject: {
@@ -15749,6 +17652,8 @@ export const schemaDict = {
               'tools.ozone.hosting.getAccountHistory#emailConfirmed',
               'tools.ozone.hosting.getAccountHistory#passwordUpdated',
               'tools.ozone.hosting.getAccountHistory#handleUpdated',
+              'tools.ozone.moderation.defs#scheduleTakedownEvent',
+              'tools.ozone.moderation.defs#cancelScheduledTakedownEvent',
             ],
           },
           count: {
@@ -16018,6 +17923,87 @@ export const schemaDict = {
       },
     },
   },
+  ToolsOzoneModerationListScheduledActions: {
+    lexicon: 1,
+    id: 'tools.ozone.moderation.listScheduledActions',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'List scheduled moderation actions with optional filtering',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['statuses'],
+            properties: {
+              startsAfter: {
+                type: 'string',
+                format: 'datetime',
+                description:
+                  'Filter actions scheduled to execute after this time',
+              },
+              endsBefore: {
+                type: 'string',
+                format: 'datetime',
+                description:
+                  'Filter actions scheduled to execute before this time',
+              },
+              subjects: {
+                type: 'array',
+                maxLength: 100,
+                items: {
+                  type: 'string',
+                  format: 'did',
+                },
+                description: 'Filter actions for specific DID subjects',
+              },
+              statuses: {
+                type: 'array',
+                minLength: 1,
+                items: {
+                  type: 'string',
+                  knownValues: ['pending', 'executed', 'cancelled', 'failed'],
+                },
+                description: 'Filter actions by status',
+              },
+              limit: {
+                type: 'integer',
+                minimum: 1,
+                maximum: 100,
+                default: 50,
+                description: 'Maximum number of results to return',
+              },
+              cursor: {
+                type: 'string',
+                description: 'Cursor for pagination',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['actions'],
+            properties: {
+              actions: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:tools.ozone.moderation.defs#scheduledActionView',
+                },
+              },
+              cursor: {
+                type: 'string',
+                description: 'Cursor for next page of results',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   ToolsOzoneModerationQueryEvents: {
     lexicon: 1,
     id: 'tools.ozone.moderation.queryEvents',
@@ -16169,6 +18155,11 @@ export const schemaDict = {
                 'blocked',
               ],
             },
+            withStrike: {
+              type: 'boolean',
+              description:
+                'If specified, only events where strikeCount value is set are returned.',
+            },
             cursor: {
               type: 'string',
             },
@@ -16299,6 +18290,12 @@ export const schemaDict = {
             reviewState: {
               type: 'string',
               description: 'Specify when fetching subjects in a certain state',
+              knownValues: [
+                'tools.ozone.moderation.defs#reviewOpen',
+                'tools.ozone.moderation.defs#reviewClosed',
+                'tools.ozone.moderation.defs#reviewEscalated',
+                'tools.ozone.moderation.defs#reviewNone',
+              ],
             },
             ignoreSubjects: {
               type: 'array',
@@ -16399,6 +18396,12 @@ export const schemaDict = {
               description:
                 'If specified, only subjects that have priority score value above the given value will be returned.',
             },
+            minStrikeCount: {
+              type: 'integer',
+              minimum: 1,
+              description:
+                'If specified, only subjects that belong to an account that has at least this many active strikes will be returned.',
+            },
             ageAssuranceState: {
               type: 'string',
               description:
@@ -16430,6 +18433,172 @@ export const schemaDict = {
                 },
               },
             },
+          },
+        },
+      },
+    },
+  },
+  ToolsOzoneModerationScheduleAction: {
+    lexicon: 1,
+    id: 'tools.ozone.moderation.scheduleAction',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Schedule a moderation action to be executed at a future time',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['action', 'subjects', 'createdBy', 'scheduling'],
+            properties: {
+              action: {
+                type: 'union',
+                refs: ['lex:tools.ozone.moderation.scheduleAction#takedown'],
+              },
+              subjects: {
+                type: 'array',
+                maxLength: 100,
+                items: {
+                  type: 'string',
+                  format: 'did',
+                },
+                description: 'Array of DID subjects to schedule the action for',
+              },
+              createdBy: {
+                type: 'string',
+                format: 'did',
+              },
+              scheduling: {
+                type: 'ref',
+                ref: 'lex:tools.ozone.moderation.scheduleAction#schedulingConfig',
+              },
+              modTool: {
+                type: 'ref',
+                ref: 'lex:tools.ozone.moderation.defs#modTool',
+                description:
+                  'This will be propagated to the moderation event when it is applied',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'ref',
+            ref: 'lex:tools.ozone.moderation.scheduleAction#scheduledActionResults',
+          },
+        },
+      },
+      takedown: {
+        type: 'object',
+        description: 'Schedule a takedown action',
+        properties: {
+          comment: {
+            type: 'string',
+          },
+          durationInHours: {
+            type: 'integer',
+            description:
+              'Indicates how long the takedown should be in effect before automatically expiring.',
+          },
+          acknowledgeAccountSubjects: {
+            type: 'boolean',
+            description:
+              'If true, all other reports on content authored by this account will be resolved (acknowledged).',
+          },
+          policies: {
+            type: 'array',
+            maxLength: 5,
+            items: {
+              type: 'string',
+            },
+            description:
+              'Names/Keywords of the policies that drove the decision.',
+          },
+          severityLevel: {
+            type: 'string',
+            description:
+              "Severity level of the violation (e.g., 'sev-0', 'sev-1', 'sev-2', etc.).",
+          },
+          strikeCount: {
+            type: 'integer',
+            description:
+              'Number of strikes to assign to the user when takedown is applied.',
+          },
+          strikeExpiresAt: {
+            type: 'string',
+            format: 'datetime',
+            description:
+              'When the strike should expire. If not provided, the strike never expires.',
+          },
+          emailContent: {
+            type: 'string',
+            description: 'Email content to be sent to the user upon takedown.',
+          },
+          emailSubject: {
+            type: 'string',
+            description:
+              'Subject of the email to be sent to the user upon takedown.',
+          },
+        },
+      },
+      schedulingConfig: {
+        type: 'object',
+        description: 'Configuration for when the action should be executed',
+        properties: {
+          executeAt: {
+            type: 'string',
+            format: 'datetime',
+            description: 'Exact time to execute the action',
+          },
+          executeAfter: {
+            type: 'string',
+            format: 'datetime',
+            description:
+              'Earliest time to execute the action (for randomized scheduling)',
+          },
+          executeUntil: {
+            type: 'string',
+            format: 'datetime',
+            description:
+              'Latest time to execute the action (for randomized scheduling)',
+          },
+        },
+      },
+      scheduledActionResults: {
+        type: 'object',
+        required: ['succeeded', 'failed'],
+        properties: {
+          succeeded: {
+            type: 'array',
+            items: {
+              type: 'string',
+              format: 'did',
+            },
+          },
+          failed: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:tools.ozone.moderation.scheduleAction#failedScheduling',
+            },
+          },
+        },
+      },
+      failedScheduling: {
+        type: 'object',
+        required: ['subject', 'error'],
+        properties: {
+          subject: {
+            type: 'string',
+            format: 'did',
+          },
+          error: {
+            type: 'string',
+          },
+          errorCode: {
+            type: 'string',
           },
         },
       },
@@ -16493,27 +18662,24 @@ export const schemaDict = {
         type: 'string',
         knownValues: [
           'tools.ozone.report.defs#reasonAppeal',
-          'tools.ozone.report.defs#reasonViolenceAnimalWelfare',
+          'tools.ozone.report.defs#reasonOther',
+          'tools.ozone.report.defs#reasonViolenceAnimal',
           'tools.ozone.report.defs#reasonViolenceThreats',
           'tools.ozone.report.defs#reasonViolenceGraphicContent',
-          'tools.ozone.report.defs#reasonViolenceSelfHarm',
           'tools.ozone.report.defs#reasonViolenceGlorification',
           'tools.ozone.report.defs#reasonViolenceExtremistContent',
           'tools.ozone.report.defs#reasonViolenceTrafficking',
           'tools.ozone.report.defs#reasonViolenceOther',
           'tools.ozone.report.defs#reasonSexualAbuseContent',
           'tools.ozone.report.defs#reasonSexualNCII',
-          'tools.ozone.report.defs#reasonSexualSextortion',
           'tools.ozone.report.defs#reasonSexualDeepfake',
           'tools.ozone.report.defs#reasonSexualAnimal',
           'tools.ozone.report.defs#reasonSexualUnlabeled',
           'tools.ozone.report.defs#reasonSexualOther',
           'tools.ozone.report.defs#reasonChildSafetyCSAM',
           'tools.ozone.report.defs#reasonChildSafetyGroom',
-          'tools.ozone.report.defs#reasonChildSafetyMinorPrivacy',
-          'tools.ozone.report.defs#reasonChildSafetyEndangerment',
+          'tools.ozone.report.defs#reasonChildSafetyPrivacy',
           'tools.ozone.report.defs#reasonChildSafetyHarassment',
-          'tools.ozone.report.defs#reasonChildSafetyPromotion',
           'tools.ozone.report.defs#reasonChildSafetyOther',
           'tools.ozone.report.defs#reasonHarassmentTroll',
           'tools.ozone.report.defs#reasonHarassmentTargeted',
@@ -16524,26 +18690,28 @@ export const schemaDict = {
           'tools.ozone.report.defs#reasonMisleadingImpersonation',
           'tools.ozone.report.defs#reasonMisleadingSpam',
           'tools.ozone.report.defs#reasonMisleadingScam',
-          'tools.ozone.report.defs#reasonMisleadingSyntheticContent',
-          'tools.ozone.report.defs#reasonMisleadingMisinformation',
+          'tools.ozone.report.defs#reasonMisleadingElections',
           'tools.ozone.report.defs#reasonMisleadingOther',
           'tools.ozone.report.defs#reasonRuleSiteSecurity',
-          'tools.ozone.report.defs#reasonRuleStolenContent',
           'tools.ozone.report.defs#reasonRuleProhibitedSales',
           'tools.ozone.report.defs#reasonRuleBanEvasion',
           'tools.ozone.report.defs#reasonRuleOther',
-          'tools.ozone.report.defs#reasonCivicElectoralProcess',
-          'tools.ozone.report.defs#reasonCivicDisclosure',
-          'tools.ozone.report.defs#reasonCivicInterference',
-          'tools.ozone.report.defs#reasonCivicMisinformation',
-          'tools.ozone.report.defs#reasonCivicImpersonation',
+          'tools.ozone.report.defs#reasonSelfHarmContent',
+          'tools.ozone.report.defs#reasonSelfHarmED',
+          'tools.ozone.report.defs#reasonSelfHarmStunts',
+          'tools.ozone.report.defs#reasonSelfHarmSubstances',
+          'tools.ozone.report.defs#reasonSelfHarmOther',
         ],
       },
       reasonAppeal: {
         type: 'token',
         description: 'Appeal a previously taken moderation action',
       },
-      reasonViolenceAnimalWelfare: {
+      reasonOther: {
+        type: 'token',
+        description: 'An issue not included in these options',
+      },
+      reasonViolenceAnimal: {
         type: 'token',
         description: 'Animal welfare violations',
       },
@@ -16554,10 +18722,6 @@ export const schemaDict = {
       reasonViolenceGraphicContent: {
         type: 'token',
         description: 'Graphic violent content',
-      },
-      reasonViolenceSelfHarm: {
-        type: 'token',
-        description: 'Self harm',
       },
       reasonViolenceGlorification: {
         type: 'token',
@@ -16583,10 +18747,6 @@ export const schemaDict = {
       reasonSexualNCII: {
         type: 'token',
         description: 'Non-consensual intimate imagery',
-      },
-      reasonSexualSextortion: {
-        type: 'token',
-        description: 'Sextortion',
       },
       reasonSexualDeepfake: {
         type: 'token',
@@ -16614,23 +18774,13 @@ export const schemaDict = {
         description:
           "Grooming or predatory behavior. These reports will be sent only be sent to the application's Moderation Authority.",
       },
-      reasonChildSafetyMinorPrivacy: {
+      reasonChildSafetyPrivacy: {
         type: 'token',
         description: 'Privacy violation involving a minor',
-      },
-      reasonChildSafetyEndangerment: {
-        type: 'token',
-        description:
-          "Child endangerment. These reports will be sent only be sent to the application's Moderation Authority.",
       },
       reasonChildSafetyHarassment: {
         type: 'token',
         description: 'Harassment or bullying of minors',
-      },
-      reasonChildSafetyPromotion: {
-        type: 'token',
-        description:
-          "Promotion of child exploitation. These reports will be sent only be sent to the application's Moderation Authority.",
       },
       reasonChildSafetyOther: {
         type: 'token',
@@ -16673,13 +18823,9 @@ export const schemaDict = {
         type: 'token',
         description: 'Scam',
       },
-      reasonMisleadingSyntheticContent: {
+      reasonMisleadingElections: {
         type: 'token',
-        description: 'Unlabelled gen-AI or synthetic content',
-      },
-      reasonMisleadingMisinformation: {
-        type: 'token',
-        description: 'Harmful false claims',
+        description: 'False information about elections',
       },
       reasonMisleadingOther: {
         type: 'token',
@@ -16688,10 +18834,6 @@ export const schemaDict = {
       reasonRuleSiteSecurity: {
         type: 'token',
         description: 'Hacking or system attacks',
-      },
-      reasonRuleStolenContent: {
-        type: 'token',
-        description: 'Stolen content',
       },
       reasonRuleProhibitedSales: {
         type: 'token',
@@ -16705,25 +18847,25 @@ export const schemaDict = {
         type: 'token',
         description: 'Other',
       },
-      reasonCivicElectoralProcess: {
+      reasonSelfHarmContent: {
         type: 'token',
-        description: 'Electoral process violations',
+        description: 'Content promoting or depicting self-harm',
       },
-      reasonCivicDisclosure: {
+      reasonSelfHarmED: {
         type: 'token',
-        description: 'Disclosure & transparency violations',
+        description: 'Eating disorders',
       },
-      reasonCivicInterference: {
+      reasonSelfHarmStunts: {
         type: 'token',
-        description: 'Voter intimidation or interference',
+        description: 'Dangerous challenges or activities',
       },
-      reasonCivicMisinformation: {
+      reasonSelfHarmSubstances: {
         type: 'token',
-        description: 'Election misinformation',
+        description: 'Dangerous substances or drug abuse',
       },
-      reasonCivicImpersonation: {
+      reasonSelfHarmOther: {
         type: 'token',
-        description: 'Impersonation of electoral officials/entities',
+        description: 'Other dangerous content',
       },
     },
   },
@@ -18006,10 +20148,10 @@ export const schemaDict = {
           role: {
             type: 'string',
             knownValues: [
-              'lex:tools.ozone.team.defs#roleAdmin',
-              'lex:tools.ozone.team.defs#roleModerator',
-              'lex:tools.ozone.team.defs#roleTriage',
-              'lex:tools.ozone.team.defs#roleVerifier',
+              'tools.ozone.team.defs#roleAdmin',
+              'tools.ozone.team.defs#roleModerator',
+              'tools.ozone.team.defs#roleTriage',
+              'tools.ozone.team.defs#roleVerifier',
             ],
           },
         },
@@ -18565,10 +20707,23 @@ export const ids = {
   AppBskyActorSearchActors: 'app.bsky.actor.searchActors',
   AppBskyActorSearchActorsTypeahead: 'app.bsky.actor.searchActorsTypeahead',
   AppBskyActorStatus: 'app.bsky.actor.status',
+  AppBskyAgeassuranceBegin: 'app.bsky.ageassurance.begin',
+  AppBskyAgeassuranceDefs: 'app.bsky.ageassurance.defs',
+  AppBskyAgeassuranceGetConfig: 'app.bsky.ageassurance.getConfig',
+  AppBskyAgeassuranceGetState: 'app.bsky.ageassurance.getState',
   AppBskyBookmarkCreateBookmark: 'app.bsky.bookmark.createBookmark',
   AppBskyBookmarkDefs: 'app.bsky.bookmark.defs',
   AppBskyBookmarkDeleteBookmark: 'app.bsky.bookmark.deleteBookmark',
   AppBskyBookmarkGetBookmarks: 'app.bsky.bookmark.getBookmarks',
+  AppBskyContactDefs: 'app.bsky.contact.defs',
+  AppBskyContactDismissMatch: 'app.bsky.contact.dismissMatch',
+  AppBskyContactGetMatches: 'app.bsky.contact.getMatches',
+  AppBskyContactGetSyncStatus: 'app.bsky.contact.getSyncStatus',
+  AppBskyContactImportContacts: 'app.bsky.contact.importContacts',
+  AppBskyContactRemoveData: 'app.bsky.contact.removeData',
+  AppBskyContactStartPhoneVerification:
+    'app.bsky.contact.startPhoneVerification',
+  AppBskyContactVerifyPhone: 'app.bsky.contact.verifyPhone',
   AppBskyEmbedDefs: 'app.bsky.embed.defs',
   AppBskyEmbedExternal: 'app.bsky.embed.external',
   AppBskyEmbedImages: 'app.bsky.embed.images',
@@ -18692,6 +20847,10 @@ export const ids = {
   AppBskyVideoGetJobStatus: 'app.bsky.video.getJobStatus',
   AppBskyVideoGetUploadLimits: 'app.bsky.video.getUploadLimits',
   AppBskyVideoUploadVideo: 'app.bsky.video.uploadVideo',
+  AppFoodiosFeedDefs: 'app.foodios.feed.defs',
+  AppFoodiosFeedRecipePost: 'app.foodios.feed.recipePost',
+  AppFoodiosFeedRecipeRevision: 'app.foodios.feed.recipeRevision',
+  AppFoodiosFeedReviewRating: 'app.foodios.feed.reviewRating',
   ChatBskyActorDeclaration: 'chat.bsky.actor.declaration',
   ChatBskyActorDefs: 'chat.bsky.actor.defs',
   ChatBskyActorDeleteAccount: 'chat.bsky.actor.deleteAccount',
@@ -18752,6 +20911,7 @@ export const ids = {
   ComAtprotoLabelDefs: 'com.atproto.label.defs',
   ComAtprotoLabelQueryLabels: 'com.atproto.label.queryLabels',
   ComAtprotoLabelSubscribeLabels: 'com.atproto.label.subscribeLabels',
+  ComAtprotoLexiconResolveLexicon: 'com.atproto.lexicon.resolveLexicon',
   ComAtprotoLexiconSchema: 'com.atproto.lexicon.schema',
   ComAtprotoModerationCreateReport: 'com.atproto.moderation.createReport',
   ComAtprotoModerationDefs: 'com.atproto.moderation.defs',
@@ -18834,6 +20994,8 @@ export const ids = {
   ToolsOzoneCommunicationUpdateTemplate:
     'tools.ozone.communication.updateTemplate',
   ToolsOzoneHostingGetAccountHistory: 'tools.ozone.hosting.getAccountHistory',
+  ToolsOzoneModerationCancelScheduledActions:
+    'tools.ozone.moderation.cancelScheduledActions',
   ToolsOzoneModerationDefs: 'tools.ozone.moderation.defs',
   ToolsOzoneModerationEmitEvent: 'tools.ozone.moderation.emitEvent',
   ToolsOzoneModerationGetAccountTimeline:
@@ -18846,8 +21008,11 @@ export const ids = {
     'tools.ozone.moderation.getReporterStats',
   ToolsOzoneModerationGetRepos: 'tools.ozone.moderation.getRepos',
   ToolsOzoneModerationGetSubjects: 'tools.ozone.moderation.getSubjects',
+  ToolsOzoneModerationListScheduledActions:
+    'tools.ozone.moderation.listScheduledActions',
   ToolsOzoneModerationQueryEvents: 'tools.ozone.moderation.queryEvents',
   ToolsOzoneModerationQueryStatuses: 'tools.ozone.moderation.queryStatuses',
+  ToolsOzoneModerationScheduleAction: 'tools.ozone.moderation.scheduleAction',
   ToolsOzoneModerationSearchRepos: 'tools.ozone.moderation.searchRepos',
   ToolsOzoneReportDefs: 'tools.ozone.report.defs',
   ToolsOzoneSafelinkAddRule: 'tools.ozone.safelink.addRule',

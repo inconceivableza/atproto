@@ -1,0 +1,152 @@
+{
+    "lexicon": 1,
+    "id": "app.foodios.feed.defs",
+    "defs": {
+        "recipeRevisionView": {
+            "type": "object",
+            "required": [
+                "selectedRevisionUri",
+                "revisionRefs",
+                "revisionContent"
+            ],
+            "properties": {
+                "selectedRevisionUri": {
+                    "type": "string",
+                    "format": "at-uri"
+                },
+                "revisionRefs": {
+                    "type": "array",
+                    "items": {
+                        "type": "ref",
+                        "ref": "#revisionRef"
+                    }
+                },
+                "revisionContent": {
+                    "type": "ref",
+                    "ref": "app.foodios.feed.recipeRevision"
+                }
+            }
+        },
+        "revisionRef": {
+            "type": "object",
+            "required": [
+                "uri",
+                "createdAt"
+            ],
+            "properties": {
+                "uri": {
+                    "type": "string",
+                    "format": "at-uri"
+                },
+                "createdAt": {
+                    "type": "string",
+                    "format": "datetime"
+                }
+            }
+        },
+        "licenseAllRights": {
+            "type": "object",
+            "required": [
+                "licenseType"
+            ],
+            "properties": {
+                "licenseType": {
+                    "type": "string",
+                    "const": "licenseAllRights",
+                    "description": "All rights reserved by the creator."
+                }
+            }
+        },
+        "licenseCreativeCommonsBy": {
+            "type": "object",
+            "required": [
+                "licenseType"
+            ],
+            "properties": {
+                "licenseType": {
+                    "type": "string",
+            "const": "licenseCreativeCommonsBy",
+            "description": "Creative Commons Attribution 4.0 License."
+                }
+            }
+        },
+        "licenseCreativeCommonsBySa": {
+            "type": "object",
+            "required": [
+                "licenseType"
+            ],
+            "properties": {
+                "licenseType": {
+                    "type": "string",
+            "const": "licenseCreativeCommonsBySa",
+            "description": "Creative Commons Attribution-ShareAlike 4.0 License."
+                }
+            }
+        },
+        "licenseCreativeCommonsByNc": {
+            "type": "object",
+            "required": [
+                "licenseType"
+            ],
+            "properties": {
+                "licenseType": {
+                    "type": "string",
+                    "const": "licenseCreativeCommonsByNc",
+                    "description": "Creative Commons Attribution-NonCommercial 4.0 License."
+                }
+            }
+        },
+        "licenseCreativeCommonsByNcSa": {
+            "type": "object",
+            "required": [
+                "licenseType"
+            ],
+            "properties": {
+                "licenseType": {
+                    "type": "string",
+                    "const": "licenseCreativeCommonsByNcSa",
+                    "description": "Creative Commons Attribution-NonCommercial-ShareAlike 4.0 License."
+                }
+            }
+        },
+        "licensePublicDomain": {
+            "type": "object",
+            "required": [
+                "licenseType"
+            ],
+            "properties": {
+                "licenseType": {
+                    "type": "string",
+            "const": "licensePublicDomain",
+            "description": "Work dedicated to the public domain."
+                }
+            }
+        },
+        "publicationTypeBook": {
+            "type": "object",
+            "required": [
+                "publicationType"
+            ],
+            "properties": {
+                "publicationType": {
+                    "type": "string",
+            "const": "publicationTypeBook",
+            "description": "Recipe from a published book."
+                }
+            }
+        },
+        "publicationTypeMagazine": {
+            "type": "object",
+            "required": [
+                "publicationType"
+            ],
+            "properties": {
+                "publicationType": {
+                    "type": "string",
+                    "const": "publicationTypeMagazine",
+                    "description": "Recipe from a magazine."
+                }
+            }
+        }
+    }
+}

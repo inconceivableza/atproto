@@ -30,6 +30,8 @@ export const softDeleted = (actorOrRecord: { takedownRef: string | null }) => {
 
 export const countAll = sql<number>`count(*)`
 
+export const avgAll = sql<number>`avg(*)`
+
 // For use with doUpdateSet()
 export const excluded = <T>(db: DatabaseSchema, col) => {
   return sql<T>`${db.dynamic.ref(`excluded.${col}`)}`

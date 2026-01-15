@@ -41,9 +41,11 @@ import {
   isModEventMuteReporter,
   isModEventPriorityScore,
   isModEventReport,
+  isModEventReverseTakedown,
   isModEventTag,
   isModEventTakedown,
   isRecordEvent,
+  isScheduleTakedownEvent,
 } from '../lexicon/types/tools/ozone/moderation/defs'
 import { Un$Typed, asPredicate } from '../lexicon/util'
 import { dbLogger, httpLogger } from '../logger'
@@ -177,11 +179,29 @@ export class ModerationViews {
     }
 
     if (
-      isModEventTakedown(event) &&
-      typeof meta.policies === 'string' &&
-      meta.policies.length > 0
+      isModEventTakedown(event) ||
+      isModEventEmail(event) ||
+      isModEventReverseTakedown(event)
     ) {
-      event.policies = meta.policies.split(',')
+      if (typeof meta.policies === 'string' && meta.policies.length > 0) {
+        event.policies = meta.policies.split(',')
+      }
+
+      event.strikeCount = ifNumber(row.strikeCount)
+      event.severityLevel = ifString(row.severityLevel)
+
+      if (isModEventTakedown(event) || isModEventEmail(event)) {
+        event.strikeExpiresAt = ifString(row.strikeExpiresAt)
+      }
+    }
+
+    if (isModEventTakedown(event)) {
+      if (
+        typeof meta.targetServices === 'string' &&
+        meta.targetServices.length > 0
+      ) {
+        event.targetServices = meta.targetServices.split(',')
+      }
     }
 
     if (isModEventLabel(event)) {
@@ -218,6 +238,7 @@ export class ModerationViews {
     if (isModEventEmail(event)) {
       event.content = ifString(meta.content)!
       event.subjectLine = ifString(meta.subjectLine)!
+      event.isDelivered = ifBoolean(meta.isDelivered)
     }
 
     if (isModEventComment(event) && meta.sticky) {
@@ -250,6 +271,7 @@ export class ModerationViews {
 
     if (isAgeAssuranceEvent(event)) {
       event.status = ifString(meta.status)!
+      event.access = ifString(meta.access)!
       event.createdAt = ifString(meta.createdAt)!
       event.attemptId = ifString(meta.attemptId)!
       event.initIp = ifString(meta.initIp)
@@ -260,6 +282,13 @@ export class ModerationViews {
 
     if (isAgeAssuranceOverrideEvent(event)) {
       event.status = ifString(meta.status)!
+      event.access = ifString(meta.access)!
+    }
+
+    if (isScheduleTakedownEvent(event)) {
+      event.executeAt = ifString(meta.executeAt)
+      event.executeAfter = ifString(meta.executeAfter)
+      event.executeUntil = ifString(meta.executeUntil)
     }
 
     return eventView
@@ -571,8 +600,8 @@ export class ModerationViews {
           'moderation_subject_status.blobCids',
         )} @> ${JSON.stringify(blobs.map((blob) => blob.ref.toString()))}`,
       )
-      .selectAll()
       .executeTakeFirst()
+
     const statusByCid = (modStatusResults?.blobCids || [])?.reduce(
       (acc, cur) => Object.assign(acc, { [cur]: modStatusResults }),
       {},
@@ -585,6 +614,7 @@ export class ModerationViews {
       const subjectStatus = statusByCid[cid]
         ? this.formatSubjectStatus(statusByCid[cid])
         : undefined
+
       return {
         cid,
         mimeType: blob.mimeType,
@@ -737,6 +767,17 @@ export class ModerationViews {
         processedCount: status.processedCount ?? undefined,
         takendownCount: status.takendownCount ?? undefined,
       },
+
+      accountStrike:
+        status.strikeCount !== null || status.totalStrikeCount !== null
+          ? {
+              $type: 'tools.ozone.moderation.defs#accountStrike',
+              activeStrikeCount: status.strikeCount ?? undefined,
+              totalStrikeCount: status.totalStrikeCount ?? undefined,
+              firstStrikeAt: status.firstStrikeAt ?? undefined,
+              lastStrikeAt: status.lastStrikeAt ?? undefined,
+            }
+          : undefined,
     }
 
     if (status.recordPath !== '') {

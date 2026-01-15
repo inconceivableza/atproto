@@ -1,18 +1,22 @@
 import { ServiceImpl } from '@connectrpc/connect'
 import { Service } from '../../../proto/bsky_connect'
-import { FeedType } from '../../../proto/bsky_pb'
+import { AuthorFeedItem, FeedItemType, FeedType } from '../../../proto/bsky_pb'
 import { Database } from '../db'
 import { TimeCidKeyset, paginate } from '../db/pagination'
+import { Selectable } from 'kysely'
+import { DatabaseSchemaType } from '../db/database-schema'
+import { PartialMessage } from '@bufbuild/protobuf'
 
 export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
   async getAuthorFeed(req) {
     const { actorDid, limit, cursor, feedType } = req
     const { ref } = db.db.dynamic
-
     // defaults to posts, reposts, and replies
     let builder = db.db
       .selectFrom('feed_item')
-      .innerJoin('post', 'post.uri', 'feed_item.postUri')
+      .leftJoin('post', 'post.uri', 'feed_item.postUri')
+      .leftJoin('recipe_post', 'recipe_post.uri', 'feed_item.postUri')
+      .leftJoin('review_rating', 'review_rating.uri', 'feed_item.postUri')
       .selectAll('feed_item')
       .where('originatorDid', '=', actorDid)
 
@@ -40,14 +44,24 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
         )
     } else if (feedType === FeedType.POSTS_NO_REPLIES) {
       builder = builder.where((qb) =>
-        qb.where('post.replyParent', 'is', null).orWhere('type', '=', 'repost'),
+        qb
+          .where('feed_item.type', "!=", 'review')
+          .where(eb => eb.where('post.replyParent', 'is', null)
+            .orWhere('type', '=', 'repost')
+          )
       )
     } else if (feedType === FeedType.POSTS_AND_AUTHOR_THREADS) {
       builder = builder.where((qb) =>
         qb
-          .where('type', '=', 'repost')
-          .orWhere('post.replyParent', 'is', null)
-          .orWhere('post.replyRoot', 'like', `at://${actorDid}/%`),
+          .where(eb => eb.where('feed_item.type', "!=", 'review')
+            .orWhere('review_rating.subject', 'like', `at://${actorDid}/%`)
+          )
+          // Bracket the conditions related to posts as the corresponding columns will
+          // always be null resulting in false positives
+          .where(eb => eb.where('type', '=', 'repost')
+            .orWhere('post.replyParent', 'is', null)
+            .orWhere('post.replyRoot', 'like', `at://${actorDid}/%`)
+        )
       )
     }
 
@@ -55,7 +69,6 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       ref('feed_item.sortAt'),
       ref('feed_item.cid'),
     )
-
     builder = paginate(builder, {
       limit,
       cursor,
@@ -63,6 +76,8 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
     })
 
     const feedItems = await builder.execute()
+
+    console.log("*** feedSkeleton", feedItems.length)
 
     return {
       items: feedItems.map(feedItemFromRow),
@@ -151,9 +166,24 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
 
 // @NOTE does not support additional fields in the protos specific to author feeds
 // and timelines. at the time of writing, hydration/view implementations do not rely on them.
-const feedItemFromRow = (row: { postUri: string; uri: string }) => {
+const feedItemFromRow = (row: Selectable<DatabaseSchemaType['feed_item']>): PartialMessage<AuthorFeedItem> => {
   return {
     uri: row.postUri,
     repost: row.uri === row.postUri ? undefined : row.uri,
+    itemType: feedItemType(row.type)
   }
+}
+
+function feedItemType(value: string): FeedItemType {
+  switch (value) {
+    case 'post':
+      return FeedItemType.POST
+    case 'repost':
+      return FeedItemType.REPOST
+    case 'recipe':
+      return FeedItemType.RECIPE
+    case 'review':
+      return FeedItemType.REVIEW_RATING
+  }
+  return FeedItemType.UNSPECIFIED
 }

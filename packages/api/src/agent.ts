@@ -11,14 +11,17 @@ import {
   AppBskyActorDefs,
   AppBskyActorProfile,
   AppBskyFeedPost,
+  AppFoodiosFeedRecipePost,
+  AppFoodiosFeedReviewRating,
   AppBskyLabelerDefs,
   AppNS,
   ChatNS,
   ComAtprotoRepoPutRecord,
   ComNS,
   ToolsNS,
+  ComAtprotoRepoStrongRef,
 } from './client/index'
-import { schemas } from './client/lexicons'
+import { ids, schemas } from './client/lexicons'
 import { MutedWord, Nux } from './client/types/app/bsky/actor/defs'
 import { $Typed, Un$Typed } from './client/util'
 import { BSKY_LABELER_DID } from './const'
@@ -33,17 +36,18 @@ import * as predicate from './predicate'
 import { SessionManager } from './session-manager'
 import {
   AtpAgentGlobalOpts,
+  AtprotoProxy,
   AtprotoServiceType,
   BskyFeedViewPreference,
   BskyInterestsPreference,
   BskyPreferences,
   BskyThreadViewPreference,
+  asAtprotoProxy,
+  asDid,
+  isDid,
 } from './types'
 import {
-  Did,
-  asDid,
   getSavedFeedType,
-  isDid,
   sanitizeMutedWordValue,
   savedFeedsToUriArrays,
   validateNux,
@@ -60,7 +64,6 @@ const FEED_VIEW_PREF_DEFAULTS = {
 
 const THREAD_VIEW_PREF_DEFAULTS = {
   sort: 'hotness',
-  prioritizeFollowedUsers: true,
 }
 
 export type { FetchHandler }
@@ -187,12 +190,11 @@ export class Agent extends XrpcClient {
 
   //#region ATPROTO proxy configuration utilities
 
-  proxy?: `${Did}#${AtprotoServiceType}`
+  proxy?: AtprotoProxy
 
-  configureProxy(value: `${Did}#${AtprotoServiceType}` | null) {
+  configureProxy(value: AtprotoProxy | null) {
     if (value === null) this.proxy = undefined
-    else if (isDid(value)) this.proxy = value
-    else throw new TypeError('Invalid proxy DID')
+    else this.proxy = asAtprotoProxy(value)
   }
 
   /** @deprecated use {@link configureProxy} instead */
@@ -375,6 +377,30 @@ export class Agent extends XrpcClient {
     )
   }
 
+  async recipePost(record: AppFoodiosFeedRecipePost.Record
+  //   {
+  //   [K in keyof AppFoodiosFeedRecipePost.Record as K extends "createdAt" ? never : K]: AppFoodiosFeedRecipePost.Record[K]
+  // } & Partial<Pick<AppFoodiosFeedRecipePost.Record, 'createdAt'>>
+  ){
+    return this.app.foodios.feed.recipePost.create({ repo: this.assertDid },
+      record
+    )
+  }
+
+  getRecipePost: typeof this.app.foodios.feed.recipePost.get = (params) => {
+    return this.app.foodios.feed.recipePost.get(params)
+  }
+
+  async reviewRating(record: AppFoodiosFeedReviewRating.Record) {
+    return this.app.foodios.feed.reviewRating.create({ repo: this.assertDid },
+      record
+    )
+  }
+
+  getReviewRating: typeof this.app.foodios.feed.reviewRating.get = (params) => {
+    return this.app.foodios.feed.reviewRating.get(params)
+  }
+
   async deletePost(postUri: string) {
     this.assertAuthenticated()
 
@@ -385,11 +411,34 @@ export class Agent extends XrpcClient {
     })
   }
 
-  async like(uri: string, cid: string, via?: { uri: string; cid: string }) {
+  async deleteRecord(uri: string) {
+    this.assertAuthenticated()
+    const atUri = new AtUri(uri)
+    switch (atUri.collection) {
+      case ids.AppBskyFeedPost:
+        return this.app.bsky.feed.post.delete({
+          repo: atUri.hostname,
+          rkey: atUri.rkey,
+        })
+      case ids.AppFoodiosFeedRecipePost:
+        return this.app.foodios.feed.recipePost.delete({
+          repo: atUri.hostname,
+          rkey: atUri.rkey
+        })
+      case ids.AppFoodiosFeedReviewRating:
+        return this.app.foodios.feed.reviewRating.delete({
+          repo: atUri.hostname,
+          rkey: atUri.rkey,
+        })
+    }
+    throw new Error("unknown record collection " + atUri.collection)
+  }
+
+  async like(subject: ComAtprotoRepoStrongRef.Main, via?: { uri: string; cid: string }) {
     return this.app.bsky.feed.like.create(
       { repo: this.accountDid },
       {
-        subject: { uri, cid },
+        subject,
         createdAt: new Date().toISOString(),
         via,
       },
@@ -406,11 +455,11 @@ export class Agent extends XrpcClient {
     })
   }
 
-  async repost(uri: string, cid: string, via?: { uri: string; cid: string }) {
+  async repost(subject: ComAtprotoRepoStrongRef.Main, via?: { uri: string; cid: string }) {
     return this.app.bsky.feed.repost.create(
       { repo: this.accountDid },
       {
-        subject: { uri, cid },
+        subject,
         createdAt: new Date().toISOString(),
         via,
       },
@@ -427,12 +476,13 @@ export class Agent extends XrpcClient {
     })
   }
 
-  async follow(subjectDid: string) {
+  async follow(subjectDid: string, via?: { uri: string; cid: string }) {
     return this.app.bsky.graph.follow.create(
       { repo: this.accountDid },
       {
         subject: subjectDid,
         createdAt: new Date().toISOString(),
+        via,
       },
     )
   }

@@ -35,6 +35,9 @@ import * as StarterPack from './plugins/starter-pack'
 import * as Status from './plugins/status'
 import * as Threadgate from './plugins/thread-gate'
 import * as Verification from './plugins/verification'
+import * as RecipePost from './plugins/recipePost'
+import * as RecipeRevision from './plugins/recipeRevision'
+import * as ReviewRating from './plugins/reviewRating'
 import { RecordProcessor } from './processor'
 
 export class IndexingService {
@@ -57,6 +60,9 @@ export class IndexingService {
     chatDeclaration: ChatDeclaration.PluginType
     verification: Verification.PluginType
     status: Status.PluginType
+    recipePost: RecipePost.PluginType
+    recipeRevision: RecipeRevision.PluginType
+    reviewRating: ReviewRating.PluginType
   }
 
   constructor(
@@ -83,6 +89,9 @@ export class IndexingService {
       chatDeclaration: ChatDeclaration.makePlugin(this.db, this.background),
       verification: Verification.makePlugin(this.db, this.background),
       status: Status.makePlugin(this.db, this.background),
+      recipePost: RecipePost.makePlugin(this.db, this.background),
+      recipeRevision: RecipeRevision.makePlugin(this.db, this.background),
+      reviewRating: ReviewRating.makePlugin(this.db, this.background),
     }
   }
 
@@ -141,10 +150,10 @@ export class IndexingService {
     const actorWithHandle =
       handle !== null
         ? await this.db.db
-            .selectFrom('actor')
-            .where('handle', '=', handle)
-            .selectAll()
-            .executeTakeFirst()
+          .selectFrom('actor')
+          .where('handle', '=', handle)
+          .selectAll()
+          .executeTakeFirst()
         : null
 
     // handle contention
@@ -386,8 +395,8 @@ type UriAndCid = {
 
 type IndexOp =
   | ({
-      op: 'create' | 'update'
-    } & UriAndCid)
+    op: 'create' | 'update'
+  } & UriAndCid)
   | ({ op: 'delete' } & UriAndCid)
 
 const findDiffFromCheckout = (

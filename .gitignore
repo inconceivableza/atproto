@@ -15,3 +15,5 @@ test.sqlite
 \#*\#
 *~
 *.swp
+env-content.json
+env-content.development.json

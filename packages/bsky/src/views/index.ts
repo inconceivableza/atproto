@@ -1,7 +1,15 @@
 import { HOUR, MINUTE, mapDefined } from '@atproto/common'
 import { AtUri, INVALID_HANDLE, normalizeDatetimeAlways } from '@atproto/syntax'
+import { FeatureGateID } from '../feature-gates'
 import { Actor, ProfileViewerState } from '../hydration/actor'
-import { FeedItem, Like, Post, Repost } from '../hydration/feed'
+import {
+  FeedItem,
+  Like,
+  Post,
+  RecipeRevision,
+  Repost,
+  ReviewRating,
+} from '../hydration/feed'
 import { Follow, Verification } from '../hydration/graph'
 import { HydrationState } from '../hydration/hydrator'
 import { Label } from '../hydration/label'
@@ -62,6 +70,15 @@ import {
   isRecord as isLabelerRecord,
 } from '../lexicon/types/app/bsky/labeler/service'
 import {
+  RecipeRevisionView
+} from "../lexicon/types/app/foodios/feed/defs"
+import {
+  Record as RecipeRevisionRecord, isRecord as isRecipeRevisionRecord
+} from "../lexicon/types/app/foodios/feed/recipeRevision"
+import {
+  Record as ReviewRatingRecord, isRecord as isReviewRatingRecord
+} from "../lexicon/types/app/foodios/feed/reviewRating"
+import {
   ActivitySubscription,
   RecordDeleted as NotificationRecordDeleted,
 } from '../lexicon/types/app/bsky/notification/defs'
@@ -72,7 +89,7 @@ import {
 } from '../lexicon/types/app/bsky/unspecced/getPostThreadV2'
 import { isSelfLabels } from '../lexicon/types/com/atproto/label/defs'
 import { $Typed, Un$Typed } from '../lexicon/util'
-import { Notification } from '../proto/bsky_pb'
+import { FeedItemType, Notification, RecipeRecord } from '../proto/bsky_pb'
 import {
   postUriToPostgateUri,
   postUriToThreadgateUri,
@@ -124,6 +141,8 @@ import {
   parsePostgate,
   parseThreadGate,
 } from './util'
+import { getURICollection, isRecipeURI, isReviewRatingURI } from '../util'
+import { revisionFromUri, stripSearchParams } from "@atproto/api"
 
 const notificationDeletedRecord = {
   $type: 'app.bsky.notification.defs#recordDeleted' as const,
@@ -139,6 +158,8 @@ export class Views {
   public indexedAtEpoch: Date | undefined = this.opts.indexedAtEpoch
   private threadTagsBumpDown: readonly string[] = this.opts.threadTagsBumpDown
   private threadTagsHide: readonly string[] = this.opts.threadTagsHide
+  private visibilityTagHide: string = this.opts.visibilityTagHide
+  private visibilityTagRankPrefix: string = this.opts.visibilityTagRankPrefix
   constructor(
     private opts: {
       imgUriBuilder: ImageUriBuilder
@@ -146,8 +167,10 @@ export class Views {
       indexedAtEpoch: Date | undefined
       threadTagsBumpDown: readonly string[]
       threadTagsHide: readonly string[]
+      visibilityTagHide: string
+      visibilityTagRankPrefix: string
     },
-  ) {}
+  ) { }
 
   // Actor
   // ------------
@@ -367,6 +390,7 @@ export class Views {
       createdAt: actor.createdAt?.toISOString(),
       verification: this.verification(did, state),
       status: this.status(did, state),
+      debug: state.ctx?.includeDebugField ? actor.debug : undefined,
     }
   }
 
@@ -389,9 +413,9 @@ export class Views {
       ...baseView,
       viewer: baseView.viewer
         ? {
-            ...baseView.viewer,
-            knownFollowers,
-          }
+          ...baseView.viewer,
+          knownFollowers,
+        }
         : undefined,
     }
   }
@@ -718,6 +742,8 @@ export class Views {
       | LabelerRecord
       | VerificationRecord
       | NotificationRecordDeleted
+      | RecipeRevisionRecord
+      | ReviewRatingRecord
   }): Label[] {
     if (!uri || !cid || !record) return []
 
@@ -725,7 +751,9 @@ export class Views {
     if (
       !isPostRecord(record) &&
       !isProfileRecord(record) &&
-      !isLabelerRecord(record)
+      !isLabelerRecord(record) &&
+      !isRecipeRevisionRecord(record) &&
+      !isReviewRatingRecord(record)
     ) {
       return []
     }
@@ -893,12 +921,125 @@ export class Views {
     }
   }
 
+  recipeView({ uri, revisionUri }: { uri: string, revisionUri?: string }, state: HydrationState, depth = 0): $Typed<PostView> | undefined {
+    // TODO: query individual revision from data plane at hydration level
+    const recipe = state.recipePosts?.get(uri)
+    if (!recipe) return;
+
+    const revisionRKey = revisionFromUri(uri)
+    // TODO: remove usages of revision query param (currently just outdated revision dialog)
+    const revision = revisionRKey || revisionUri ? recipe.revisions.find(rev => new AtUri(rev.uri).rkey === revisionRKey || rev.uri === revisionUri)
+      : recipe.revisions.at(-1)
+    if (!revision) return;
+
+    const parsedUri = new AtUri(uri)
+    const authorDid = parsedUri.hostname
+    const author = this.profileBasic(authorDid, state)
+    if (!author) return
+    const aggs = state.postAggs?.get(uri)
+    const viewer = state.postViewers?.get(uri)
+
+    const record: RecipeRevisionView = {
+      "$type": "app.foodios.feed.defs#recipeRevisionView",
+      revisionContent: revision.record,
+      selectedRevisionUri: revision.uri,
+      // TODO: pass createdAt field through from data-plane
+      revisionRefs: recipe.revisions.map(revision => ({ uri: revision.uri, createdAt: revision.sortedAt.toISOString() }))
+    }
+    const ratingCount = aggs?.ratingCount ?? -1
+    const ratingAverage = aggs?.ratingAverage ?? -1
+    const reviewCount = aggs?.reviewCount ?? -1
+    const ratingInfo = {
+      ...(ratingCount === -1) ? {} : {ratingCount},
+      ...(ratingAverage === -1) ? {} : {ratingAverage100: Math.round(ratingAverage * 100)},
+      ...(reviewCount === -1) ? {} : {reviewCount},
+    }
+
+    return {
+      "$type": "app.bsky.feed.defs#postView",
+      uri,
+      cid: revision.cid,
+      author,
+      record: record as any,
+      embed:
+        depth < 2 && record.revisionContent.embed
+          ? this.embed(uri, record.revisionContent.embed as any, state, depth + 1)
+          : undefined,
+      replyCount: aggs?.replies ?? 0,
+      repostCount: aggs?.reposts ?? 0,
+      likeCount: aggs?.likes ?? 0,
+      quoteCount: aggs?.quotes ?? 0,
+      indexedAt: this.indexedAt(revision).toISOString(),
+      viewer: viewer
+        ? {
+          repost: viewer.repost,
+          like: viewer.like,
+          threadMuted: viewer.threadMuted,
+          replyDisabled: this.userReplyDisabled(uri, state),
+          embeddingDisabled: this.userPostEmbeddingDisabled(uri, state),
+          pinned: this.viewerPinned(uri, state, authorDid),
+          bookmarked: viewer.bookmarked
+        }
+        : undefined,
+      ...ratingInfo,
+    }
+  }
+
+  reviewRatingView({ uri }: { uri: string }, state: HydrationState, depth = 0): $Typed<PostView> | undefined {
+    const review = state.reviewRatings?.get(uri)
+    if (!review) return;
+
+    const parsedUri = new AtUri(uri)
+    const authorDid = parsedUri.hostname
+    const author = this.profileBasic(authorDid, state)
+    if (!author) return
+    const aggs = state.postAggs?.get(uri)
+    const viewer = state.postViewers?.get(uri)
+
+    const record: $Typed<PostView> = {
+      "$type": "app.bsky.feed.defs#postView",
+      uri: uri,
+      cid: review.cid,
+      author,
+      record: review.record as any,
+      embed:
+        depth < 2 && review.record.images
+          ? this.embed(uri, review.record.images as any, state, depth + 1)
+          : undefined,
+      replyCount: aggs?.replies ?? 0,
+      repostCount: aggs?.reposts ?? 0,
+      likeCount: aggs?.likes ?? 0,
+      quoteCount: aggs?.quotes ?? 0,
+      indexedAt: this.indexedAt(review).toISOString(),
+      viewer: viewer
+        ? {
+          repost: viewer.repost,
+          like: viewer.like,
+          threadMuted: viewer.threadMuted,
+          replyDisabled: this.userReplyDisabled(uri, state),
+          embeddingDisabled: this.userPostEmbeddingDisabled(uri, state),
+          pinned: this.viewerPinned(uri, state, authorDid),
+        }
+        : undefined,
+    }
+    return record
+  }
+
   post(
     uri: string,
     state: HydrationState,
     depth = 0,
-  ): Un$Typed<PostView> | undefined {
+  ): $Typed<PostView> | undefined {
+    let postUri = uri
+    if (isRecipeURI(uri)) {
+      return this.recipeView({ uri }, state, depth)
+    }
+    if (isReviewRatingURI(uri)) {
+      return this.reviewRatingView({ uri }, state, depth)
+    }
     const post = state.posts?.get(uri)
+
+
     if (!post) return
     const parsedUri = new AtUri(uri)
     const authorDid = parsedUri.hostname
@@ -916,13 +1057,14 @@ export class Views {
       }),
     ]
     return {
-      uri,
+      "$type": "app.bsky.feed.defs#postView",
+      uri: postUri,
       cid: post.cid,
       author,
       record: post.record,
       embed:
         depth < 2 && post.record.embed
-          ? this.embed(uri, post.record.embed, state, depth + 1)
+          ? this.embed(uri, post.record.embed as any, state, depth + 1)
           : undefined,
       bookmarkCount: aggs?.bookmarks ?? 0,
       replyCount: aggs?.replies ?? 0,
@@ -945,7 +1087,49 @@ export class Views {
       threadgate: !post.record.reply // only hydrate gate on root post
         ? this.threadgate(threadgateUri, state)
         : undefined,
+      debug: state.ctx?.includeDebugField
+        ? { post: post.debug, author: author.debug }
+        : undefined,
     }
+  }
+
+  feedViewPostUnion(
+    item: FeedItem,
+    state: HydrationState,
+  ): Un$Typed<FeedViewPost> | undefined {
+    if (item.itemType === FeedItemType.RECIPE) {
+      const recipePostView = this.recipeView({ uri: item.post.uri }, state)
+      if (!recipePostView) return;
+      return {
+        post: recipePostView,
+        reason: item.authorPinned ? this.reasonPin() : undefined
+      }
+    }
+    if (item.itemType == FeedItemType.REVIEW_RATING) {
+      const reviewPostView = this.reviewRatingView({ uri: item.post.uri }, state)
+      if (!reviewPostView) return;
+      return {
+        post: reviewPostView,
+        reason: item.authorPinned ? this.reasonPin() : undefined,
+        reply: this.replyRef(item.post.uri, state)
+      }
+    }
+    if (item.repost && isRecipeURI(item.post.uri)) {
+      const repost = state.reposts?.get(item.repost.uri)
+      if (!repost) return
+      const recipePostView = this.recipeView({ uri: item.post.uri, revisionUri: repost.record.subject.revisionUri }, state)
+      const reason = this.reasonRepost(item.repost.uri, repost, state)
+      if (!(reason && recipePostView)) return
+
+      return {
+        post: recipePostView,
+        reason
+      }
+    }
+
+    const postView =  this.feedViewPost(item, state)
+    if (!postView) return
+    return postView
   }
 
   feedViewPost(
@@ -976,12 +1160,28 @@ export class Views {
   }
 
   replyRef(uri: string, state: HydrationState): Un$Typed<ReplyRef> | undefined {
-    const postRecord = state.posts?.get(uri.toString())?.record
-    if (!postRecord?.reply) return
-    let root = this.maybePost(postRecord.reply.root.uri, state)
-    let parent = this.maybePost(postRecord.reply.parent.uri, state)
+    const collection = getURICollection(uri)
+    switch (collection) {
+      case ids.AppBskyFeedPost: {
+        const postRecord = state.posts?.get(uri)?.record
+        if (!postRecord?.reply) return
+        return this._replyRef(uri, postRecord.reply.root.uri, postRecord.reply.parent.uri, state)
+      }
+
+      case ids.AppFoodiosFeedReviewRating: {
+        const reviewRecord = state.reviewRatings?.get(uri)?.record
+        if (!reviewRecord) return
+        return this._replyRef(uri, reviewRecord.subject.uri, reviewRecord.subject.uri, state)
+      }
+    }
+
+  }
+
+  _replyRef(childUri: string, rootUri: string, parentUri: string, state: HydrationState): Un$Typed<ReplyRef> | undefined {
+    let root = this.maybePost(rootUri, state)
+    let parent = this.maybePost(parentUri, state)
     if (!state.ctx?.include3pBlocks) {
-      const childBlocks = state.postBlocks?.get(uri)
+      const childBlocks = state.postBlocks?.get(childUri)
       const parentBlocks = state.postBlocks?.get(parent.uri)
       // if child blocks parent, block parent
       if (isPostView(parent) && childBlocks?.parent) {
@@ -993,6 +1193,7 @@ export class Views {
       }
     }
     let grandparentAuthor: ProfileViewBasic | undefined
+    // TODO: recipe may be grandparent
     if (
       isPostView(parent) &&
       isPostRecord(parent.record) &&
@@ -1084,9 +1285,6 @@ export class Views {
     const bookmark = state.bookmarks?.get(viewer)?.get(key)
     if (!bookmark) return
 
-    const atUri = new AtUri(bookmark.subjectUri)
-    if (atUri.collection !== ids.AppBskyFeedPost) return
-
     const item = this.maybePost(bookmark.subjectUri, state)
     return {
       createdAt: bookmark.indexedAt?.toDate().toISOString(),
@@ -1107,9 +1305,9 @@ export class Views {
     opts: { height: number; depth: number },
   ): $Typed<ThreadViewPost> | $Typed<NotFoundPost> | $Typed<BlockedPost> {
     const { anchor, uris } = skele
+
     const post = this.post(anchor, state)
-    const postInfo = state.posts?.get(anchor)
-    if (!postInfo || !post) return this.notFoundPost(anchor)
+    if (!post) return this.notFoundPost(anchor)
     if (this.viewerBlockExists(post.author.did, state)) {
       return this.blockedPost(anchor, post.author.did, state)
     }
@@ -1124,8 +1322,14 @@ export class Views {
       childrenByParentUri[parentUri] ??= []
       childrenByParentUri[parentUri].push(uri)
     })
-    const rootUri = getRootUri(anchor, postInfo)
-    const violatesThreadGate = postInfo.violatesThreadGate
+    let rootUri = anchor
+    let violatesThreadGate = false // TODO: fix
+    if (!isRecipeURI(post.uri) && !isReviewRatingURI(post.uri)) {
+      const postInfo = state.posts?.get(anchor)
+      if (!postInfo) return this.notFoundPost(anchor)
+      rootUri = getRootUri(anchor, postInfo)
+      violatesThreadGate = postInfo.violatesThreadGate
+    }
 
     return {
       $type: 'app.bsky.feed.defs#threadViewPost',
@@ -1159,6 +1363,8 @@ export class Views {
     | $Typed<BlockedPost>
     | undefined {
     if (height < 1) return undefined
+    // TODO: maybe state.posts should contain a union?
+    // TODO: brand recipe, post uris
     const parentUri = state.posts?.get(childUri)?.record.reply?.parent.uri
     if (!parentUri) return undefined
     if (
@@ -1242,22 +1448,27 @@ export class Views {
       above,
       below,
       branchingFactor,
-      prioritizeFollowedUsers,
       sort,
     }: {
       above: number
       below: number
       branchingFactor: number
-      prioritizeFollowedUsers: boolean
       sort: GetPostThreadV2QueryParams['sort']
     },
   ): { hasOtherReplies: boolean; thread: ThreadItem[] } {
     const { anchor: anchorUri, uris } = skeleton
-
+    //
     // Not found.
     const postView = this.post(anchorUri, state)
-    const post = state.posts?.get(anchorUri)
-    if (!post || !postView) {
+    let post: RecipeRevision | ReviewRating | Post | null | undefined
+    if (isRecipeURI(anchorUri)) {
+      post = state.recipePosts?.get(anchorUri)?.revisions.at(-1)
+    } else if (isReviewRatingURI(anchorUri)) {
+      post = state.reviewRatings?.get(anchorUri)
+    } else {
+      post = state.posts?.get(anchorUri)
+    }
+    if (!(post && postView)) {
       return {
         hasOtherReplies: false,
         thread: [
@@ -1289,11 +1500,16 @@ export class Views {
       uris,
       state,
     )
-    const rootUri = getRootUri(anchorUri, post)
+
+    const record = postView.record
+    // recipes aren't replies, but review ratings and posts can be
+    const rootReplyRef = isReviewRatingRecord(post.record) ? post.record.subject :
+        isPostRecord(post.record) ? post.record.reply?.root : null
+    const rootUri = rootReplyRef?.uri ?? anchorUri
     const opDid = uriToDid(rootUri)
     const authorDid = postView.author.did
     const isOPPost = authorDid === opDid
-    const anchorViolatesThreadGate = post.violatesThreadGate
+    const anchorViolatesThreadGate = state.posts?.get(anchorUri)?.violatesThreadGate
 
     // Builds the parent tree, and whether it is a contiguous OP thread.
     const parentTree = !anchorViolatesThreadGate
@@ -1343,7 +1559,6 @@ export class Views {
                 below,
                 depth: 1,
                 branchingFactor,
-                prioritizeFollowedUsers,
               },
               state,
             )
@@ -1359,22 +1574,28 @@ export class Views {
           repliesAllowance: Infinity, // While we don't have pagination.
           uri: anchorUri,
         }),
-        tags: post.tags,
+        tags: new Set(post.tags ?? []),
         hasOPLike: !!state.threadContexts?.get(postView.uri)?.like,
         parent,
         replies,
       }
     }
 
-    const thread = sortTrimFlattenThreadTree(anchorTree, {
-      opDid,
-      branchingFactor,
-      sort,
-      prioritizeFollowedUsers,
-      viewer: state.ctx?.viewer ?? null,
-      threadTagsBumpDown: this.threadTagsBumpDown,
-      threadTagsHide: this.threadTagsHide,
-    })
+    const thread = sortTrimFlattenThreadTree(
+      anchorTree,
+      {
+        opDid,
+        branchingFactor,
+        sort,
+        viewer: state.ctx?.viewer ?? null,
+        threadTagsBumpDown: this.threadTagsBumpDown,
+        threadTagsHide: this.threadTagsHide,
+        visibilityTagRankPrefix: this.visibilityTagRankPrefix,
+      },
+      state.ctx?.featureGates.get(
+        FeatureGateID.ThreadsV2ReplyRankingExploration,
+      ),
+    )
 
     return {
       hasOtherReplies,
@@ -1403,26 +1624,75 @@ export class Views {
       return undefined
     }
 
-    // Not found.
-    const uri = state.posts?.get(childUri)?.record.reply?.parent.uri
-    if (!uri) {
-      return undefined
-    }
-    const postView = this.post(uri, state)
-    const post = state.posts?.get(uri)
-    if (!post || !postView) {
-      return {
-        tree: {
-          type: 'notFound',
-          item: this.threadV2ItemNotFound({ uri, depth }),
-        },
-        isOPThread: false,
+    const { postView, post, error, uri } = (() => {
+      if (isReviewRatingURI(childUri)) {
+        // review-ratings are always on a recipe that is the rootUri and is therefore their parent
+        const reviewRatingView: $Typed<PostView> | undefined = this.reviewRatingView({ uri: childUri }, state)
+        const reviewRating: ReviewRating | undefined = state.reviewRatings?.get(childUri) ?? undefined
+        if (!reviewRatingView) {
+          return { postView: undefined, post: undefined, uri: childUri, error: {
+              tree: ({
+                type: 'notFound',
+                item: this.threadV2ItemNotFound({ uri: childUri, depth }),
+              }) as ThreadTreeVisible,
+              isOPThread: false,
+            }
+          }
+        }
+        if (!reviewRating?.record?.subject || rootUri !== (reviewRating?.record.subject?.uri ?? childUri)) {
+          // Outside thread boundary.
+          return { postView: undefined, post: undefined, uri: rootUri, error: undefined }
+        }
+        const postView: $Typed<PostView> | undefined = this.recipeView(reviewRating?.record.subject, state)
+        const recipe = state.recipePosts?.get(rootUri)
+        if (!recipe) {
+          // couldn't find it. it should be there...
+          return { postView: undefined, post: undefined, uri: rootUri, error: undefined }
+        }
+        const revisionUri = reviewRating?.record.subject?.revisionUri
+        const revisionRKey = revisionFromUri(revisionUri ?? rootUri)
+        // TODO: remove usages of revision query param (currently just outdated revision dialog)
+        const revision =
+          (revisionRKey || revisionUri)
+            ? recipe.revisions.find(
+                (rev) =>
+                  new AtUri(rev.uri).rkey === revisionRKey ||
+                  rev.uri === revisionUri,
+              )
+          : recipe.revisions.at(-1)
+        if (!revision) {
+          // coulnd't find revision
+          return { postView: undefined, post: undefined, uri: rootUri, error: undefined }
+        }
+        return { postView, post: revision, uri: rootUri, error: undefined }
+      } else {
+        // Not found.
+        const uri = stripSearchParams(state.posts?.get(childUri)?.record.reply?.parent.uri)
+        if (!uri) {
+          return { postView: undefined, post: undefined, uri, error: undefined }
+        }
+        const postView: $Typed<PostView> | undefined = this.post(uri, state)
+        const post = state.posts?.get(uri)
+        if (!postView) {
+          return { postView: undefined, post: undefined, uri, error: {
+              tree: ({
+                type: 'notFound',
+                item: this.threadV2ItemNotFound({ uri, depth }),
+              }) as ThreadTreeVisible,
+              isOPThread: false,
+            }
+          }
+        }
+
+        if (rootUri !== (stripSearchParams(post?.record.reply?.root.uri) ?? uri)) {
+          // Outside thread boundary.
+          return { postView: undefined, post: undefined, uri, error: undefined }
+        }
+        return { postView, post, uri, error: undefined }
       }
-    }
-    if (rootUri !== getRootUri(uri, post)) {
-      // Outside thread boundary.
-      return undefined
-    }
+    })()
+    if (error) return error
+    if (!(postView && post)) return undefined
 
     // Blocked (1p and 3p for parent).
     const authorDid = postView.author.did
@@ -1477,7 +1747,7 @@ export class Views {
       }
     }
 
-    const parentUri = post.record.reply?.parent.uri
+    const parentUri = isRecipeRevisionRecord(post?.record) ? null : post?.record.reply?.parent.uri
     const hasMoreParents = !!parentUri && !parent
 
     return {
@@ -1490,7 +1760,7 @@ export class Views {
           postView,
           uri,
         }),
-        tags: post.tags,
+        tags: new Set(post?.record.tags ?? []), // TODO: fix
         hasOPLike: !!state.threadContexts?.get(postView.uri)?.like,
         parent,
         replies: undefined,
@@ -1509,7 +1779,6 @@ export class Views {
       below,
       depth,
       branchingFactor,
-      prioritizeFollowedUsers,
     }: {
       parentUri: string
       isOPThread: boolean
@@ -1519,7 +1788,6 @@ export class Views {
       below: number
       depth: number
       branchingFactor: number
-      prioritizeFollowedUsers: boolean
     },
     state: HydrationState,
   ): { replies: ThreadTreeVisible[] | undefined; hasOtherReplies: boolean } {
@@ -1543,7 +1811,7 @@ export class Views {
 
       // Hidden.
       const { isOther } = this.isOtherThreadPost(
-        { post, postView, prioritizeFollowedUsers, rootUri, uri },
+        { post, postView, rootUri, uri },
         state,
       )
       if (isOther) {
@@ -1566,7 +1834,6 @@ export class Views {
           below,
           depth: depth + 1,
           branchingFactor,
-          prioritizeFollowedUsers,
         },
         state,
       )
@@ -1695,11 +1962,9 @@ export class Views {
     {
       below,
       branchingFactor,
-      prioritizeFollowedUsers,
     }: {
       below: number
       branchingFactor: number
-      prioritizeFollowedUsers: boolean
     },
   ): ThreadOtherItem[] {
     const { anchor: anchorUri, uris } = skeleton
@@ -1734,20 +1999,25 @@ export class Views {
           childrenByParentUri,
           below,
           depth: 1,
-          prioritizeFollowedUsers,
         },
         state,
       ),
     }
 
-    return sortTrimFlattenThreadTree(anchorTree, {
-      opDid,
-      branchingFactor,
-      prioritizeFollowedUsers: false,
-      viewer: state.ctx?.viewer ?? null,
-      threadTagsBumpDown: this.threadTagsBumpDown,
-      threadTagsHide: this.threadTagsHide,
-    })
+    return sortTrimFlattenThreadTree(
+      anchorTree,
+      {
+        opDid,
+        branchingFactor,
+        viewer: state.ctx?.viewer ?? null,
+        threadTagsBumpDown: this.threadTagsBumpDown,
+        threadTagsHide: this.threadTagsHide,
+        visibilityTagRankPrefix: this.visibilityTagRankPrefix,
+      },
+      state.ctx?.featureGates.get(
+        FeatureGateID.ThreadsV2ReplyRankingExploration,
+      ),
+    )
   }
 
   private threadOtherV2Replies(
@@ -1757,14 +2027,12 @@ export class Views {
       childrenByParentUri,
       below,
       depth,
-      prioritizeFollowedUsers,
     }: {
       parentUri: string
       rootUri: string
       childrenByParentUri: Record<string, string[]>
       below: number
       depth: number
-      prioritizeFollowedUsers: boolean
     },
     state: HydrationState,
   ): ThreadOtherPostNode[] | undefined {
@@ -1787,10 +2055,7 @@ export class Views {
 
       // Other posts to pull out
       const { isOther, hiddenByThreadgate, mutedByViewer } =
-        this.isOtherThreadPost(
-          { post, postView, rootUri, prioritizeFollowedUsers, uri },
-          state,
-        )
+        this.isOtherThreadPost({ post, postView, rootUri, uri }, state)
       if (isOther) {
         // Only show hidden anchor replies, not all hidden.
         if (depth > 1) {
@@ -1809,7 +2074,6 @@ export class Views {
           childrenByParentUri,
           below,
           depth: depth + 1,
-          prioritizeFollowedUsers,
         },
         state,
       )
@@ -1887,20 +2151,23 @@ export class Views {
     state: HydrationState
   }): {
     authorDid: string
-    post: Post
+    post: Post | ReviewRating
     postView: PostView
   } | null {
     // Not found.
-    const post = state.posts?.get(uri)
+    const postUri = stripSearchParams(uri)!
+    const handlingReviewRating = isReviewRatingURI(postUri)
+    const post = handlingReviewRating ? state.reviewRatings?.get(postUri) : state.posts?.get(postUri)
+    if (!post) return null
     if (post?.violatesThreadGate) {
       return null
     }
-    const postView = this.post(uri, state)
+    const postView = handlingReviewRating ? this.reviewRatingView({ uri: postUri}, state) : this.post(postUri, state)
     if (!post || !postView) {
       return null
     }
     const authorDid = postView.author.did
-    if (rootUri !== getRootUri(uri, post)) {
+    if (rootUri !== getRootUri(postUri, post)) {
       // outside thread boundary
       return null
     }
@@ -1908,11 +2175,11 @@ export class Views {
     // Blocked (1p and 3p for replies).
     const has1pBlock = this.viewerBlockExists(authorDid, state)
     const has3pBlock =
-      !state.ctx?.include3pBlocks && state.postBlocks?.get(uri)?.parent
+      !state.ctx?.include3pBlocks && state.postBlocks?.get(postUri)?.parent
     if (has1pBlock || has3pBlock) {
       return null
     }
-    if (!this.viewerSeesNeedsReview({ uri, did: authorDid }, state)) {
+    if (!this.viewerSeesNeedsReview({ uri: postUri, did: authorDid }, state)) {
       return null
     }
 
@@ -1928,13 +2195,11 @@ export class Views {
     {
       post,
       postView,
-      prioritizeFollowedUsers,
       rootUri,
       uri,
     }: {
-      post: Post
+      post: Post | ReviewRating
       postView: PostView
-      prioritizeFollowedUsers: boolean
       rootUri: string
       uri: string
     },
@@ -1948,22 +2213,32 @@ export class Views {
     const opDid = creatorFromUri(rootUri)
     const authorDid = creatorFromUri(uri)
 
-    const showBecauseFollowing =
-      prioritizeFollowedUsers && !!postView.author.viewer?.following
-    const hiddenByTag =
-      authorDid !== opDid &&
-      authorDid !== state.ctx?.viewer &&
-      !showBecauseFollowing &&
-      this.threadTagsHide.some((t) => post.tags.has(t))
+    let hiddenByTag = false
+    if (
+      state.ctx?.featureGates.get(
+        FeatureGateID.ThreadsV2ReplyRankingExploration,
+      )
+    ) {
+      hiddenByTag = authorDid !== opDid && post.tags.has(this.visibilityTagHide)
+    } else {
+      const showBecauseFollowing = !!postView.author.viewer?.following
+      hiddenByTag =
+        authorDid !== opDid &&
+        authorDid !== state.ctx?.viewer &&
+        !showBecauseFollowing &&
+        this.threadTagsHide.some((t) => post.tags.has(t))
+    }
 
     const hiddenByThreadgate =
       state.ctx?.viewer !== authorDid &&
       this.replyIsHiddenByThreadgate(uri, rootUri, state)
 
     const mutedByViewer = this.viewerMuteExists(authorDid, state)
+    const isPushPin =
+      isPostRecord(post.record) && post.record.text.trim() === '📌'
 
     return {
-      isOther: hiddenByTag || hiddenByThreadgate || mutedByViewer,
+      isOther: hiddenByTag || hiddenByThreadgate || mutedByViewer || isPushPin,
       hiddenByTag,
       hiddenByThreadgate,
       mutedByViewer,
@@ -1979,8 +2254,13 @@ export class Views {
     const includedPosts = new Set<string>([anchorUri])
     const childrenByParentUri: Record<string, string[]> = {}
     uris.forEach((uri) => {
-      const post = state.posts?.get(uri)
-      const parentUri = post?.record.reply?.parent.uri
+      const parentUri = state.posts?.has(uri)
+        ? stripSearchParams(state.posts?.get(uri)?.record?.reply?.parent.uri)
+        : state.reviewRatings?.has(uri)
+          ? stripSearchParams(
+              state.reviewRatings?.get(uri)?.record?.subject?.uri,
+            )
+          : null
       if (!parentUri) return
       if (includedPosts.has(uri)) return
       includedPosts.add(uri)
@@ -2057,10 +2337,10 @@ export class Views {
         description,
         thumb: thumb
           ? this.imgUriBuilder.getPresetUri(
-              'feed_thumbnail',
-              did,
-              cidFromBlobJson(thumb),
-            )
+            'feed_thumbnail',
+            did,
+            cidFromBlobJson(thumb),
+          )
           : undefined,
       },
     }
@@ -2211,6 +2491,41 @@ export class Views {
         { ...view, $type: 'app.bsky.graph.defs#starterPackViewBasic' },
         withTypeTag,
       )
+    } else if (parsedUri.collection === ids.AppFoodiosFeedRecipePost) {
+      const view = this.recipeView({ uri, revisionUri: embed.record.revisionUri }, state)
+
+      if (!view) return this.embedNotFound(uri)
+      return this.recordEmbedWrapper({
+        $type: 'app.bsky.embed.record#viewRecord',
+        uri: view.uri,
+        cid: view.cid,
+        author: view.author,
+        value: view.record,
+        labels: view.labels,
+        likeCount: view.likeCount,
+        replyCount: view.replyCount,
+        repostCount: view.repostCount,
+        quoteCount: view.quoteCount,
+        indexedAt: view.indexedAt,
+        embeds: depth > 1 ? undefined : view.embed ? [view.embed] : [],
+      }, withTypeTag)
+    } else if (parsedUri.collection === ids.AppFoodiosFeedReviewRating) {
+      const view = this.reviewRatingView({ uri }, state)
+      if (!view) return this.embedNotFound(uri)
+      return this.recordEmbedWrapper({
+        $type: 'app.bsky.embed.record#viewRecord',
+        uri: view.uri,
+        cid: view.cid,
+        author: view.author,
+        value: view.record,
+        labels: view.labels,
+        likeCount: view.likeCount,
+        replyCount: view.replyCount,
+        repostCount: view.repostCount,
+        quoteCount: view.quoteCount,
+        indexedAt: view.indexedAt,
+        embeds: depth > 1 ? undefined : view.embed ? [view.embed] : [],
+      }, withTypeTag)
     }
     return this.embedNotFound(uri)
   }
@@ -2295,8 +2610,7 @@ export class Views {
     uri: string,
     state: HydrationState,
   ): boolean | undefined {
-    const post = state.posts?.get(uri)
-    if (!post) {
+    if (!state.posts?.get(uri) && !state.recipePosts?.get(uri) && !state.reviewRatings?.get(uri)) {
       return true
     }
     const postgateRecordUri = postUriToPostgateUri(uri)
@@ -2343,6 +2657,8 @@ export class Views {
       | RecordInfo<ProfileRecord>
       | Verification
       | Pick<RecordInfo<Required<NotificationRecordDeleted>>, 'cid' | 'record'>
+      | RecipeRevision
+      | ReviewRating
       | undefined
       | null
 
@@ -2373,6 +2689,10 @@ export class Views {
               takedownRef: actor.profileTakedownRef,
             }
           : undefined
+    } else if (uri.collection === ids.AppFoodiosFeedRecipePost) {
+      recordInfo = state.recipePosts?.get(notif.uri)?.revisions.at(-1)
+    } else if (uri.collection === ids.AppFoodiosFeedReviewRating) {
+      recordInfo = state.reviewRatings?.get(notif.uri)
     }
     if (!recordInfo) return
 
@@ -2405,6 +2725,6 @@ export class Views {
   }
 }
 
-const getRootUri = (uri: string, post: Post): string => {
-  return post.record.reply?.root.uri ?? uri
+const getRootUri = (uri: string, post: Post | ReviewRating): string => {
+  return stripSearchParams(isReviewRatingRecord(post.record) ? post.record.subject?.uri : post.record.reply?.root.uri) ?? uri
 }

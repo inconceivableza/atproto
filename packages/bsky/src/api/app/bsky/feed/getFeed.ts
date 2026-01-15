@@ -28,7 +28,7 @@ import {
   SkeletonFnInput,
   createPipeline,
 } from '../../../../pipeline'
-import { GetIdentityByDidResponse } from '../../../../proto/bsky_pb'
+import { FeedItemType, GetIdentityByDidResponse } from '../../../../proto/bsky_pb'
 import { BSKY_USER_AGENT, resHeaders } from '../../../util'
 
 export default function (server: Server, ctx: AppContext) {
@@ -252,15 +252,18 @@ const skeletonFromFeedGen = async (
     }
     throw err
   }
-
   const { feed: feedSkele, ...skele } = skeleton
-  const feedItems = feedSkele.slice(0, params.limit).map((item) => ({
-    post: { uri: item.post },
-    repost: isSkeletonReasonRepost(item.reason)
-      ? { uri: item.reason.repost }
-      : undefined,
-    feedContext: item.feedContext,
-  }))
+  const feedItems: FeedItem[] = feedSkele.slice(0, params.limit).map((item) => {
+    return ({
+      post: { uri: item.post },
+      repost: isSkeletonReasonRepost(item.reason)
+        ? { uri: item.reason.repost }
+        : undefined,
+      feedContext: item.feedContext,
+      itemType: FeedItemType.POST,
+    })
+  }
+  )
 
   return { ...skele, resHeaders, feedItems }
 }

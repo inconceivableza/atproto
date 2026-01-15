@@ -1,9 +1,20 @@
 import { ServiceImpl } from '@connectrpc/connect'
+import { sql } from 'kysely'
 import { DAY, keyBy } from '@atproto/common'
 import { Service } from '../../../proto/bsky_connect'
 import { Database } from '../db'
 import { countAll } from '../db/util'
 
+function stringToFloat(floatString: string | null | undefined) {
+  if (floatString === null || floatString === undefined || floatString === '')
+    return null
+  try {
+    const floatValue = parseFloat(floatString)
+    return floatValue
+  } catch {
+    return null
+  }
+}
 export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
   async getInteractionCounts(req) {
     const uris = req.refs.map((ref) => ref.uri)
@@ -12,8 +23,25 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
     }
     const res = await db.db
       .selectFrom('post_agg')
-      .where('uri', 'in', uris)
-      .selectAll()
+      .fullJoin('rating_agg', (join) =>
+        join
+          .onRef('rating_agg.uri', '=', 'post_agg.uri')
+          .on('rating_agg.uri', 'in', uris)
+          .on('rating_agg.aspect', '=', ''),
+      )
+      .where('post_agg.uri', 'in', uris)
+      .orWhere('rating_agg.uri', 'in', uris)
+      .select([
+        sql<string>`coalesce(post_agg.uri, rating_agg.uri)`.as('uri'),
+        'post_agg.likeCount',
+        'post_agg.replyCount',
+        'post_agg.repostCount',
+        'post_agg.quoteCount',
+        'post_agg.bookmarkCount',
+        'rating_agg.ratingCount',
+        sql<string>`coalesce(rating_agg."ratingAverage"::text, '')`.as('ratingAverage'), // postgres returns floats as strings
+        'rating_agg.reviewCount',
+      ])
       .execute()
     const byUri = keyBy(res, 'uri')
     return {
@@ -22,6 +50,11 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       reposts: uris.map((uri) => byUri.get(uri)?.repostCount ?? 0),
       quotes: uris.map((uri) => byUri.get(uri)?.quoteCount ?? 0),
       bookmarks: uris.map((uri) => byUri.get(uri)?.bookmarkCount ?? 0),
+      ratingCount: uris.map((uri) => byUri.get(uri)?.ratingCount ?? -1),
+      ratingAverage: uris.map(
+        (uri) => stringToFloat(byUri.get(uri)?.ratingAverage) ?? -1,
+      ),
+      reviewCount: uris.map((uri) => byUri.get(uri)?.reviewCount ?? 0),
     }
   },
   async getCountsForUsers(req) {

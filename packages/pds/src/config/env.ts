@@ -1,6 +1,24 @@
 import { envBool, envInt, envList, envStr } from '@atproto/common'
+import fs from 'fs'
 
-export const readEnv = (): ServerEnvironment => {
+const envContentFilenames = {
+  production: '../../env-content.production.json',
+  staging: '../../env-content.test.json',
+  development: '../../env-content.json',
+}
+
+export function readEnv() {
+  const nodeEnv = envStr('NODE_ENV') || 'development'
+  const envContentFile = envStr('PDS_ENV_CONTENT_FILE') || envContentFilenames[nodeEnv] || 'env-content.json'
+  const envContent = fs.existsSync(envContentFile) ?
+    JSON.parse(fs.readFileSync(envContentFile, {encoding: 'utf-8'}))
+    : {}
+  const policyBaseUrl = envContent.links?.policyBase
+  const supportUrl = envContent.links?.pdsSupport ?? envContent.links?.helpDesk
+  const brandingFile = envStr('PDS_BRANDING_FILE') || 'branding.json'
+  const branding = fs.existsSync(brandingFile) ?
+    JSON.parse(fs.readFileSync(brandingFile, {encoding: 'utf-8'}))
+    : {}
   return {
     // service
     port: envInt('PDS_PORT'),
@@ -10,9 +28,9 @@ export const readEnv = (): ServerEnvironment => {
     version: envStr('PDS_VERSION'),
     homeUrl: envStr('PDS_HOME_URL'),
     logoUrl: envStr('PDS_LOGO_URL'),
-    privacyPolicyUrl: envStr('PDS_PRIVACY_POLICY_URL'),
-    supportUrl: envStr('PDS_SUPPORT_URL'),
-    termsOfServiceUrl: envStr('PDS_TERMS_OF_SERVICE_URL'),
+    privacyPolicyUrl: `${policyBaseUrl}/privacy-policy/`,
+    supportUrl: supportUrl,
+    termsOfServiceUrl: `${policyBaseUrl}/tos/`,
     contactEmailAddress: envStr('PDS_CONTACT_EMAIL_ADDRESS'),
     emailImagesBaseUrl: envStr('PDS_EMAIL_IMAGES_BASE_URL'),
     acceptingImports: envBool('PDS_ACCEPTING_REPO_IMPORTS'),
@@ -29,9 +47,9 @@ export const readEnv = (): ServerEnvironment => {
     trustedOAuthClients: envList('PDS_OAUTH_TRUSTED_CLIENTS'),
 
     // app branding
-    socialAppName: envStr('PDS_SOCIAL_APP_NAME'),
-    socialAppDescription: envStr('PDS_SOCIAL_APP_DESCRIPTION'),
-    socialAppEmoji: envStr('PDS_SOCIAL_APP_EMOJI'),
+    socialAppName: branding.naming?.app_name || 'Bluesky',
+    socialAppDescription: branding.verbage?.app_description || "the social internet",
+    socialAppEmoji: branding.verbage?.app_emoji || "🦋",
     socialAppUrl: envStr('PDS_SOCIAL_APP_URL'),
 
     // branding
@@ -80,7 +98,7 @@ export const readEnv = (): ServerEnvironment => {
     didCacheMaxTTL: envInt('PDS_DID_CACHE_MAX_TTL'),
     resolverTimeout: envInt('PDS_ID_RESOLVER_TIMEOUT'),
     recoveryDidKey: envStr('PDS_RECOVERY_DID_KEY'),
-    serviceHandleDomains: envList('PDS_SERVICE_HANDLE_DOMAINS'),
+    serviceHandleDomains: envList('PDS_SERVICE_HANDLE_DOMAINS'), // public hostname by default
     handleBackupNameservers: envList('PDS_HANDLE_BACKUP_NAMESERVERS'),
     enableDidDocWithSession: envBool('PDS_ENABLE_DID_DOC_WITH_SESSION'),
 
@@ -158,161 +176,10 @@ export const readEnv = (): ServerEnvironment => {
     proxyMaxResponseSize: envInt('PDS_PROXY_MAX_RESPONSE_SIZE'),
     proxyMaxRetries: envInt('PDS_PROXY_MAX_RETRIES'),
     proxyPreferCompressed: envBool('PDS_PROXY_PREFER_COMPRESSED'),
+
+    // lexicon resolution
+    lexiconDidAuthority: envStr('PDS_LEXICON_AUTHORITY_DID'),
   }
 }
 
-export type ServerEnvironment = {
-  // service
-  port?: number
-  hostname?: string
-  serviceDid?: string
-  serviceName?: string
-  version?: string
-  homeUrl?: string
-  logoUrl?: string
-  privacyPolicyUrl?: string
-  supportUrl?: string
-  termsOfServiceUrl?: string
-  contactEmailAddress?: string
-  emailImagesBaseUrl?: string
-  acceptingImports?: boolean
-  maxImportSize?: number
-  blobUploadLimit?: number
-  devMode?: boolean
-
-  // OAuth
-  hcaptchaSiteKey?: string
-  hcaptchaSecretKey?: string
-  hcaptchaTokenSalt?: string
-  trustedOAuthClients?: string[]
-
-  // app branding
-  socialAppName?: string
-  socialAppDescription?: string
-  socialAppEmoji?: string
-  socialAppUrl?: string
-
-  // branding
-  lightColor?: string
-  darkColor?: string
-  primaryColor?: string
-  primaryColorContrast?: string
-  primaryColorHue?: number
-  errorColor?: string
-  errorColorContrast?: string
-  errorColorHue?: number
-  warningColor?: string
-  warningColorContrast?: string
-  warningColorHue?: number
-  successColor?: string
-  successColorContrast?: string
-  successColorHue?: number
-
-  // database
-  dataDirectory?: string
-  disableWalAutoCheckpoint?: boolean
-  accountDbLocation?: string
-  sequencerDbLocation?: string
-  didCacheDbLocation?: string
-
-  // actor store
-  actorStoreDirectory?: string
-  actorStoreCacheSize?: number
-
-  // blobstore: one required
-  blobstoreS3Bucket?: string
-  blobstoreDiskLocation?: string
-  blobstoreDiskTmpLocation?: string
-
-  // -- optional s3 parameters
-  blobstoreS3Region?: string
-  blobstoreS3Endpoint?: string
-  blobstoreS3ForcePathStyle?: boolean
-  blobstoreS3AccessKeyId?: string
-  blobstoreS3SecretAccessKey?: string
-  blobstoreS3UploadTimeoutMs?: number
-
-  // identity
-  didPlcUrl?: string
-  didCacheStaleTTL?: number
-  didCacheMaxTTL?: number
-  resolverTimeout?: number
-  recoveryDidKey?: string
-  serviceHandleDomains?: string[] // public hostname by default
-  handleBackupNameservers?: string[]
-  enableDidDocWithSession?: boolean
-
-  // entryway
-  entrywayUrl?: string
-  entrywayDid?: string
-  entrywayJwtVerifyKeyK256PublicKeyHex?: string
-  entrywayPlcRotationKey?: string
-
-  // invites
-  inviteRequired?: boolean
-  inviteInterval?: number
-  inviteEpoch?: number
-
-  // email
-  emailSmtpUrl?: string
-  emailFromAddress?: string
-  moderationEmailSmtpUrl?: string
-  moderationEmailAddress?: string
-
-  // subscription
-  maxSubscriptionBuffer?: number
-  repoBackfillLimitMs?: number
-
-  // appview
-  bskyAppViewUrl?: string
-  bskyAppViewDid?: string
-  bskyAppViewCdnUrlPattern?: string
-
-  // mod service
-  modServiceUrl?: string
-  modServiceDid?: string
-
-  // report service
-  reportServiceUrl?: string
-  reportServiceDid?: string
-
-  // rate limits
-  rateLimitsEnabled?: boolean
-  rateLimitBypassKey?: string
-  rateLimitBypassIps?: string[]
-
-  // redis
-  redisScratchAddress?: string
-  redisScratchPassword?: string
-
-  // crawler
-  crawlers?: string[]
-
-  // secrets
-  dpopSecret?: string
-  jwtSecret?: string
-  adminPassword?: string
-  entrywayAdminToken?: string
-
-  // keys
-  plcRotationKeyKmsKeyId?: string
-  plcRotationKeyK256PrivateKeyHex?: string
-
-  // user provided url http requests
-  disableSsrfProtection?: boolean
-
-  // fetch
-  fetchForceLogging?: boolean
-  fetchMaxResponseSize?: number
-
-  // lexicon resolver
-  lexiconDidAuthority?: string
-
-  // proxy
-  proxyAllowHTTP2?: boolean
-  proxyHeadersTimeout?: number
-  proxyBodyTimeout?: number
-  proxyMaxResponseSize?: number
-  proxyMaxRetries?: number
-  proxyPreferCompressed?: boolean
-}
+export type ServerEnvironment = Partial<ReturnType<typeof readEnv>>

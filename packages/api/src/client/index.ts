@@ -19,10 +19,22 @@ import * as AppBskyActorPutPreferences from './types/app/bsky/actor/putPreferenc
 import * as AppBskyActorSearchActors from './types/app/bsky/actor/searchActors.js'
 import * as AppBskyActorSearchActorsTypeahead from './types/app/bsky/actor/searchActorsTypeahead.js'
 import * as AppBskyActorStatus from './types/app/bsky/actor/status.js'
+import * as AppBskyAgeassuranceBegin from './types/app/bsky/ageassurance/begin.js'
+import * as AppBskyAgeassuranceDefs from './types/app/bsky/ageassurance/defs.js'
+import * as AppBskyAgeassuranceGetConfig from './types/app/bsky/ageassurance/getConfig.js'
+import * as AppBskyAgeassuranceGetState from './types/app/bsky/ageassurance/getState.js'
 import * as AppBskyBookmarkCreateBookmark from './types/app/bsky/bookmark/createBookmark.js'
 import * as AppBskyBookmarkDefs from './types/app/bsky/bookmark/defs.js'
 import * as AppBskyBookmarkDeleteBookmark from './types/app/bsky/bookmark/deleteBookmark.js'
 import * as AppBskyBookmarkGetBookmarks from './types/app/bsky/bookmark/getBookmarks.js'
+import * as AppBskyContactDefs from './types/app/bsky/contact/defs.js'
+import * as AppBskyContactDismissMatch from './types/app/bsky/contact/dismissMatch.js'
+import * as AppBskyContactGetMatches from './types/app/bsky/contact/getMatches.js'
+import * as AppBskyContactGetSyncStatus from './types/app/bsky/contact/getSyncStatus.js'
+import * as AppBskyContactImportContacts from './types/app/bsky/contact/importContacts.js'
+import * as AppBskyContactRemoveData from './types/app/bsky/contact/removeData.js'
+import * as AppBskyContactStartPhoneVerification from './types/app/bsky/contact/startPhoneVerification.js'
+import * as AppBskyContactVerifyPhone from './types/app/bsky/contact/verifyPhone.js'
 import * as AppBskyEmbedDefs from './types/app/bsky/embed/defs.js'
 import * as AppBskyEmbedExternal from './types/app/bsky/embed/external.js'
 import * as AppBskyEmbedImages from './types/app/bsky/embed/images.js'
@@ -128,6 +140,10 @@ import * as AppBskyVideoDefs from './types/app/bsky/video/defs.js'
 import * as AppBskyVideoGetJobStatus from './types/app/bsky/video/getJobStatus.js'
 import * as AppBskyVideoGetUploadLimits from './types/app/bsky/video/getUploadLimits.js'
 import * as AppBskyVideoUploadVideo from './types/app/bsky/video/uploadVideo.js'
+import * as AppFoodiosFeedDefs from './types/app/foodios/feed/defs.js'
+import * as AppFoodiosFeedRecipePost from './types/app/foodios/feed/recipePost.js'
+import * as AppFoodiosFeedRecipeRevision from './types/app/foodios/feed/recipeRevision.js'
+import * as AppFoodiosFeedReviewRating from './types/app/foodios/feed/reviewRating.js'
 import * as ChatBskyActorDeclaration from './types/chat/bsky/actor/declaration.js'
 import * as ChatBskyActorDefs from './types/chat/bsky/actor/defs.js'
 import * as ChatBskyActorDeleteAccount from './types/chat/bsky/actor/deleteAccount.js'
@@ -182,6 +198,7 @@ import * as ComAtprotoIdentityUpdateHandle from './types/com/atproto/identity/up
 import * as ComAtprotoLabelDefs from './types/com/atproto/label/defs.js'
 import * as ComAtprotoLabelQueryLabels from './types/com/atproto/label/queryLabels.js'
 import * as ComAtprotoLabelSubscribeLabels from './types/com/atproto/label/subscribeLabels.js'
+import * as ComAtprotoLexiconResolveLexicon from './types/com/atproto/lexicon/resolveLexicon.js'
 import * as ComAtprotoLexiconSchema from './types/com/atproto/lexicon/schema.js'
 import * as ComAtprotoModerationCreateReport from './types/com/atproto/moderation/createReport.js'
 import * as ComAtprotoModerationDefs from './types/com/atproto/moderation/defs.js'
@@ -253,6 +270,7 @@ import * as ToolsOzoneCommunicationDeleteTemplate from './types/tools/ozone/comm
 import * as ToolsOzoneCommunicationListTemplates from './types/tools/ozone/communication/listTemplates.js'
 import * as ToolsOzoneCommunicationUpdateTemplate from './types/tools/ozone/communication/updateTemplate.js'
 import * as ToolsOzoneHostingGetAccountHistory from './types/tools/ozone/hosting/getAccountHistory.js'
+import * as ToolsOzoneModerationCancelScheduledActions from './types/tools/ozone/moderation/cancelScheduledActions.js'
 import * as ToolsOzoneModerationDefs from './types/tools/ozone/moderation/defs.js'
 import * as ToolsOzoneModerationEmitEvent from './types/tools/ozone/moderation/emitEvent.js'
 import * as ToolsOzoneModerationGetAccountTimeline from './types/tools/ozone/moderation/getAccountTimeline.js'
@@ -263,8 +281,10 @@ import * as ToolsOzoneModerationGetRepo from './types/tools/ozone/moderation/get
 import * as ToolsOzoneModerationGetReporterStats from './types/tools/ozone/moderation/getReporterStats.js'
 import * as ToolsOzoneModerationGetRepos from './types/tools/ozone/moderation/getRepos.js'
 import * as ToolsOzoneModerationGetSubjects from './types/tools/ozone/moderation/getSubjects.js'
+import * as ToolsOzoneModerationListScheduledActions from './types/tools/ozone/moderation/listScheduledActions.js'
 import * as ToolsOzoneModerationQueryEvents from './types/tools/ozone/moderation/queryEvents.js'
 import * as ToolsOzoneModerationQueryStatuses from './types/tools/ozone/moderation/queryStatuses.js'
+import * as ToolsOzoneModerationScheduleAction from './types/tools/ozone/moderation/scheduleAction.js'
 import * as ToolsOzoneModerationSearchRepos from './types/tools/ozone/moderation/searchRepos.js'
 import * as ToolsOzoneReportDefs from './types/tools/ozone/report/defs.js'
 import * as ToolsOzoneSafelinkAddRule from './types/tools/ozone/safelink/addRule.js'
@@ -309,10 +329,22 @@ export * as AppBskyActorPutPreferences from './types/app/bsky/actor/putPreferenc
 export * as AppBskyActorSearchActors from './types/app/bsky/actor/searchActors.js'
 export * as AppBskyActorSearchActorsTypeahead from './types/app/bsky/actor/searchActorsTypeahead.js'
 export * as AppBskyActorStatus from './types/app/bsky/actor/status.js'
+export * as AppBskyAgeassuranceBegin from './types/app/bsky/ageassurance/begin.js'
+export * as AppBskyAgeassuranceDefs from './types/app/bsky/ageassurance/defs.js'
+export * as AppBskyAgeassuranceGetConfig from './types/app/bsky/ageassurance/getConfig.js'
+export * as AppBskyAgeassuranceGetState from './types/app/bsky/ageassurance/getState.js'
 export * as AppBskyBookmarkCreateBookmark from './types/app/bsky/bookmark/createBookmark.js'
 export * as AppBskyBookmarkDefs from './types/app/bsky/bookmark/defs.js'
 export * as AppBskyBookmarkDeleteBookmark from './types/app/bsky/bookmark/deleteBookmark.js'
 export * as AppBskyBookmarkGetBookmarks from './types/app/bsky/bookmark/getBookmarks.js'
+export * as AppBskyContactDefs from './types/app/bsky/contact/defs.js'
+export * as AppBskyContactDismissMatch from './types/app/bsky/contact/dismissMatch.js'
+export * as AppBskyContactGetMatches from './types/app/bsky/contact/getMatches.js'
+export * as AppBskyContactGetSyncStatus from './types/app/bsky/contact/getSyncStatus.js'
+export * as AppBskyContactImportContacts from './types/app/bsky/contact/importContacts.js'
+export * as AppBskyContactRemoveData from './types/app/bsky/contact/removeData.js'
+export * as AppBskyContactStartPhoneVerification from './types/app/bsky/contact/startPhoneVerification.js'
+export * as AppBskyContactVerifyPhone from './types/app/bsky/contact/verifyPhone.js'
 export * as AppBskyEmbedDefs from './types/app/bsky/embed/defs.js'
 export * as AppBskyEmbedExternal from './types/app/bsky/embed/external.js'
 export * as AppBskyEmbedImages from './types/app/bsky/embed/images.js'
@@ -418,6 +450,10 @@ export * as AppBskyVideoDefs from './types/app/bsky/video/defs.js'
 export * as AppBskyVideoGetJobStatus from './types/app/bsky/video/getJobStatus.js'
 export * as AppBskyVideoGetUploadLimits from './types/app/bsky/video/getUploadLimits.js'
 export * as AppBskyVideoUploadVideo from './types/app/bsky/video/uploadVideo.js'
+export * as AppFoodiosFeedDefs from './types/app/foodios/feed/defs.js'
+export * as AppFoodiosFeedRecipePost from './types/app/foodios/feed/recipePost.js'
+export * as AppFoodiosFeedRecipeRevision from './types/app/foodios/feed/recipeRevision.js'
+export * as AppFoodiosFeedReviewRating from './types/app/foodios/feed/reviewRating.js'
 export * as ChatBskyActorDeclaration from './types/chat/bsky/actor/declaration.js'
 export * as ChatBskyActorDefs from './types/chat/bsky/actor/defs.js'
 export * as ChatBskyActorDeleteAccount from './types/chat/bsky/actor/deleteAccount.js'
@@ -472,6 +508,7 @@ export * as ComAtprotoIdentityUpdateHandle from './types/com/atproto/identity/up
 export * as ComAtprotoLabelDefs from './types/com/atproto/label/defs.js'
 export * as ComAtprotoLabelQueryLabels from './types/com/atproto/label/queryLabels.js'
 export * as ComAtprotoLabelSubscribeLabels from './types/com/atproto/label/subscribeLabels.js'
+export * as ComAtprotoLexiconResolveLexicon from './types/com/atproto/lexicon/resolveLexicon.js'
 export * as ComAtprotoLexiconSchema from './types/com/atproto/lexicon/schema.js'
 export * as ComAtprotoModerationCreateReport from './types/com/atproto/moderation/createReport.js'
 export * as ComAtprotoModerationDefs from './types/com/atproto/moderation/defs.js'
@@ -543,6 +580,7 @@ export * as ToolsOzoneCommunicationDeleteTemplate from './types/tools/ozone/comm
 export * as ToolsOzoneCommunicationListTemplates from './types/tools/ozone/communication/listTemplates.js'
 export * as ToolsOzoneCommunicationUpdateTemplate from './types/tools/ozone/communication/updateTemplate.js'
 export * as ToolsOzoneHostingGetAccountHistory from './types/tools/ozone/hosting/getAccountHistory.js'
+export * as ToolsOzoneModerationCancelScheduledActions from './types/tools/ozone/moderation/cancelScheduledActions.js'
 export * as ToolsOzoneModerationDefs from './types/tools/ozone/moderation/defs.js'
 export * as ToolsOzoneModerationEmitEvent from './types/tools/ozone/moderation/emitEvent.js'
 export * as ToolsOzoneModerationGetAccountTimeline from './types/tools/ozone/moderation/getAccountTimeline.js'
@@ -553,8 +591,10 @@ export * as ToolsOzoneModerationGetRepo from './types/tools/ozone/moderation/get
 export * as ToolsOzoneModerationGetReporterStats from './types/tools/ozone/moderation/getReporterStats.js'
 export * as ToolsOzoneModerationGetRepos from './types/tools/ozone/moderation/getRepos.js'
 export * as ToolsOzoneModerationGetSubjects from './types/tools/ozone/moderation/getSubjects.js'
+export * as ToolsOzoneModerationListScheduledActions from './types/tools/ozone/moderation/listScheduledActions.js'
 export * as ToolsOzoneModerationQueryEvents from './types/tools/ozone/moderation/queryEvents.js'
 export * as ToolsOzoneModerationQueryStatuses from './types/tools/ozone/moderation/queryStatuses.js'
+export * as ToolsOzoneModerationScheduleAction from './types/tools/ozone/moderation/scheduleAction.js'
 export * as ToolsOzoneModerationSearchRepos from './types/tools/ozone/moderation/searchRepos.js'
 export * as ToolsOzoneReportDefs from './types/tools/ozone/report/defs.js'
 export * as ToolsOzoneSafelinkAddRule from './types/tools/ozone/safelink/addRule.js'
@@ -636,12 +676,11 @@ export const TOOLS_OZONE_MODERATION = {
 }
 export const TOOLS_OZONE_REPORT = {
   DefsReasonAppeal: 'tools.ozone.report.defs#reasonAppeal',
-  DefsReasonViolenceAnimalWelfare:
-    'tools.ozone.report.defs#reasonViolenceAnimalWelfare',
+  DefsReasonOther: 'tools.ozone.report.defs#reasonOther',
+  DefsReasonViolenceAnimal: 'tools.ozone.report.defs#reasonViolenceAnimal',
   DefsReasonViolenceThreats: 'tools.ozone.report.defs#reasonViolenceThreats',
   DefsReasonViolenceGraphicContent:
     'tools.ozone.report.defs#reasonViolenceGraphicContent',
-  DefsReasonViolenceSelfHarm: 'tools.ozone.report.defs#reasonViolenceSelfHarm',
   DefsReasonViolenceGlorification:
     'tools.ozone.report.defs#reasonViolenceGlorification',
   DefsReasonViolenceExtremistContent:
@@ -652,21 +691,16 @@ export const TOOLS_OZONE_REPORT = {
   DefsReasonSexualAbuseContent:
     'tools.ozone.report.defs#reasonSexualAbuseContent',
   DefsReasonSexualNCII: 'tools.ozone.report.defs#reasonSexualNCII',
-  DefsReasonSexualSextortion: 'tools.ozone.report.defs#reasonSexualSextortion',
   DefsReasonSexualDeepfake: 'tools.ozone.report.defs#reasonSexualDeepfake',
   DefsReasonSexualAnimal: 'tools.ozone.report.defs#reasonSexualAnimal',
   DefsReasonSexualUnlabeled: 'tools.ozone.report.defs#reasonSexualUnlabeled',
   DefsReasonSexualOther: 'tools.ozone.report.defs#reasonSexualOther',
   DefsReasonChildSafetyCSAM: 'tools.ozone.report.defs#reasonChildSafetyCSAM',
   DefsReasonChildSafetyGroom: 'tools.ozone.report.defs#reasonChildSafetyGroom',
-  DefsReasonChildSafetyMinorPrivacy:
-    'tools.ozone.report.defs#reasonChildSafetyMinorPrivacy',
-  DefsReasonChildSafetyEndangerment:
-    'tools.ozone.report.defs#reasonChildSafetyEndangerment',
+  DefsReasonChildSafetyPrivacy:
+    'tools.ozone.report.defs#reasonChildSafetyPrivacy',
   DefsReasonChildSafetyHarassment:
     'tools.ozone.report.defs#reasonChildSafetyHarassment',
-  DefsReasonChildSafetyPromotion:
-    'tools.ozone.report.defs#reasonChildSafetyPromotion',
   DefsReasonChildSafetyOther: 'tools.ozone.report.defs#reasonChildSafetyOther',
   DefsReasonHarassmentTroll: 'tools.ozone.report.defs#reasonHarassmentTroll',
   DefsReasonHarassmentTargeted:
@@ -681,27 +715,20 @@ export const TOOLS_OZONE_REPORT = {
     'tools.ozone.report.defs#reasonMisleadingImpersonation',
   DefsReasonMisleadingSpam: 'tools.ozone.report.defs#reasonMisleadingSpam',
   DefsReasonMisleadingScam: 'tools.ozone.report.defs#reasonMisleadingScam',
-  DefsReasonMisleadingSyntheticContent:
-    'tools.ozone.report.defs#reasonMisleadingSyntheticContent',
-  DefsReasonMisleadingMisinformation:
-    'tools.ozone.report.defs#reasonMisleadingMisinformation',
+  DefsReasonMisleadingElections:
+    'tools.ozone.report.defs#reasonMisleadingElections',
   DefsReasonMisleadingOther: 'tools.ozone.report.defs#reasonMisleadingOther',
   DefsReasonRuleSiteSecurity: 'tools.ozone.report.defs#reasonRuleSiteSecurity',
-  DefsReasonRuleStolenContent:
-    'tools.ozone.report.defs#reasonRuleStolenContent',
   DefsReasonRuleProhibitedSales:
     'tools.ozone.report.defs#reasonRuleProhibitedSales',
   DefsReasonRuleBanEvasion: 'tools.ozone.report.defs#reasonRuleBanEvasion',
   DefsReasonRuleOther: 'tools.ozone.report.defs#reasonRuleOther',
-  DefsReasonCivicElectoralProcess:
-    'tools.ozone.report.defs#reasonCivicElectoralProcess',
-  DefsReasonCivicDisclosure: 'tools.ozone.report.defs#reasonCivicDisclosure',
-  DefsReasonCivicInterference:
-    'tools.ozone.report.defs#reasonCivicInterference',
-  DefsReasonCivicMisinformation:
-    'tools.ozone.report.defs#reasonCivicMisinformation',
-  DefsReasonCivicImpersonation:
-    'tools.ozone.report.defs#reasonCivicImpersonation',
+  DefsReasonSelfHarmContent: 'tools.ozone.report.defs#reasonSelfHarmContent',
+  DefsReasonSelfHarmED: 'tools.ozone.report.defs#reasonSelfHarmED',
+  DefsReasonSelfHarmStunts: 'tools.ozone.report.defs#reasonSelfHarmStunts',
+  DefsReasonSelfHarmSubstances:
+    'tools.ozone.report.defs#reasonSelfHarmSubstances',
+  DefsReasonSelfHarmOther: 'tools.ozone.report.defs#reasonSelfHarmOther',
 }
 export const TOOLS_OZONE_TEAM = {
   DefsRoleAdmin: 'tools.ozone.team.defs#roleAdmin',
@@ -733,17 +760,21 @@ export class AtpBaseClient extends XrpcClient {
 export class AppNS {
   _client: XrpcClient
   bsky: AppBskyNS
+  foodios: AppFoodiosNS
 
   constructor(client: XrpcClient) {
     this._client = client
     this.bsky = new AppBskyNS(client)
+    this.foodios = new AppFoodiosNS(client)
   }
 }
 
 export class AppBskyNS {
   _client: XrpcClient
   actor: AppBskyActorNS
+  ageassurance: AppBskyAgeassuranceNS
   bookmark: AppBskyBookmarkNS
+  contact: AppBskyContactNS
   embed: AppBskyEmbedNS
   feed: AppBskyFeedNS
   graph: AppBskyGraphNS
@@ -756,7 +787,9 @@ export class AppBskyNS {
   constructor(client: XrpcClient) {
     this._client = client
     this.actor = new AppBskyActorNS(client)
+    this.ageassurance = new AppBskyAgeassuranceNS(client)
     this.bookmark = new AppBskyBookmarkNS(client)
+    this.contact = new AppBskyContactNS(client)
     this.embed = new AppBskyEmbedNS(client)
     this.feed = new AppBskyFeedNS(client)
     this.graph = new AppBskyGraphNS(client)
@@ -1032,6 +1065,49 @@ export class AppBskyActorStatusRecord {
   }
 }
 
+export class AppBskyAgeassuranceNS {
+  _client: XrpcClient
+
+  constructor(client: XrpcClient) {
+    this._client = client
+  }
+
+  begin(
+    data?: AppBskyAgeassuranceBegin.InputSchema,
+    opts?: AppBskyAgeassuranceBegin.CallOptions,
+  ): Promise<AppBskyAgeassuranceBegin.Response> {
+    return this._client
+      .call('app.bsky.ageassurance.begin', opts?.qp, data, opts)
+      .catch((e) => {
+        throw AppBskyAgeassuranceBegin.toKnownErr(e)
+      })
+  }
+
+  getConfig(
+    params?: AppBskyAgeassuranceGetConfig.QueryParams,
+    opts?: AppBskyAgeassuranceGetConfig.CallOptions,
+  ): Promise<AppBskyAgeassuranceGetConfig.Response> {
+    return this._client.call(
+      'app.bsky.ageassurance.getConfig',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  getState(
+    params?: AppBskyAgeassuranceGetState.QueryParams,
+    opts?: AppBskyAgeassuranceGetState.CallOptions,
+  ): Promise<AppBskyAgeassuranceGetState.Response> {
+    return this._client.call(
+      'app.bsky.ageassurance.getState',
+      params,
+      undefined,
+      opts,
+    )
+  }
+}
+
 export class AppBskyBookmarkNS {
   _client: XrpcClient
 
@@ -1071,6 +1147,91 @@ export class AppBskyBookmarkNS {
       undefined,
       opts,
     )
+  }
+}
+
+export class AppBskyContactNS {
+  _client: XrpcClient
+
+  constructor(client: XrpcClient) {
+    this._client = client
+  }
+
+  dismissMatch(
+    data?: AppBskyContactDismissMatch.InputSchema,
+    opts?: AppBskyContactDismissMatch.CallOptions,
+  ): Promise<AppBskyContactDismissMatch.Response> {
+    return this._client
+      .call('app.bsky.contact.dismissMatch', opts?.qp, data, opts)
+      .catch((e) => {
+        throw AppBskyContactDismissMatch.toKnownErr(e)
+      })
+  }
+
+  getMatches(
+    params?: AppBskyContactGetMatches.QueryParams,
+    opts?: AppBskyContactGetMatches.CallOptions,
+  ): Promise<AppBskyContactGetMatches.Response> {
+    return this._client
+      .call('app.bsky.contact.getMatches', params, undefined, opts)
+      .catch((e) => {
+        throw AppBskyContactGetMatches.toKnownErr(e)
+      })
+  }
+
+  getSyncStatus(
+    params?: AppBskyContactGetSyncStatus.QueryParams,
+    opts?: AppBskyContactGetSyncStatus.CallOptions,
+  ): Promise<AppBskyContactGetSyncStatus.Response> {
+    return this._client
+      .call('app.bsky.contact.getSyncStatus', params, undefined, opts)
+      .catch((e) => {
+        throw AppBskyContactGetSyncStatus.toKnownErr(e)
+      })
+  }
+
+  importContacts(
+    data?: AppBskyContactImportContacts.InputSchema,
+    opts?: AppBskyContactImportContacts.CallOptions,
+  ): Promise<AppBskyContactImportContacts.Response> {
+    return this._client
+      .call('app.bsky.contact.importContacts', opts?.qp, data, opts)
+      .catch((e) => {
+        throw AppBskyContactImportContacts.toKnownErr(e)
+      })
+  }
+
+  removeData(
+    data?: AppBskyContactRemoveData.InputSchema,
+    opts?: AppBskyContactRemoveData.CallOptions,
+  ): Promise<AppBskyContactRemoveData.Response> {
+    return this._client
+      .call('app.bsky.contact.removeData', opts?.qp, data, opts)
+      .catch((e) => {
+        throw AppBskyContactRemoveData.toKnownErr(e)
+      })
+  }
+
+  startPhoneVerification(
+    data?: AppBskyContactStartPhoneVerification.InputSchema,
+    opts?: AppBskyContactStartPhoneVerification.CallOptions,
+  ): Promise<AppBskyContactStartPhoneVerification.Response> {
+    return this._client
+      .call('app.bsky.contact.startPhoneVerification', opts?.qp, data, opts)
+      .catch((e) => {
+        throw AppBskyContactStartPhoneVerification.toKnownErr(e)
+      })
+  }
+
+  verifyPhone(
+    data?: AppBskyContactVerifyPhone.InputSchema,
+    opts?: AppBskyContactVerifyPhone.CallOptions,
+  ): Promise<AppBskyContactVerifyPhone.Response> {
+    return this._client
+      .call('app.bsky.contact.verifyPhone', opts?.qp, data, opts)
+      .catch((e) => {
+        throw AppBskyContactVerifyPhone.toKnownErr(e)
+      })
   }
 }
 
@@ -3254,6 +3415,279 @@ export class AppBskyVideoNS {
   }
 }
 
+export class AppFoodiosNS {
+  _client: XrpcClient
+  feed: AppFoodiosFeedNS
+
+  constructor(client: XrpcClient) {
+    this._client = client
+    this.feed = new AppFoodiosFeedNS(client)
+  }
+}
+
+export class AppFoodiosFeedNS {
+  _client: XrpcClient
+  recipePost: AppFoodiosFeedRecipePostRecord
+  recipeRevision: AppFoodiosFeedRecipeRevisionRecord
+  reviewRating: AppFoodiosFeedReviewRatingRecord
+
+  constructor(client: XrpcClient) {
+    this._client = client
+    this.recipePost = new AppFoodiosFeedRecipePostRecord(client)
+    this.recipeRevision = new AppFoodiosFeedRecipeRevisionRecord(client)
+    this.reviewRating = new AppFoodiosFeedReviewRatingRecord(client)
+  }
+}
+
+export class AppFoodiosFeedRecipePostRecord {
+  _client: XrpcClient
+
+  constructor(client: XrpcClient) {
+    this._client = client
+  }
+
+  async list(
+    params: OmitKey<ComAtprotoRepoListRecords.QueryParams, 'collection'>,
+  ): Promise<{
+    cursor?: string
+    records: { uri: string; value: AppFoodiosFeedRecipePost.Record }[]
+  }> {
+    const res = await this._client.call('com.atproto.repo.listRecords', {
+      collection: 'app.foodios.feed.recipePost',
+      ...params,
+    })
+    return res.data
+  }
+
+  async get(
+    params: OmitKey<ComAtprotoRepoGetRecord.QueryParams, 'collection'>,
+  ): Promise<{
+    uri: string
+    cid: string
+    value: AppFoodiosFeedRecipePost.Record
+  }> {
+    const res = await this._client.call('com.atproto.repo.getRecord', {
+      collection: 'app.foodios.feed.recipePost',
+      ...params,
+    })
+    return res.data
+  }
+
+  async create(
+    params: OmitKey<
+      ComAtprotoRepoCreateRecord.InputSchema,
+      'collection' | 'record'
+    >,
+    record: Un$Typed<AppFoodiosFeedRecipePost.Record>,
+    headers?: Record<string, string>,
+  ): Promise<{ uri: string; cid: string }> {
+    const collection = 'app.foodios.feed.recipePost'
+    const res = await this._client.call(
+      'com.atproto.repo.createRecord',
+      undefined,
+      { collection, ...params, record: { ...record, $type: collection } },
+      { encoding: 'application/json', headers },
+    )
+    return res.data
+  }
+
+  async put(
+    params: OmitKey<
+      ComAtprotoRepoPutRecord.InputSchema,
+      'collection' | 'record'
+    >,
+    record: Un$Typed<AppFoodiosFeedRecipePost.Record>,
+    headers?: Record<string, string>,
+  ): Promise<{ uri: string; cid: string }> {
+    const collection = 'app.foodios.feed.recipePost'
+    const res = await this._client.call(
+      'com.atproto.repo.putRecord',
+      undefined,
+      { collection, ...params, record: { ...record, $type: collection } },
+      { encoding: 'application/json', headers },
+    )
+    return res.data
+  }
+
+  async delete(
+    params: OmitKey<ComAtprotoRepoDeleteRecord.InputSchema, 'collection'>,
+    headers?: Record<string, string>,
+  ): Promise<void> {
+    await this._client.call(
+      'com.atproto.repo.deleteRecord',
+      undefined,
+      { collection: 'app.foodios.feed.recipePost', ...params },
+      { headers },
+    )
+  }
+}
+
+export class AppFoodiosFeedRecipeRevisionRecord {
+  _client: XrpcClient
+
+  constructor(client: XrpcClient) {
+    this._client = client
+  }
+
+  async list(
+    params: OmitKey<ComAtprotoRepoListRecords.QueryParams, 'collection'>,
+  ): Promise<{
+    cursor?: string
+    records: { uri: string; value: AppFoodiosFeedRecipeRevision.Record }[]
+  }> {
+    const res = await this._client.call('com.atproto.repo.listRecords', {
+      collection: 'app.foodios.feed.recipeRevision',
+      ...params,
+    })
+    return res.data
+  }
+
+  async get(
+    params: OmitKey<ComAtprotoRepoGetRecord.QueryParams, 'collection'>,
+  ): Promise<{
+    uri: string
+    cid: string
+    value: AppFoodiosFeedRecipeRevision.Record
+  }> {
+    const res = await this._client.call('com.atproto.repo.getRecord', {
+      collection: 'app.foodios.feed.recipeRevision',
+      ...params,
+    })
+    return res.data
+  }
+
+  async create(
+    params: OmitKey<
+      ComAtprotoRepoCreateRecord.InputSchema,
+      'collection' | 'record'
+    >,
+    record: Un$Typed<AppFoodiosFeedRecipeRevision.Record>,
+    headers?: Record<string, string>,
+  ): Promise<{ uri: string; cid: string }> {
+    const collection = 'app.foodios.feed.recipeRevision'
+    const res = await this._client.call(
+      'com.atproto.repo.createRecord',
+      undefined,
+      { collection, ...params, record: { ...record, $type: collection } },
+      { encoding: 'application/json', headers },
+    )
+    return res.data
+  }
+
+  async put(
+    params: OmitKey<
+      ComAtprotoRepoPutRecord.InputSchema,
+      'collection' | 'record'
+    >,
+    record: Un$Typed<AppFoodiosFeedRecipeRevision.Record>,
+    headers?: Record<string, string>,
+  ): Promise<{ uri: string; cid: string }> {
+    const collection = 'app.foodios.feed.recipeRevision'
+    const res = await this._client.call(
+      'com.atproto.repo.putRecord',
+      undefined,
+      { collection, ...params, record: { ...record, $type: collection } },
+      { encoding: 'application/json', headers },
+    )
+    return res.data
+  }
+
+  async delete(
+    params: OmitKey<ComAtprotoRepoDeleteRecord.InputSchema, 'collection'>,
+    headers?: Record<string, string>,
+  ): Promise<void> {
+    await this._client.call(
+      'com.atproto.repo.deleteRecord',
+      undefined,
+      { collection: 'app.foodios.feed.recipeRevision', ...params },
+      { headers },
+    )
+  }
+}
+
+export class AppFoodiosFeedReviewRatingRecord {
+  _client: XrpcClient
+
+  constructor(client: XrpcClient) {
+    this._client = client
+  }
+
+  async list(
+    params: OmitKey<ComAtprotoRepoListRecords.QueryParams, 'collection'>,
+  ): Promise<{
+    cursor?: string
+    records: { uri: string; value: AppFoodiosFeedReviewRating.Record }[]
+  }> {
+    const res = await this._client.call('com.atproto.repo.listRecords', {
+      collection: 'app.foodios.feed.reviewRating',
+      ...params,
+    })
+    return res.data
+  }
+
+  async get(
+    params: OmitKey<ComAtprotoRepoGetRecord.QueryParams, 'collection'>,
+  ): Promise<{
+    uri: string
+    cid: string
+    value: AppFoodiosFeedReviewRating.Record
+  }> {
+    const res = await this._client.call('com.atproto.repo.getRecord', {
+      collection: 'app.foodios.feed.reviewRating',
+      ...params,
+    })
+    return res.data
+  }
+
+  async create(
+    params: OmitKey<
+      ComAtprotoRepoCreateRecord.InputSchema,
+      'collection' | 'record'
+    >,
+    record: Un$Typed<AppFoodiosFeedReviewRating.Record>,
+    headers?: Record<string, string>,
+  ): Promise<{ uri: string; cid: string }> {
+    const collection = 'app.foodios.feed.reviewRating'
+    const res = await this._client.call(
+      'com.atproto.repo.createRecord',
+      undefined,
+      { collection, ...params, record: { ...record, $type: collection } },
+      { encoding: 'application/json', headers },
+    )
+    return res.data
+  }
+
+  async put(
+    params: OmitKey<
+      ComAtprotoRepoPutRecord.InputSchema,
+      'collection' | 'record'
+    >,
+    record: Un$Typed<AppFoodiosFeedReviewRating.Record>,
+    headers?: Record<string, string>,
+  ): Promise<{ uri: string; cid: string }> {
+    const collection = 'app.foodios.feed.reviewRating'
+    const res = await this._client.call(
+      'com.atproto.repo.putRecord',
+      undefined,
+      { collection, ...params, record: { ...record, $type: collection } },
+      { encoding: 'application/json', headers },
+    )
+    return res.data
+  }
+
+  async delete(
+    params: OmitKey<ComAtprotoRepoDeleteRecord.InputSchema, 'collection'>,
+    headers?: Record<string, string>,
+  ): Promise<void> {
+    await this._client.call(
+      'com.atproto.repo.deleteRecord',
+      undefined,
+      { collection: 'app.foodios.feed.reviewRating', ...params },
+      { headers },
+    )
+  }
+}
+
 export class ChatNS {
   _client: XrpcClient
   bsky: ChatBskyNS
@@ -3997,6 +4431,17 @@ export class ComAtprotoLexiconNS {
   constructor(client: XrpcClient) {
     this._client = client
     this.schema = new ComAtprotoLexiconSchemaRecord(client)
+  }
+
+  resolveLexicon(
+    params?: ComAtprotoLexiconResolveLexicon.QueryParams,
+    opts?: ComAtprotoLexiconResolveLexicon.CallOptions,
+  ): Promise<ComAtprotoLexiconResolveLexicon.Response> {
+    return this._client
+      .call('com.atproto.lexicon.resolveLexicon', params, undefined, opts)
+      .catch((e) => {
+        throw ComAtprotoLexiconResolveLexicon.toKnownErr(e)
+      })
   }
 }
 
@@ -4910,6 +5355,18 @@ export class ToolsOzoneModerationNS {
     this._client = client
   }
 
+  cancelScheduledActions(
+    data?: ToolsOzoneModerationCancelScheduledActions.InputSchema,
+    opts?: ToolsOzoneModerationCancelScheduledActions.CallOptions,
+  ): Promise<ToolsOzoneModerationCancelScheduledActions.Response> {
+    return this._client.call(
+      'tools.ozone.moderation.cancelScheduledActions',
+      opts?.qp,
+      data,
+      opts,
+    )
+  }
+
   emitEvent(
     data?: ToolsOzoneModerationEmitEvent.InputSchema,
     opts?: ToolsOzoneModerationEmitEvent.CallOptions,
@@ -5019,6 +5476,18 @@ export class ToolsOzoneModerationNS {
     )
   }
 
+  listScheduledActions(
+    data?: ToolsOzoneModerationListScheduledActions.InputSchema,
+    opts?: ToolsOzoneModerationListScheduledActions.CallOptions,
+  ): Promise<ToolsOzoneModerationListScheduledActions.Response> {
+    return this._client.call(
+      'tools.ozone.moderation.listScheduledActions',
+      opts?.qp,
+      data,
+      opts,
+    )
+  }
+
   queryEvents(
     params?: ToolsOzoneModerationQueryEvents.QueryParams,
     opts?: ToolsOzoneModerationQueryEvents.CallOptions,
@@ -5039,6 +5508,18 @@ export class ToolsOzoneModerationNS {
       'tools.ozone.moderation.queryStatuses',
       params,
       undefined,
+      opts,
+    )
+  }
+
+  scheduleAction(
+    data?: ToolsOzoneModerationScheduleAction.InputSchema,
+    opts?: ToolsOzoneModerationScheduleAction.CallOptions,
+  ): Promise<ToolsOzoneModerationScheduleAction.Response> {
+    return this._client.call(
+      'tools.ozone.moderation.scheduleAction',
+      opts?.qp,
+      data,
       opts,
     )
   }
