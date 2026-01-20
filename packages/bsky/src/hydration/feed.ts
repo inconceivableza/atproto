@@ -101,7 +101,9 @@ export type Postgate = RecordInfo<PostgateRecord>
 export type Postgates = HydrationMap<Postgate>
 
 
-export type RecipeRevision = RecordInfo<RecipeRevisionRecord> & { uri: string }
+export type RecipeRevision = RecordInfo<RecipeRevisionRecord> & {
+  uri: string, tags: Set<string>
+}
 export type Recipe = RecordInfo<RecipeRecord> & {
   revisions: RecipeRevision[]
 }
@@ -166,6 +168,7 @@ export class FeedHydrator {
           sortedAt: recordInfo.sortedAt?.toDate() ?? new Date(0),
           takedownRef: recordInfo.takedownRef,
           uri: recordInfo.uri,
+          tags: new Set(revisionRecord.tags),
           record: revisionRecord
         }]
       })

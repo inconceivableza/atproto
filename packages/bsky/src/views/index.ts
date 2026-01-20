@@ -1574,7 +1574,7 @@ export class Views {
           repliesAllowance: Infinity, // While we don't have pagination.
           uri: anchorUri,
         }),
-        tags: 'tags' in post ? post.tags : new Set(post.record.tags ?? []), // TODO: clean up
+        tags: new Set(post.tags ?? []),
         hasOPLike: !!state.threadContexts?.get(postView.uri)?.like,
         parent,
         replies,

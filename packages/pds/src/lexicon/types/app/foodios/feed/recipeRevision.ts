@@ -33,7 +33,7 @@ export interface Main {
   text: string
   /** Annotations of text (mentions, URLs, hashtags, etc) */
   facets?: AppBskyRichtextFacet.Main[]
-  ingredients: Ingredient[]
+  ingredientSections: IngredientSection[]
   instructionSections: InstructionSection[]
   /** Preparation time in minutes */
   prepTime?: string
@@ -82,6 +82,22 @@ export {
   type Main as Record,
   isMain as isRecord,
   validateMain as validateRecord,
+}
+
+export interface IngredientSection {
+  $type?: 'app.foodios.feed.recipeRevision#ingredientSection'
+  name?: string
+  ingredients: Ingredient[]
+}
+
+const hashIngredientSection = 'ingredientSection'
+
+export function isIngredientSection<V>(v: V) {
+  return is$typed(v, id, hashIngredientSection)
+}
+
+export function validateIngredientSection<V>(v: V) {
+  return validate<IngredientSection & V>(v, id, hashIngredientSection)
 }
 
 export interface InstructionSection {
@@ -164,7 +180,7 @@ export interface Nutrition {
   $type?: 'app.foodios.feed.recipeRevision#nutrition'
   servingSize: QuantityAndUnit
   /** Energy in kJ */
-  energy: string
+  energy?: string
   /** Carbohydrate in g */
   carbohydrateContent?: string
   /** Cholesterol in mg */
@@ -268,6 +284,13 @@ export interface WebsiteAttribution {
   type: 'website'
   name: string
   url: string
+  license?:
+    | $Typed<AppFoodiosFeedDefs.LicenseAllRights>
+    | $Typed<AppFoodiosFeedDefs.LicenseCreativeCommonsBy>
+    | $Typed<AppFoodiosFeedDefs.LicenseCreativeCommonsBySa>
+    | $Typed<AppFoodiosFeedDefs.LicenseCreativeCommonsByNc>
+    | $Typed<AppFoodiosFeedDefs.LicenseCreativeCommonsByNcSa>
+    | $Typed<AppFoodiosFeedDefs.LicensePublicDomain>
   notes?: string
 }
 

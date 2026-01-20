@@ -3,7 +3,7 @@ import { MINUTE } from '@atproto/common'
 import { BackgroundQueue } from './background'
 import { crawlerLogger as log } from './logger'
 
-const NOTIFY_THRESHOLD = 20 * MINUTE
+const NOTIFY_THRESHOLD = 1 * MINUTE
 
 export class Crawlers {
   public agents: AtpAgent[]

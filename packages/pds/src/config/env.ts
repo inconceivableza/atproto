@@ -1,6 +1,24 @@
 import { envBool, envInt, envList, envStr } from '@atproto/common'
+import fs from 'fs'
+
+const envContentFilenames = {
+  production: '../../env-content.production.json',
+  staging: '../../env-content.test.json',
+  development: '../../env-content.json',
+}
 
 export function readEnv() {
+  const nodeEnv = envStr('NODE_ENV') || 'development'
+  const envContentFile = envStr('PDS_ENV_CONTENT_FILE') || envContentFilenames[nodeEnv] || 'env-content.json'
+  const envContent = fs.existsSync(envContentFile) ?
+    JSON.parse(fs.readFileSync(envContentFile, {encoding: 'utf-8'}))
+    : {}
+  const policyBaseUrl = envContent.links?.policyBase
+  const supportUrl = envContent.links?.pdsSupport ?? envContent.links?.helpDesk
+  const brandingFile = envStr('PDS_BRANDING_FILE') || 'branding.json'
+  const branding = fs.existsSync(brandingFile) ?
+    JSON.parse(fs.readFileSync(brandingFile, {encoding: 'utf-8'}))
+    : {}
   return {
     // service
     port: envInt('PDS_PORT'),
@@ -10,9 +28,9 @@ export function readEnv() {
     version: envStr('PDS_VERSION'),
     homeUrl: envStr('PDS_HOME_URL'),
     logoUrl: envStr('PDS_LOGO_URL'),
-    privacyPolicyUrl: envStr('PDS_PRIVACY_POLICY_URL'),
-    supportUrl: envStr('PDS_SUPPORT_URL'),
-    termsOfServiceUrl: envStr('PDS_TERMS_OF_SERVICE_URL'),
+    privacyPolicyUrl: `${policyBaseUrl}/privacy-policy/`,
+    supportUrl: supportUrl,
+    termsOfServiceUrl: `${policyBaseUrl}/tos/`,
     contactEmailAddress: envStr('PDS_CONTACT_EMAIL_ADDRESS'),
     emailImagesBaseUrl: envStr('PDS_EMAIL_IMAGES_BASE_URL'),
     acceptingImports: envBool('PDS_ACCEPTING_REPO_IMPORTS'),
@@ -29,9 +47,9 @@ export function readEnv() {
     trustedOAuthClients: envList('PDS_OAUTH_TRUSTED_CLIENTS'),
 
     // app branding
-    socialAppName: envStr('PDS_SOCIAL_APP_NAME'),
-    socialAppDescription: envStr('PDS_SOCIAL_APP_DESCRIPTION'),
-    socialAppEmoji: envStr('PDS_SOCIAL_APP_EMOJI'),
+    socialAppName: branding.naming?.app_name || 'Bluesky',
+    socialAppDescription: branding.verbage?.app_description || "the social internet",
+    socialAppEmoji: branding.verbage?.app_emoji || "🦋",
     socialAppUrl: envStr('PDS_SOCIAL_APP_URL'),
 
     // branding
