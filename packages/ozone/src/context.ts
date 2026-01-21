@@ -98,6 +98,7 @@ export class AppContext {
     })
     const signingKey = await Secp256k1Keypair.import(secrets.signingKeyHex)
     const signingKeyId = await getSigningKeyId(db, signingKey.did())
+    const pdsOzoneAccountPublicKey = cfg.pds?.ozoneAccountPublicKey
     const appviewAgent = new AtpAgent({ service: cfg.appview.url })
     const pdsAgent = cfg.pds
       ? new AtpAgent({ service: cfg.pds.url })
