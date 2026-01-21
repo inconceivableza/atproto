@@ -7,32 +7,6 @@ WORKDIR /app
 COPY ./package.json ./
 RUN corepack prepare --activate
 
-COPY ./tsconfig ./tsconfig
-COPY ./packages/bsky/package.json ./packages/bsky/package.json
-COPY ./packages/api/package.json ./packages/api/package.json
-COPY ./packages/common/package.json ./packages/common/package.json
-COPY ./packages/common-web/package.json ./packages/common-web/package.json
-COPY ./packages/crypto/package.json ./packages/crypto/package.json
-COPY ./packages/did/package.json ./packages/did/package.json
-COPY ./packages/identity/package.json ./packages/identity/package.json
-COPY ./packages/sync/package.json ./packages/sync/package.json
-COPY ./packages/syntax/package.json ./packages/syntax/package.json
-COPY ./packages/lexicon/package.json ./packages/lexicon/package.json
-COPY ./packages/repo/package.json ./packages/repo/package.json
-COPY ./packages/xrpc/package.json ./packages/xrpc/package.json
-COPY ./packages/xrpc-server/package.json ./packages/xrpc-server/package.json
-COPY ./packages/internal/fetch-node/package.json ./packages/internal/fetch-node/package.json
-COPY ./packages/internal/fetch/package.json ./packages/internal/fetch/package.json
-COPY ./packages/internal/pipe/package.json ./packages/internal/pipe/package.json
-COPY ./packages/internal/xrpc-utils/package.json ./packages/internal/xrpc-utils/package.json
-COPY ./services/bsky/package.json ./services/bsky/package.json
-COPY ./package.json ./package.json
-COPY ./pnpm-lock.yaml ./pnpm-lock.yaml
-COPY ./pnpm-workspace.yaml ./pnpm-workspace.yaml 
-
-# install all deps
-RUN pnpm install --frozen-lockfile
-
 # Move files into the image and install
 COPY ./*.* ./
 COPY ./tsconfig ./tsconfig
@@ -74,12 +48,17 @@ COPY ./packages/xrpc ./packages/xrpc
 COPY ./packages/xrpc-server ./packages/xrpc-server
 
 COPY ./services/bsky ./services/bsky
-# build all dependent packages with external node_modules
+
+# install all deps
+RUN pnpm install --frozen-lockfile
+# build all packages with external node_modules
 RUN pnpm run --recursive --stream --filter '@atproto/crypto...' build
 RUN pnpm run --recursive --stream --filter '@atproto/bsky...' build
 # clean up
 RUN rm -rf node_modules
 # install only prod deps, hoisted to root node_modules dir
+# Set NODE_ENV to skip prepare scripts that install dev dependencies (e.g., puppeteer browsers)
+ENV NODE_ENV=production
 RUN pnpm install --prod --shamefully-hoist --frozen-lockfile --prefer-offline
 
 WORKDIR services/bsky

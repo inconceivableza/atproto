@@ -35,8 +35,13 @@ export const lexToIpld = (val: LexValue): IpldValue => {
   // objects
   if (val && typeof val === 'object') {
     // convert blobs, leaving the original encoding so that we don't change CIDs on re-encode
+    // Check both instanceof and duck-typing for BlobRef to handle cross-module instances
     if (val instanceof BlobRef) {
       return val.original
+    }
+    // Duck-type check for BlobRef-like objects (handles cross-module BlobRef instances)
+    if ('original' in val && check.is(val['original'], jsonBlobRef)) {
+      return val['original']
     }
     // retain cids & bytes
     if (CID.asCID(val) || val instanceof Uint8Array) {

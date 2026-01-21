@@ -8684,7 +8684,7 @@ export const schemaDict = {
           },
           revisionContent: {
             type: 'ref',
-            ref: 'lex:app.foodios.feed.recipeRevision#Record',
+            ref: 'lex:app.foodios.feed.recipeRevision',
           },
         },
       },
@@ -8833,7 +8833,7 @@ export const schemaDict = {
             'recipePostRef',
             'name',
             'text',
-            'ingredients',
+            'ingredientSections',
             'instructionSections',
             'createdAt',
           ],
@@ -8869,11 +8869,11 @@ export const schemaDict = {
                 ref: 'lex:app.bsky.richtext.facet',
               },
             },
-            ingredients: {
+            ingredientSections: {
               type: 'array',
               items: {
                 type: 'ref',
-                ref: 'lex:app.foodios.feed.recipeRevision#ingredient',
+                ref: 'lex:app.foodios.feed.recipeRevision#ingredientSection',
               },
             },
             instructionSections: {
@@ -8983,6 +8983,23 @@ export const schemaDict = {
           },
         },
       },
+      ingredientSection: {
+        type: 'object',
+        required: ['ingredients'],
+        properties: {
+          name: {
+            type: 'string',
+            maxLength: 1000,
+          },
+          ingredients: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:app.foodios.feed.recipeRevision#ingredient',
+            },
+          },
+        },
+      },
       instructionSection: {
         type: 'object',
         required: ['instructions'],
@@ -9056,7 +9073,7 @@ export const schemaDict = {
       },
       nutrition: {
         type: 'object',
-        required: ['servingSize', 'energy'],
+        required: ['servingSize'],
         properties: {
           servingSize: {
             description:
@@ -9229,6 +9246,18 @@ export const schemaDict = {
           url: {
             type: 'string',
             format: 'uri',
+          },
+          license: {
+            type: 'union',
+            refs: [
+              'lex:app.foodios.feed.defs#licenseAllRights',
+              'lex:app.foodios.feed.defs#licenseCreativeCommonsBy',
+              'lex:app.foodios.feed.defs#licenseCreativeCommonsBySa',
+              'lex:app.foodios.feed.defs#licenseCreativeCommonsByNc',
+              'lex:app.foodios.feed.defs#licenseCreativeCommonsByNcSa',
+              'lex:app.foodios.feed.defs#licensePublicDomain',
+            ],
+            closed: true,
           },
           notes: {
             type: 'string',
