@@ -8794,6 +8794,60 @@ export const schemaDict = {
       },
     },
   },
+  AppFoodiosFeedGetTimeline: {
+    lexicon: 1,
+    id: 'app.foodios.feed.getTimeline',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          "Get a view of the requesting account's home timeline. This is expected to be some form of reverse-chronological feed.",
+        parameters: {
+          type: 'params',
+          required: ['id'],
+          properties: {
+            id: {
+              type: 'string',
+              description:
+                "Identifier for which timeline should be returned e.g. 'following'",
+            },
+            filter: {
+              type: 'string',
+              description: "String indicating filter behaviour e.g. 'recipes'",
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['feed'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              feed: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.feed.defs#feedViewPost',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   AppFoodiosFeedRecipePost: {
     lexicon: 1,
     id: 'app.foodios.feed.recipePost',
@@ -15692,6 +15746,7 @@ export const ids = {
   AppBskyVideoGetUploadLimits: 'app.bsky.video.getUploadLimits',
   AppBskyVideoUploadVideo: 'app.bsky.video.uploadVideo',
   AppFoodiosFeedDefs: 'app.foodios.feed.defs',
+  AppFoodiosFeedGetTimeline: 'app.foodios.feed.getTimeline',
   AppFoodiosFeedRecipePost: 'app.foodios.feed.recipePost',
   AppFoodiosFeedRecipeRevision: 'app.foodios.feed.recipeRevision',
   AppFoodiosFeedReviewRating: 'app.foodios.feed.reviewRating',

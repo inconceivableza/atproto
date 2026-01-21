@@ -141,6 +141,7 @@ import * as AppBskyVideoGetJobStatus from './types/app/bsky/video/getJobStatus.j
 import * as AppBskyVideoGetUploadLimits from './types/app/bsky/video/getUploadLimits.js'
 import * as AppBskyVideoUploadVideo from './types/app/bsky/video/uploadVideo.js'
 import * as AppFoodiosFeedDefs from './types/app/foodios/feed/defs.js'
+import * as AppFoodiosFeedGetTimeline from './types/app/foodios/feed/getTimeline.js'
 import * as AppFoodiosFeedRecipePost from './types/app/foodios/feed/recipePost.js'
 import * as AppFoodiosFeedRecipeRevision from './types/app/foodios/feed/recipeRevision.js'
 import * as AppFoodiosFeedReviewRating from './types/app/foodios/feed/reviewRating.js'
@@ -451,6 +452,7 @@ export * as AppBskyVideoGetJobStatus from './types/app/bsky/video/getJobStatus.j
 export * as AppBskyVideoGetUploadLimits from './types/app/bsky/video/getUploadLimits.js'
 export * as AppBskyVideoUploadVideo from './types/app/bsky/video/uploadVideo.js'
 export * as AppFoodiosFeedDefs from './types/app/foodios/feed/defs.js'
+export * as AppFoodiosFeedGetTimeline from './types/app/foodios/feed/getTimeline.js'
 export * as AppFoodiosFeedRecipePost from './types/app/foodios/feed/recipePost.js'
 export * as AppFoodiosFeedRecipeRevision from './types/app/foodios/feed/recipeRevision.js'
 export * as AppFoodiosFeedReviewRating from './types/app/foodios/feed/reviewRating.js'
@@ -3436,6 +3438,18 @@ export class AppFoodiosFeedNS {
     this.recipePost = new AppFoodiosFeedRecipePostRecord(client)
     this.recipeRevision = new AppFoodiosFeedRecipeRevisionRecord(client)
     this.reviewRating = new AppFoodiosFeedReviewRatingRecord(client)
+  }
+
+  getTimeline(
+    params?: AppFoodiosFeedGetTimeline.QueryParams,
+    opts?: AppFoodiosFeedGetTimeline.CallOptions,
+  ): Promise<AppFoodiosFeedGetTimeline.Response> {
+    return this._client.call(
+      'app.foodios.feed.getTimeline',
+      params,
+      undefined,
+      opts,
+    )
   }
 }
 

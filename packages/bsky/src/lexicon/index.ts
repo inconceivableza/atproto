@@ -107,6 +107,7 @@ import * as AppBskyUnspeccedSearchStarterPacksSkeleton from './types/app/bsky/un
 import * as AppBskyVideoGetJobStatus from './types/app/bsky/video/getJobStatus.js'
 import * as AppBskyVideoGetUploadLimits from './types/app/bsky/video/getUploadLimits.js'
 import * as AppBskyVideoUploadVideo from './types/app/bsky/video/uploadVideo.js'
+import * as AppFoodiosFeedGetTimeline from './types/app/foodios/feed/getTimeline.js'
 import * as ChatBskyActorDeleteAccount from './types/chat/bsky/actor/deleteAccount.js'
 import * as ChatBskyActorExportAccountData from './types/chat/bsky/actor/exportAccountData.js'
 import * as ChatBskyConvoAcceptConvo from './types/chat/bsky/convo/acceptConvo.js'
@@ -1587,6 +1588,18 @@ export class AppFoodiosFeedNS {
 
   constructor(server: Server) {
     this._server = server
+  }
+
+  getTimeline<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppFoodiosFeedGetTimeline.QueryParams,
+      AppFoodiosFeedGetTimeline.HandlerInput,
+      AppFoodiosFeedGetTimeline.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.foodios.feed.getTimeline' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
   }
 }
 
