@@ -1036,6 +1036,7 @@ message GetTimelineRequest {
   bool exclude_replies = 4;
   bool exclude_reposts = 5;
   bool exclude_quotes = 6;
+  string filter = 7;
 }
 
 message GetTimelineResponse {
@@ -1069,6 +1070,33 @@ message GetListFeedRequest {
 message GetListFeedResponse {
   repeated TimelineFeedItem items = 1;
   string cursor = 2;
+}
+
+message GetEverythingFeedRequest {
+  string filter = 1;
+  int32 limit = 2;
+  string cursor = 3;
+}
+
+message GetEverythingFeedResponse {
+  repeated TimelineFeedItem items = 1;
+  string cursor = 2;
+}
+
+message GetRecipesFeedRequest {
+  int32 limit = 1;
+  string cursor = 2;
+}
+
+message GetRecipesFeedResponse {
+  repeated TimelineFeedItem items = 1;
+  string cursor = 2;
+}
+
+// TODO: consider if we want to include reposts/quotes of recipes
+message RecipesFeedItem {
+  string uri = 1;
+  string cid = 2;
 }
 
 //
@@ -1498,6 +1526,8 @@ service Service {
   rpc GetAuthorFeed(GetAuthorFeedRequest) returns (GetAuthorFeedResponse);
   rpc GetTimeline(GetTimelineRequest) returns (GetTimelineResponse);
   rpc GetListFeed(GetListFeedRequest) returns (GetListFeedResponse);
+  rpc GetEverythingFeed(GetEverythingFeedRequest) returns (GetEverythingFeedResponse);
+  rpc GetRecipesFeed(GetRecipesFeedRequest) returns (GetRecipesFeedResponse);
 
   // Threads
   rpc GetThread(GetThreadRequest) returns (GetThreadResponse);

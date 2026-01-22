@@ -7480,6 +7480,11 @@ export class GetTimelineRequest extends Message<GetTimelineRequest> {
    */
   excludeQuotes = false;
 
+  /**
+   * @generated from field: string filter = 7;
+   */
+  filter = "";
+
   constructor(data?: PartialMessage<GetTimelineRequest>) {
     super();
     proto3.util.initPartial(data, this);
@@ -7494,6 +7499,7 @@ export class GetTimelineRequest extends Message<GetTimelineRequest> {
     { no: 4, name: "exclude_replies", kind: "scalar", T: 8 /* ScalarType.BOOL */ },
     { no: 5, name: "exclude_reposts", kind: "scalar", T: 8 /* ScalarType.BOOL */ },
     { no: 6, name: "exclude_quotes", kind: "scalar", T: 8 /* ScalarType.BOOL */ },
+    { no: 7, name: "filter", kind: "scalar", T: 9 /* ScalarType.STRING */ },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): GetTimelineRequest {
@@ -7746,6 +7752,229 @@ export class GetListFeedResponse extends Message<GetListFeedResponse> {
 
   static equals(a: GetListFeedResponse | PlainMessage<GetListFeedResponse> | undefined, b: GetListFeedResponse | PlainMessage<GetListFeedResponse> | undefined): boolean {
     return proto3.util.equals(GetListFeedResponse, a, b);
+  }
+}
+
+/**
+ * @generated from message bsky.GetEverythingFeedRequest
+ */
+export class GetEverythingFeedRequest extends Message<GetEverythingFeedRequest> {
+  /**
+   * @generated from field: string filter = 1;
+   */
+  filter = "";
+
+  /**
+   * @generated from field: int32 limit = 2;
+   */
+  limit = 0;
+
+  /**
+   * @generated from field: string cursor = 3;
+   */
+  cursor = "";
+
+  constructor(data?: PartialMessage<GetEverythingFeedRequest>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "bsky.GetEverythingFeedRequest";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "filter", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: "limit", kind: "scalar", T: 5 /* ScalarType.INT32 */ },
+    { no: 3, name: "cursor", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): GetEverythingFeedRequest {
+    return new GetEverythingFeedRequest().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): GetEverythingFeedRequest {
+    return new GetEverythingFeedRequest().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): GetEverythingFeedRequest {
+    return new GetEverythingFeedRequest().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: GetEverythingFeedRequest | PlainMessage<GetEverythingFeedRequest> | undefined, b: GetEverythingFeedRequest | PlainMessage<GetEverythingFeedRequest> | undefined): boolean {
+    return proto3.util.equals(GetEverythingFeedRequest, a, b);
+  }
+}
+
+/**
+ * @generated from message bsky.GetEverythingFeedResponse
+ */
+export class GetEverythingFeedResponse extends Message<GetEverythingFeedResponse> {
+  /**
+   * @generated from field: repeated bsky.TimelineFeedItem items = 1;
+   */
+  items: TimelineFeedItem[] = [];
+
+  /**
+   * @generated from field: string cursor = 2;
+   */
+  cursor = "";
+
+  constructor(data?: PartialMessage<GetEverythingFeedResponse>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "bsky.GetEverythingFeedResponse";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "items", kind: "message", T: TimelineFeedItem, repeated: true },
+    { no: 2, name: "cursor", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): GetEverythingFeedResponse {
+    return new GetEverythingFeedResponse().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): GetEverythingFeedResponse {
+    return new GetEverythingFeedResponse().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): GetEverythingFeedResponse {
+    return new GetEverythingFeedResponse().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: GetEverythingFeedResponse | PlainMessage<GetEverythingFeedResponse> | undefined, b: GetEverythingFeedResponse | PlainMessage<GetEverythingFeedResponse> | undefined): boolean {
+    return proto3.util.equals(GetEverythingFeedResponse, a, b);
+  }
+}
+
+/**
+ * @generated from message bsky.GetRecipesFeedRequest
+ */
+export class GetRecipesFeedRequest extends Message<GetRecipesFeedRequest> {
+  /**
+   * @generated from field: int32 limit = 1;
+   */
+  limit = 0;
+
+  /**
+   * @generated from field: string cursor = 2;
+   */
+  cursor = "";
+
+  constructor(data?: PartialMessage<GetRecipesFeedRequest>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "bsky.GetRecipesFeedRequest";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "limit", kind: "scalar", T: 5 /* ScalarType.INT32 */ },
+    { no: 2, name: "cursor", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): GetRecipesFeedRequest {
+    return new GetRecipesFeedRequest().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): GetRecipesFeedRequest {
+    return new GetRecipesFeedRequest().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): GetRecipesFeedRequest {
+    return new GetRecipesFeedRequest().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: GetRecipesFeedRequest | PlainMessage<GetRecipesFeedRequest> | undefined, b: GetRecipesFeedRequest | PlainMessage<GetRecipesFeedRequest> | undefined): boolean {
+    return proto3.util.equals(GetRecipesFeedRequest, a, b);
+  }
+}
+
+/**
+ * @generated from message bsky.GetRecipesFeedResponse
+ */
+export class GetRecipesFeedResponse extends Message<GetRecipesFeedResponse> {
+  /**
+   * @generated from field: repeated bsky.TimelineFeedItem items = 1;
+   */
+  items: TimelineFeedItem[] = [];
+
+  /**
+   * @generated from field: string cursor = 2;
+   */
+  cursor = "";
+
+  constructor(data?: PartialMessage<GetRecipesFeedResponse>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "bsky.GetRecipesFeedResponse";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "items", kind: "message", T: TimelineFeedItem, repeated: true },
+    { no: 2, name: "cursor", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): GetRecipesFeedResponse {
+    return new GetRecipesFeedResponse().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): GetRecipesFeedResponse {
+    return new GetRecipesFeedResponse().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): GetRecipesFeedResponse {
+    return new GetRecipesFeedResponse().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: GetRecipesFeedResponse | PlainMessage<GetRecipesFeedResponse> | undefined, b: GetRecipesFeedResponse | PlainMessage<GetRecipesFeedResponse> | undefined): boolean {
+    return proto3.util.equals(GetRecipesFeedResponse, a, b);
+  }
+}
+
+/**
+ * TODO: consider if we want to include reposts/quotes of recipes
+ *
+ * @generated from message bsky.RecipesFeedItem
+ */
+export class RecipesFeedItem extends Message<RecipesFeedItem> {
+  /**
+   * @generated from field: string uri = 1;
+   */
+  uri = "";
+
+  /**
+   * @generated from field: string cid = 2;
+   */
+  cid = "";
+
+  constructor(data?: PartialMessage<RecipesFeedItem>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "bsky.RecipesFeedItem";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "uri", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: "cid", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): RecipesFeedItem {
+    return new RecipesFeedItem().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): RecipesFeedItem {
+    return new RecipesFeedItem().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): RecipesFeedItem {
+    return new RecipesFeedItem().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: RecipesFeedItem | PlainMessage<RecipesFeedItem> | undefined, b: RecipesFeedItem | PlainMessage<RecipesFeedItem> | undefined): boolean {
+    return proto3.util.equals(RecipesFeedItem, a, b);
   }
 }
 

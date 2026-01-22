@@ -107,6 +107,8 @@ import * as AppBskyUnspeccedSearchStarterPacksSkeleton from './types/app/bsky/un
 import * as AppBskyVideoGetJobStatus from './types/app/bsky/video/getJobStatus.js'
 import * as AppBskyVideoGetUploadLimits from './types/app/bsky/video/getUploadLimits.js'
 import * as AppBskyVideoUploadVideo from './types/app/bsky/video/uploadVideo.js'
+import * as AppFoodiosFeedGetEverythingFeed from './types/app/foodios/feed/getEverythingFeed.js'
+import * as AppFoodiosFeedGetFollowingFeed from './types/app/foodios/feed/getFollowingFeed.js'
 import * as ChatBskyActorDeleteAccount from './types/chat/bsky/actor/deleteAccount.js'
 import * as ChatBskyActorExportAccountData from './types/chat/bsky/actor/exportAccountData.js'
 import * as ChatBskyConvoAcceptConvo from './types/chat/bsky/convo/acceptConvo.js'
@@ -1708,6 +1710,30 @@ export class AppFoodiosFeedNS {
 
   constructor(server: Server) {
     this._server = server
+  }
+
+  getEverythingFeed<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppFoodiosFeedGetEverythingFeed.QueryParams,
+      AppFoodiosFeedGetEverythingFeed.HandlerInput,
+      AppFoodiosFeedGetEverythingFeed.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.foodios.feed.getEverythingFeed' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getFollowingFeed<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppFoodiosFeedGetFollowingFeed.QueryParams,
+      AppFoodiosFeedGetFollowingFeed.HandlerInput,
+      AppFoodiosFeedGetFollowingFeed.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.foodios.feed.getFollowingFeed' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
   }
 }
 
