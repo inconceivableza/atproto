@@ -224,7 +224,7 @@ const validateInputsForLocalPds = async (
   let plcOp: plc.Operation | null
   let deactivated = false
   if (input.did) {
-    if (input.did !== requester) {
+    if (input.did !== requester && input.did != requester?.replace('#atproto_labeler', '')) {
       throw new AuthRequiredError(
         `Missing auth to create account with did: ${input.did}`,
       )
