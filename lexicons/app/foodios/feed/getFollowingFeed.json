@@ -1,18 +1,13 @@
 {
   "lexicon": 1,
-  "id": "app.foodios.feed.getTimeline",
+  "id": "app.foodios.feed.getFollowingFeed",
   "defs": {
     "main": {
       "type": "query",
       "description": "Get a view of the requesting account's home timeline. This is expected to be some form of reverse-chronological feed.",
       "parameters": {
         "type": "params",
-        "required": ["id"],
         "properties": {
-          "id": {
-            "type": "string",
-            "description": "Identifier for which timeline should be returned e.g. 'following'"
-          },
           "filter": {
             "type": "string",
             "description": "String indicating filter behaviour e.g. 'recipes'"
