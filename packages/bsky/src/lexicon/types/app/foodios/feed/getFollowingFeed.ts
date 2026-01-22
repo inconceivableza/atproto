@@ -13,11 +13,9 @@ import type * as AppBskyFeedDefs from '../../bsky/feed/defs.js'
 
 const is$typed = _is$typed,
   validate = _validate
-const id = 'app.foodios.feed.getTimeline'
+const id = 'app.foodios.feed.getFollowingFeed'
 
 export type QueryParams = {
-  /** Identifier for which timeline should be returned e.g. 'following' */
-  id: string
   /** String indicating filter behaviour e.g. 'recipes' */
   filter?: string
   limit: number

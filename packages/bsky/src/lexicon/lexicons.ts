@@ -8794,9 +8794,9 @@ export const schemaDict = {
       },
     },
   },
-  AppFoodiosFeedGetTimeline: {
+  AppFoodiosFeedGetEverythingFeed: {
     lexicon: 1,
-    id: 'app.foodios.feed.getTimeline',
+    id: 'app.foodios.feed.getEverythingFeed',
     defs: {
       main: {
         type: 'query',
@@ -8804,13 +8804,55 @@ export const schemaDict = {
           "Get a view of the requesting account's home timeline. This is expected to be some form of reverse-chronological feed.",
         parameters: {
           type: 'params',
-          required: ['id'],
           properties: {
-            id: {
+            filter: {
               type: 'string',
-              description:
-                "Identifier for which timeline should be returned e.g. 'following'",
+              description: "String indicating filter behaviour e.g. 'recipes'",
             },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['feed'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              feed: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.feed.defs#feedViewPost',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  AppFoodiosFeedGetFollowingFeed: {
+    lexicon: 1,
+    id: 'app.foodios.feed.getFollowingFeed',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          "Get a view of the requesting account's home timeline. This is expected to be some form of reverse-chronological feed.",
+        parameters: {
+          type: 'params',
+          properties: {
             filter: {
               type: 'string',
               description: "String indicating filter behaviour e.g. 'recipes'",
@@ -15746,7 +15788,8 @@ export const ids = {
   AppBskyVideoGetUploadLimits: 'app.bsky.video.getUploadLimits',
   AppBskyVideoUploadVideo: 'app.bsky.video.uploadVideo',
   AppFoodiosFeedDefs: 'app.foodios.feed.defs',
-  AppFoodiosFeedGetTimeline: 'app.foodios.feed.getTimeline',
+  AppFoodiosFeedGetEverythingFeed: 'app.foodios.feed.getEverythingFeed',
+  AppFoodiosFeedGetFollowingFeed: 'app.foodios.feed.getFollowingFeed',
   AppFoodiosFeedRecipePost: 'app.foodios.feed.recipePost',
   AppFoodiosFeedRecipeRevision: 'app.foodios.feed.recipeRevision',
   AppFoodiosFeedReviewRating: 'app.foodios.feed.reviewRating',

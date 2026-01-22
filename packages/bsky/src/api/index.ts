@@ -32,7 +32,8 @@ import getQuotes from './app/bsky/feed/getQuotes'
 import getRepostedBy from './app/bsky/feed/getRepostedBy'
 import getSuggestedFeeds from './app/bsky/feed/getSuggestedFeeds'
 import searchPosts from './app/bsky/feed/searchPosts'
-import getTimeline from './app/foodios/feed/getTimeline'
+import getEverythingFeed from './app/foodios/feed/getEverythingFeed'
+import getFollowingFeed from './app/foodios/feed/getFollowingFeed'
 import getActorStarterPacks from './app/bsky/graph/getActorStarterPacks'
 import getBlocks from './app/bsky/graph/getBlocks'
 import getFollowers from './app/bsky/graph/getFollowers'
@@ -97,7 +98,8 @@ export * as external from './external'
 
 export default function (server: Server, ctx: AppContext) {
   // app.foodios
-  getTimeline(server, ctx)
+  getFollowingFeed(server, ctx)
+  getEverythingFeed(server, ctx)
   // app.bsky
   createBookmark(server, ctx)
   deleteBookmark(server, ctx)
