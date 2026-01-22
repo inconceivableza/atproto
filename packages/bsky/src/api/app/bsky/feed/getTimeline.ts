@@ -13,7 +13,7 @@ import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/getTimeline
 import { createPipeline } from '../../../../pipeline'
 import { Views } from '../../../../views'
 import { clearlyBadCursor, resHeaders } from '../../../util'
-// TODO: this would be identical for everything feed apart from dataplane call
+
 export default function (server: Server, ctx: AppContext) {
   const getTimeline = createPipeline(
     skeleton,
