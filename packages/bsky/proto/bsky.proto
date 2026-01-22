@@ -1036,6 +1036,7 @@ message GetTimelineRequest {
   bool exclude_replies = 4;
   bool exclude_reposts = 5;
   bool exclude_quotes = 6;
+  string filter = 7;
 }
 
 message GetTimelineResponse {
@@ -1072,8 +1073,9 @@ message GetListFeedResponse {
 }
 
 message GetEverythingFeedRequest {
-  int32 limit = 1;
-  string cursor = 2;
+  string filter = 1;
+  int32 limit = 2;
+  string cursor = 3;
 }
 
 message GetEverythingFeedResponse {

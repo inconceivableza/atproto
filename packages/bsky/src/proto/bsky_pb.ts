@@ -7480,6 +7480,11 @@ export class GetTimelineRequest extends Message<GetTimelineRequest> {
    */
   excludeQuotes = false;
 
+  /**
+   * @generated from field: string filter = 7;
+   */
+  filter = "";
+
   constructor(data?: PartialMessage<GetTimelineRequest>) {
     super();
     proto3.util.initPartial(data, this);
@@ -7494,6 +7499,7 @@ export class GetTimelineRequest extends Message<GetTimelineRequest> {
     { no: 4, name: "exclude_replies", kind: "scalar", T: 8 /* ScalarType.BOOL */ },
     { no: 5, name: "exclude_reposts", kind: "scalar", T: 8 /* ScalarType.BOOL */ },
     { no: 6, name: "exclude_quotes", kind: "scalar", T: 8 /* ScalarType.BOOL */ },
+    { no: 7, name: "filter", kind: "scalar", T: 9 /* ScalarType.STRING */ },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): GetTimelineRequest {
@@ -7754,12 +7760,17 @@ export class GetListFeedResponse extends Message<GetListFeedResponse> {
  */
 export class GetEverythingFeedRequest extends Message<GetEverythingFeedRequest> {
   /**
-   * @generated from field: int32 limit = 1;
+   * @generated from field: string filter = 1;
+   */
+  filter = "";
+
+  /**
+   * @generated from field: int32 limit = 2;
    */
   limit = 0;
 
   /**
-   * @generated from field: string cursor = 2;
+   * @generated from field: string cursor = 3;
    */
   cursor = "";
 
@@ -7771,8 +7782,9 @@ export class GetEverythingFeedRequest extends Message<GetEverythingFeedRequest> 
   static readonly runtime: typeof proto3 = proto3;
   static readonly typeName = "bsky.GetEverythingFeedRequest";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
-    { no: 1, name: "limit", kind: "scalar", T: 5 /* ScalarType.INT32 */ },
-    { no: 2, name: "cursor", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 1, name: "filter", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: "limit", kind: "scalar", T: 5 /* ScalarType.INT32 */ },
+    { no: 3, name: "cursor", kind: "scalar", T: 9 /* ScalarType.STRING */ },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): GetEverythingFeedRequest {
