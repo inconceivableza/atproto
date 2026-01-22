@@ -3,9 +3,10 @@ import { Service } from '../../../proto/bsky_connect'
 import { AuthorFeedItem, FeedItemType, FeedType } from '../../../proto/bsky_pb'
 import { Database } from '../db'
 import { TimeCidKeyset, paginate } from '../db/pagination'
-import { Selectable } from 'kysely'
+import { Selectable, SelectQueryBuilder } from 'kysely'
 import { DatabaseSchemaType } from '../db/database-schema'
 import { PartialMessage } from '@bufbuild/protobuf'
+import z from "zod"
 
 export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
   async getAuthorFeed(req) {
@@ -77,8 +78,6 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
 
     const feedItems = await builder.execute()
 
-    console.log("*** feedSkeleton", feedItems.length)
-
     return {
       items: feedItems.map(feedItemFromRow),
       cursor: keyset.packFromResult(feedItems),
@@ -86,7 +85,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
   },
 
   async getTimeline(req) {
-    const { actorDid, limit, cursor } = req
+    const { actorDid, limit, cursor, filter } = req
     const { ref } = db.db.dynamic
 
     const keyset = new TimeCidKeyset(
@@ -94,11 +93,12 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       ref('feed_item.cid'),
     )
 
-    let followQb = db.db
+    let followQb = addPostTypeFilter(filter, db.db
       .selectFrom('feed_item')
       .innerJoin('follow', 'follow.subjectDid', 'feed_item.originatorDid')
       .where('follow.creator', '=', actorDid)
       .selectAll('feed_item')
+    )
 
     followQb = paginate(followQb, {
       limit,
@@ -107,10 +107,11 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       tryIndex: true,
     })
 
-    let selfQb = db.db
+    let selfQb = addPostTypeFilter(filter, db.db
       .selectFrom('feed_item')
       .where('feed_item.originatorDid', '=', actorDid)
       .selectAll('feed_item')
+    )
 
     selfQb = paginate(selfQb, {
       limit: Math.min(limit, 10),
@@ -139,6 +140,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
   },
 
   async getListFeed(req) {
+    // TODO add recipes
     const { listUri, cursor, limit } = req
     const { ref } = db.db.dynamic
 
@@ -164,7 +166,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
   },
 
   async getEverythingFeed(req) {
-    const { cursor, limit } = req
+    const { cursor, limit, filter } = req
     const { ref } = db.db.dynamic
 
     const keyset = new TimeCidKeyset(
@@ -172,15 +174,18 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       ref('feed_item.cid'),
     )
 
-    let feedQb = paginate(db.db
+    const builder = addPostTypeFilter(filter, db.db
       .selectFrom('feed_item')
-      .selectAll('feed_item'), {
+      .selectAll('feed_item')
+    )
+
+    const feedQb = paginate(builder, {
       limit,
       cursor,
       keyset,
       tryIndex: true
-    }
-    )
+    })
+
     const feedItems = await feedQb.execute()
 
     return {
@@ -240,4 +245,21 @@ function feedItemType(value: string): FeedItemType {
   return FeedItemType.UNSPECIFIED
 }
 
+const filterSchema = z.enum(["all", "post", "recipe", "review"])
 
+function addPostTypeFilter<O>(filter: string, qb: SelectQueryBuilder<DatabaseSchemaType, "feed_item", O>) {
+  const parsedFilter = filterSchema.safeParse(filter)
+  if (parsedFilter.error || parsedFilter.data === "all") {
+    return qb
+  }
+  return qb.innerJoin("feed_item as subject", "feed_item.postUri", "subject.uri")
+    .where(eb =>
+      //@ts-ignore lambda expression isn't aware of above type refinement (filtering out "all")                                                                                                                           
+      eb.where("feed_item.type", "=", parsedFilter.data)
+        .orWhere(eb2 =>
+          eb2.where("feed_item.type", "=", "repost")
+            //@ts-ignore                                                                                       
+            .where("subject.type", "=", parsedFilter.data)
+        )
+    )
+}

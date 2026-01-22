@@ -275,8 +275,11 @@ export class Agent extends XrpcClient {
 
   //#region "app.bsky" lexicon short hand methods
 
-  getTimeline: typeof this.app.foodios.feed.getTimeline = (params, opts) =>
-    this.app.foodios.feed.getTimeline(params, opts)
+  getEverythingFeed: typeof this.app.foodios.feed.getEverythingFeed = (params, opts) =>
+    this.app.foodios.feed.getEverythingFeed(params, opts)
+
+  getFollowingFeed: typeof this.app.foodios.feed.getFollowingFeed = (params, opts) =>
+    this.app.foodios.feed.getFollowingFeed(params, opts)
 
   getAuthorFeed: typeof this.app.bsky.feed.getAuthorFeed = (params, opts) =>
     this.app.bsky.feed.getAuthorFeed(params, opts)
@@ -660,7 +663,6 @@ export class Agent extends XrpcClient {
           )
       } else if (predicate.isValidSavedFeedsPrefV2(pref)) {
         prefs.savedFeeds = pref.items
-        // potentially insert here
       } else if (predicate.isValidSavedFeedsPref(pref)) {
         // saved and pinned feeds
         prefs.feeds.saved = pref.saved
