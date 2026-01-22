@@ -87,6 +87,7 @@ import resolveHandle from './com/atproto/identity/resolveHandle'
 import queryLabels from './com/atproto/label/queryLabels'
 import getRecord from './com/atproto/repo/getRecord'
 import fetchLabels from './com/atproto/temp/fetchLabels'
+import getTimeline from './app/bsky/feed/getTimeline'
 
 export * as health from './health'
 
@@ -101,6 +102,7 @@ export default function (server: Server, ctx: AppContext) {
   getFollowingFeed(server, ctx)
   getEverythingFeed(server, ctx)
   // app.bsky
+  getTimeline(server, ctx) // Deprecated
   createBookmark(server, ctx)
   deleteBookmark(server, ctx)
   getBookmarks(server, ctx)
