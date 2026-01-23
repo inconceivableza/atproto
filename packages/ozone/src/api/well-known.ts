@@ -45,7 +45,7 @@ export const createRouter = (ctx: AppContext): Router => {
         },
       ] : []),
       ...(ctx.cfg.service.did == `did:web:${hostname}` ? {
-        alsoKnownAs: [`at://${ctx.cfg.service.did}`]
+        alsoKnownAs: [`at://${hostname}`]
       } : {})
     })
   })
