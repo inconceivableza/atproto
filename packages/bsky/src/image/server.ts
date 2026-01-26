@@ -29,8 +29,7 @@ export function createMiddleware(
     throw new TypeError('Prefix must start and end with a slash')
   }
 
-  // If there is a CDN, we don't need to serve images
-  if (ctx.cfg.cdnUrl) {
+  if (ctx.cfg.cdnUrl && !ctx.cfg.serveImages) {
     return (req, res, next) => next()
   }
 

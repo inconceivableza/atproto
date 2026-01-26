@@ -306,6 +306,11 @@ if (postMod.ui('contentMedia').blur) {
 
 ## Advanced
 
+### Non-standard Moderators
+
+If your atproto setup uses a appview-level moderator different from the standard bsky one,
+set the environment variable `BSKY_LABELER_DID` to the did of this moderator and the api agent will use it instead.
+
 ### Advanced API calls
 
 The methods above are convenience wrappers. It covers most but not all available methods.
