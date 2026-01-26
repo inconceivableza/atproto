@@ -23,7 +23,7 @@
     "extra_headers_for_owner_dids": [],
     "known_shutdown_feeds": [],
     "authed_only": [],
-    "fallback_to": "timeline"
+    "fallback_to": "following"
   },
   "links": {
     "about": "https://ghost.foodios.social",
