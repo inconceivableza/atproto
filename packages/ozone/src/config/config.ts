@@ -44,6 +44,7 @@ export const envToCfg = (env: OzoneEnvironment): OzoneConfig => {
     pdsCfg = {
       url: env.pdsUrl,
       did: env.pdsDid,
+      ozoneAccountPublicKey: env.pdsOzoneAccountPublicKey
     }
   }
 
@@ -152,6 +153,7 @@ export type AppviewConfig = {
 export type PdsConfig = {
   url: string
   did: string
+  ozoneAccountPublicKey: string | undefined
 }
 
 export type ChatConfig = {
