@@ -29,10 +29,9 @@ export function createMiddleware(
     throw new TypeError('Prefix must start and end with a slash')
   }
 
-  // Even if there is a CDN, still serve images for the CDN to cache
-  /* if (ctx.cfg.cdnUrl) {
+  if (ctx.cfg.cdnUrl && !ctx.cfg.serveImages) {
     return (req, res, next) => next()
-  } */
+  }
 
   const cache = new BlobDiskCache(ctx.cfg.blobCacheLocation)
 

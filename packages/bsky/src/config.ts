@@ -1,4 +1,5 @@
 import assert from 'node:assert'
+import { envBool } from '@atproto/common'
 import { subLogger as log } from './logger'
 
 type LiveNowConfig = {
@@ -66,6 +67,7 @@ export interface ServerConfigValues {
   topicsUrl?: string
   topicsApiKey?: string
   cdnUrl?: string
+  serveImages?: boolean
   videoPlaylistUrlPattern?: string
   videoThumbnailUrlPattern?: string
   blobRateLimitBypassKey?: string
@@ -142,6 +144,7 @@ export class ServerConfig {
       process.env.BSKY_HANDLE_RESOLVE_NAMESERVERS,
     )
     const cdnUrl = process.env.BSKY_CDN_URL || process.env.BSKY_IMG_URI_ENDPOINT
+    const serveImages = Boolean(cdnUrl) || envBool('BSKY_SERVE_IMG_URIS')
     const etcdHosts =
       overrides?.etcdHosts ?? envList(process.env.BSKY_ETCD_HOSTS)
     // e.g. https://video.invalid/watch/%s/%s/playlist.m3u8
@@ -346,6 +349,7 @@ export class ServerConfig {
       labelsFromIssuerDids,
       handleResolveNameservers,
       cdnUrl,
+      serveImages,
       videoPlaylistUrlPattern,
       videoThumbnailUrlPattern,
       blobCacheLocation,
@@ -523,6 +527,10 @@ export class ServerConfig {
 
   get cdnUrl() {
     return this.cfg.cdnUrl
+  }
+
+  get serveImages() {
+    return this.cfg.serveImages
   }
 
   get videoPlaylistUrlPattern() {
