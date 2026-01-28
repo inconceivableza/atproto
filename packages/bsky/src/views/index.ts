@@ -1003,8 +1003,8 @@ export class Views {
       author,
       record: review.record as any,
       embed:
-        depth < 2 && review.record.images
-          ? this.embed(uri, review.record.images as any, state, depth + 1)
+        depth < 2 && review.record.embed
+          ? this.embed(uri, review.record.embed, state, depth + 1)
           : undefined,
       replyCount: aggs?.replies ?? 0,
       repostCount: aggs?.reposts ?? 0,
