@@ -195,29 +195,20 @@ function baseAuthorFeedQuery(db: Database, req: GetAuthorFeedRequest) {
           )
         )
     case FeedType.POSTS_WITH_MEDIA:
-      // TODO: recipes
       return builder
-        // only your own posts
-        .where('type', '=', 'post')
-        // only posts with media
-        .whereExists((qb) =>
+        .where('feed_item.postUri', 'in', (qb) =>
           qb
             .selectFrom('post_embed_image')
             .select('post_embed_image.postUri')
-            .whereRef('post_embed_image.postUri', '=', 'feed_item.postUri'),
+            .union(
+              qb
+                .selectFrom('post_embed_video')
+                .select('post_embed_video.postUri')
+            )
         )
+
     case FeedType.POSTS_WITH_VIDEO:
-      return builder
-        // TODO: recipes
-        // only your own posts
-        .where('type', '=', 'post')
-        // only posts with video
-        .whereExists((qb) =>
-          qb
-            .selectFrom('post_embed_video')
-            .select('post_embed_video.postUri')
-            .whereRef('post_embed_video.postUri', '=', 'feed_item.postUri'),
-        )
+      return builder.innerJoin("post_embed_video", "post_embed_video.postUri", "feed_item.postUri")
     case FeedType.UNSPECIFIED:
     case FeedType.ALL:
       return builder
