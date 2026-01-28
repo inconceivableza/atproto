@@ -9,6 +9,9 @@ import { DatabaseSchema, DatabaseSchemaType } from '../../db/database-schema'
 import { Notification } from '../../db/tables/notification'
 import { excluded } from '../../db/util'
 import { RecordProcessor } from '../processor'
+import { separateEmbeds } from '../util'
+import { isMain as isEmbedImage } from '../../../../lexicon/types/app/bsky/embed/images'
+import { isMain as isEmbedVideo } from '../../../../lexicon/types/app/bsky/embed/video'
 
 const lexId = lex.ids.AppFoodiosFeedReviewRating
 
@@ -52,6 +55,30 @@ const insertFn = async (
       inserted.indexedAt < inserted.createdAt ? inserted.indexedAt : inserted.createdAt,
   }).onConflict((oc) => oc.doNothing())
     .execute()
+
+  const postEmbeds = separateEmbeds(obj.embed)
+  for (const postEmbed of postEmbeds) {
+    if (isEmbedImage(postEmbed)) {
+      const { images } = postEmbed
+      const imagesEmbed = images.map((img, i) => ({
+        postUri: uri.toString(),
+        position: i,
+        imageCid: img.image.ref.toString(),
+        alt: img.alt,
+      }))
+      // TODO: potentially delete if revised without image
+      await db.insertInto('post_embed_image').values(imagesEmbed).execute()
+    } else if (isEmbedVideo(postEmbed)) {
+      const { video } = postEmbed
+      const videoEmbed = {
+        postUri: uri.toString(),
+        videoCid: video.ref.toString(),
+        // @NOTE: alt is required for image but not for video on the lexicon.
+        alt: postEmbed.alt ?? null,
+      }
+      await db.insertInto('post_embed_video').values(videoEmbed).execute()
+    }
+  }
   return inserted || null
 }
 
@@ -107,6 +134,17 @@ const deleteFn = async (
   await db.deleteFrom("feed_item")
     .where("postUri", "=", uri.toString())
     .execute()
+
+  await Promise.all([
+    db
+      .deleteFrom('post_embed_image')
+      .where('postUri', '=', uri.toString())
+      .execute(),
+    db
+      .deleteFrom('post_embed_video')
+      .where('postUri', '=', uri.toString())
+      .executeTakeFirst(),
+  ])
 
   // TODO: update aggregates
 

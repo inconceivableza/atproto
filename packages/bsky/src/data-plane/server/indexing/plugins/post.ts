@@ -6,7 +6,6 @@ import * as lex from '../../../../lexicon/lexicons'
 import { isMain as isEmbedExternal } from '../../../../lexicon/types/app/bsky/embed/external'
 import { isMain as isEmbedImage } from '../../../../lexicon/types/app/bsky/embed/images'
 import { isMain as isEmbedRecord } from '../../../../lexicon/types/app/bsky/embed/record'
-import { isMain as isEmbedRecordWithMedia } from '../../../../lexicon/types/app/bsky/embed/recordWithMedia'
 import { isMain as isEmbedVideo } from '../../../../lexicon/types/app/bsky/embed/video'
 import {
   Record as PostRecord,
@@ -18,7 +17,6 @@ import {
   isLink,
   isMention,
 } from '../../../../lexicon/types/app/bsky/richtext/facet'
-import { $Typed } from '../../../../lexicon/util'
 import {
   postUriToPostgateUri,
   postUriToThreadgateUri,
@@ -39,6 +37,7 @@ import {
 } from '../../util'
 import { RecordProcessor } from '../processor'
 import { stripSearchParams } from '@atproto/api'
+import { separateEmbeds } from '../util'
 
 type Notif = Insertable<Notification>
 type Post = Selectable<DatabaseSchemaType['post']>
@@ -532,21 +531,7 @@ export const makePlugin = (
 
 export default makePlugin
 
-function separateEmbeds(
-  embed: PostRecord['embed'],
-): Array<
-  | RecordWithMedia['media']
-  | $Typed<RecordWithMedia['record']>
-  | NonNullable<PostRecord['embed']>
-> {
-  if (!embed) {
-    return []
-  }
-  if (isEmbedRecordWithMedia(embed)) {
-    return [{ $type: lex.ids.AppBskyEmbedRecord, ...embed.record }, embed.media]
-  }
-  return [embed]
-}
+
 
 async function validateReply(
   db: DatabaseSchema,
