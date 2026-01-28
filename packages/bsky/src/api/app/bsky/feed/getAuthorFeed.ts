@@ -61,6 +61,9 @@ const FILTER_TO_FEED_TYPE = {
   posts_with_media: FeedType.POSTS_WITH_MEDIA,
   posts_and_author_threads: FeedType.POSTS_AND_AUTHOR_THREADS,
   posts_with_video: FeedType.POSTS_WITH_VIDEO,
+  recipes: FeedType.RECIPES,
+  reviews: FeedType.REVIEWS,
+  all: FeedType.ALL
 }
 
 export const skeleton = async (inputs: {

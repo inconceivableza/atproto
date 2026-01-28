@@ -1,6 +1,6 @@
 import { ServiceImpl } from '@connectrpc/connect'
 import { Service } from '../../../proto/bsky_connect'
-import { AuthorFeedItem, FeedItemType, FeedType } from '../../../proto/bsky_pb'
+import { AuthorFeedItem, FeedItemType, FeedType, GetAuthorFeedRequest } from '../../../proto/bsky_pb'
 import { Database } from '../db'
 import { TimeCidKeyset, paginate } from '../db/pagination'
 import { Selectable, SelectQueryBuilder } from 'kysely'
@@ -10,61 +10,9 @@ import z from "zod"
 
 export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
   async getAuthorFeed(req) {
-    const { actorDid, limit, cursor, feedType } = req
     const { ref } = db.db.dynamic
-    // defaults to posts, reposts, and replies
-    let builder = db.db
-      .selectFrom('feed_item')
-      .leftJoin('post', 'post.uri', 'feed_item.postUri')
-      .leftJoin('recipe_post', 'recipe_post.uri', 'feed_item.postUri')
-      .leftJoin('review_rating', 'review_rating.uri', 'feed_item.postUri')
-      .selectAll('feed_item')
-      .where('originatorDid', '=', actorDid)
-
-    if (feedType === FeedType.POSTS_WITH_MEDIA) {
-      builder = builder
-        // only your own posts
-        .where('type', '=', 'post')
-        // only posts with media
-        .whereExists((qb) =>
-          qb
-            .selectFrom('post_embed_image')
-            .select('post_embed_image.postUri')
-            .whereRef('post_embed_image.postUri', '=', 'feed_item.postUri'),
-        )
-    } else if (feedType === FeedType.POSTS_WITH_VIDEO) {
-      builder = builder
-        // only your own posts
-        .where('type', '=', 'post')
-        // only posts with video
-        .whereExists((qb) =>
-          qb
-            .selectFrom('post_embed_video')
-            .select('post_embed_video.postUri')
-            .whereRef('post_embed_video.postUri', '=', 'feed_item.postUri'),
-        )
-    } else if (feedType === FeedType.POSTS_NO_REPLIES) {
-      builder = builder.where((qb) =>
-        qb
-          .where('feed_item.type', "!=", 'review')
-          .where(eb => eb.where('post.replyParent', 'is', null)
-            .orWhere('type', '=', 'repost')
-          )
-      )
-    } else if (feedType === FeedType.POSTS_AND_AUTHOR_THREADS) {
-      builder = builder.where((qb) =>
-        qb
-          .where(eb => eb.where('feed_item.type', "!=", 'review')
-            .orWhere('review_rating.subject', 'like', `at://${actorDid}/%`)
-          )
-          // Bracket the conditions related to posts as the corresponding columns will
-          // always be null resulting in false positives
-          .where(eb => eb.where('type', '=', 'repost')
-            .orWhere('post.replyParent', 'is', null)
-            .orWhere('post.replyRoot', 'like', `at://${actorDid}/%`)
-        )
-      )
-    }
+    const { limit, cursor } = req
+    let builder = baseAuthorFeedQuery(db, req)
 
     const keyset = new TimeCidKeyset(
       ref('feed_item.sortAt'),
@@ -220,6 +168,69 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
     }
   }
 })
+
+function baseAuthorFeedQuery(db: Database, req: GetAuthorFeedRequest) {
+  const { actorDid, feedType } = req
+  let builder = db.db
+    .selectFrom('feed_item')
+    .selectAll('feed_item')
+    .where('originatorDid', '=', actorDid)
+  // defaults to posts, reposts, and replies
+  switch (feedType) {
+    case FeedType.POSTS_AND_AUTHOR_THREADS:
+      return builder
+        .innerJoin('post', 'post.uri', 'feed_item.postUri')
+        .where((qb) =>
+          qb
+            .where('type', "=", 'repost')//.where("postUri", "ilike", `at://%/${ids.AppBskyFeedPost}/%`))
+            .orWhere('post.replyParent', 'is', null)
+            .orWhere('post.replyRoot', 'like', `at://${actorDid}/%`)
+        )
+    case FeedType.POSTS_NO_REPLIES:
+      return builder
+        .innerJoin('post', 'post.uri', 'feed_item.postUri')
+        .where((qb) =>
+          qb.where(eb => eb.where('post.replyParent', 'is', null)
+            .orWhere('type', '=', 'repost')
+          )
+        )
+    case FeedType.POSTS_WITH_MEDIA:
+      // TODO: recipes
+      return builder
+        // only your own posts
+        .where('type', '=', 'post')
+        // only posts with media
+        .whereExists((qb) =>
+          qb
+            .selectFrom('post_embed_image')
+            .select('post_embed_image.postUri')
+            .whereRef('post_embed_image.postUri', '=', 'feed_item.postUri'),
+        )
+    case FeedType.POSTS_WITH_VIDEO:
+      return builder
+        // TODO: recipes
+        // only your own posts
+        .where('type', '=', 'post')
+        // only posts with video
+        .whereExists((qb) =>
+          qb
+            .selectFrom('post_embed_video')
+            .select('post_embed_video.postUri')
+            .whereRef('post_embed_video.postUri', '=', 'feed_item.postUri'),
+        )
+    case FeedType.UNSPECIFIED:
+    case FeedType.ALL:
+      return builder
+    case FeedType.RECIPES:
+      // Will include reposts of recipes
+      return builder
+        .innerJoin("recipe_post", "recipe_post.uri", "postUri")
+    case FeedType.REVIEWS:
+      // Will include reposts of reviews
+      return builder
+        .innerJoin("review_rating", "review_rating.uri", "postUri")
+  }
+}
 
 // @NOTE does not support additional fields in the protos specific to author feeds
 // and timelines. at the time of writing, hydration/view implementations do not rely on them.
