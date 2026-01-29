@@ -16,7 +16,7 @@ import {
   Notification,
   RecordRef,
 } from '../proto/bsky_pb'
-import { ParsedLabelers, getURICollection, isRecipeURI } from '../util'
+import { ParsedLabelers, getURICollection, isRecipeURI, isReviewRatingURI } from '../util'
 import { uriToDid, uriToDid as didFromUri } from '../util/uris'
 import {
   ActivitySubscriptionStates,
@@ -713,6 +713,10 @@ export class Hydrator {
       } else if (item.itemType === FeedItemType.REPOST) {
         if (isRecipeURI(item.post.uri)) {
           recipeUris.push(item.post.uri)
+        } else if (isReviewRatingURI(item.post.uri)) {
+          reviewRatingUris.push(item.post.uri)
+        } else {
+          otherItems.push(item)
         }
       } else {
         otherItems.push(item)

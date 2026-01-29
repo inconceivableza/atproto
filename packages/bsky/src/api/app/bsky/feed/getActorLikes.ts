@@ -16,6 +16,8 @@ import { uriToDid as creatorFromUri } from '../../../../util/uris'
 import { Views } from '../../../../views'
 import { clearlyBadCursor, resHeaders } from '../../../util'
 import { FeedItemType } from '../../../../proto/bsky_pb'
+import { AtUri } from '@atproto/syntax'
+import { ids } from '../../../../lexicon/lexicons'
 
 export default function (server: Server, ctx: AppContext) {
   const getActorLikes = createPipeline(
@@ -69,7 +71,15 @@ const skeleton = async (inputs: {
   })
 
   // TODO: fix item type
-  const items: FeedItem[] = likesRes.likes.map((l) => ({ post: { uri: l.subject, }, itemType: FeedItemType.POST }))
+  const items: FeedItem[] = likesRes.likes.map((l) => {
+    const subjectUri = new AtUri(l.subject)
+    return {
+      post: { uri: l.subject, },
+      itemType: subjectUri.collection === ids.AppFoodiosFeedRecipePost ? FeedItemType.RECIPE :
+        subjectUri.collection === ids.AppFoodiosFeedReviewRating ? FeedItemType.REVIEW_RATING :
+          FeedItemType.POST
+    }
+  })
 
   return {
     items,

@@ -86,6 +86,21 @@ export enum FeedType {
    * @generated from enum value: FEED_TYPE_POSTS_WITH_VIDEO = 4;
    */
   POSTS_WITH_VIDEO = 4,
+
+  /**
+   * @generated from enum value: FEED_TYPE_ALL = 5;
+   */
+  ALL = 5,
+
+  /**
+   * @generated from enum value: FEED_TYPE_RECIPES = 6;
+   */
+  RECIPES = 6,
+
+  /**
+   * @generated from enum value: FEED_TYPE_REVIEWS = 7;
+   */
+  REVIEWS = 7,
 }
 // Retrieve enum metadata with: proto3.getEnumType(FeedType)
 proto3.util.setEnumType(FeedType, "bsky.FeedType", [
@@ -94,6 +109,9 @@ proto3.util.setEnumType(FeedType, "bsky.FeedType", [
   { no: 2, name: "FEED_TYPE_POSTS_NO_REPLIES" },
   { no: 3, name: "FEED_TYPE_POSTS_WITH_MEDIA" },
   { no: 4, name: "FEED_TYPE_POSTS_WITH_VIDEO" },
+  { no: 5, name: "FEED_TYPE_ALL" },
+  { no: 6, name: "FEED_TYPE_RECIPES" },
+  { no: 7, name: "FEED_TYPE_REVIEWS" },
 ]);
 
 /**

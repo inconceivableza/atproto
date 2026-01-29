@@ -8,6 +8,9 @@ import { Selectable } from 'kysely'
 import { BackgroundQueue } from '../../background'
 import * as lex from '../../../../lexicon/lexicons'
 import { normalizeDatetimeAlways } from '@atproto/syntax'
+import { separateEmbeds } from '../util'
+import { isMain as isEmbedImage } from '../../../../lexicon/types/app/bsky/embed/images'
+import { isMain as isEmbedVideo } from '../../../../lexicon/types/app/bsky/embed/video'
 
 type RecipeRevision = Selectable<DatabaseSchemaType['recipe_revision']>
 
@@ -34,6 +37,10 @@ const insertFn: Params["insertFn"] = async (db, uri, cid, obj, timestamp) => {
         .returningAll()
         .executeTakeFirst()
 
+    if (!recipeRevision) {
+        return null
+    }
+
     // TODO: check the timestamp of current head before replacing it
     await db.insertInto("recipe_head_revision").values({
         recipePostUri: obj.recipePostRef.uri,
@@ -44,12 +51,44 @@ const insertFn: Params["insertFn"] = async (db, uri, cid, obj, timestamp) => {
             .doUpdateSet({ recipeRevisionUri: uri.toString() })
     ).execute()
 
-    if (!recipeRevision) {
-        return null
+    // Clear the embed metadata (useful for if this is an edit)
+    const recipePostUri = obj.recipePostRef.uri
+    await Promise.all([
+        db
+            .deleteFrom('post_embed_image')
+            .where('postUri', '=', recipePostUri)
+            .execute(),
+        db
+            .deleteFrom('post_embed_video')
+            .where('postUri', '=', recipePostUri)
+            .executeTakeFirst(),
+    ])
+
+    const postEmbeds = separateEmbeds(obj.embed)
+    for (const postEmbed of postEmbeds) {
+        if (isEmbedImage(postEmbed)) {
+            const { images } = postEmbed
+            const imagesEmbed = images.map((img, i) => ({
+                postUri: recipePostUri,
+                position: i,
+                imageCid: img.image.ref.toString(),
+                alt: img.alt,
+            }))
+            await db.insertInto('post_embed_image').values(imagesEmbed).execute()
+        } else if (isEmbedVideo(postEmbed)) {
+            const { video } = postEmbed
+            const videoEmbed = {
+                postUri: recipePostUri,
+                videoCid: video.ref.toString(),
+                // @NOTE: alt is required for image but not for video on the lexicon.
+                alt: postEmbed.alt ?? null,
+            }
+            await db.insertInto('post_embed_video').values(videoEmbed).execute()
+        }
     }
 
     return {
-        recipeRevision
+        recipeRevision,
     }
 
 
@@ -65,8 +104,6 @@ export const makePlugin = (
         // TODO: Determine whether we want this to work (posts table does the same thing)
         findDuplicate: async () => null,
         deleteFn: async (db, uri) => {
-
-
             const recipeRevision = await db.deleteFrom("recipe_revision")
                 .where("uri", "=", uri.toString())
                 .returningAll()

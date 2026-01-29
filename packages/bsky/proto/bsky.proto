@@ -987,6 +987,9 @@ enum FeedType {
   FEED_TYPE_POSTS_NO_REPLIES = 2;
   FEED_TYPE_POSTS_WITH_MEDIA = 3;
   FEED_TYPE_POSTS_WITH_VIDEO = 4;
+  FEED_TYPE_ALL = 5;
+  FEED_TYPE_RECIPES = 6;
+  FEED_TYPE_REVIEWS = 7;
 }
 
 // - Returns recent posts authored by a given DID, paginated
