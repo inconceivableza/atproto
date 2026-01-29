@@ -88,17 +88,16 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
   },
 
   async getListFeed(req) {
-    // TODO add recipes
     const { listUri, cursor, limit } = req
     const { ref } = db.db.dynamic
 
     let builder = db.db
-      .selectFrom('post')
-      .selectAll('post')
-      .innerJoin('list_item', 'list_item.subjectDid', 'post.creator')
+      .selectFrom('feed_item')
+      .selectAll('feed_item')
+      .innerJoin('list_item', 'list_item.subjectDid', 'feed_item.originatorDid')
       .where('list_item.listUri', '=', listUri)
 
-    const keyset = new TimeCidKeyset(ref('post.sortAt'), ref('post.cid'))
+    const keyset = new TimeCidKeyset(ref('feed_item.sortAt'), ref('feed_item.cid'))
     builder = paginate(builder, {
       limit,
       cursor,
@@ -108,7 +107,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
     const feedItems = await builder.execute()
 
     return {
-      items: feedItems.map((item) => ({ uri: item.uri, cid: item.cid })),
+      items: feedItems.map(feedItemFromRow),
       cursor: keyset.packFromResult(feedItems),
     }
   },
