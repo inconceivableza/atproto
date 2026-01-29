@@ -80,9 +80,56 @@ await service.start()
 - `app.bsky.video.getJobStatus` - Get the status of a video processing job
 - `app.bsky.video.getUploadLimits` - Get current upload limits for a user
 
+## Authentication
+
+The video service uses **service JWT authentication** following ATProto standards.
+
+### Client Flow
+
+1. **Request Service Auth Token** from PDS:
+   ```typescript
+   const { data } = await agent.com.atproto.server.getServiceAuth({
+     aud: 'did:web:video.example.com', // Video service DID
+     lxm: 'app.bsky.video.uploadVideo', // Method being called
+   })
+   const token = data.token
+   ```
+
+2. **Make Request** with Bearer token:
+   ```typescript
+   const response = await fetch('https://video.example.com/xrpc/app.bsky.video.uploadVideo', {
+     method: 'POST',
+     headers: {
+       'Authorization': `Bearer ${token}`,
+       'Content-Type': 'video/mp4'
+     },
+     body: videoData
+   })
+   ```
+
+### Service Verification
+
+The video service:
+1. Extracts Bearer token from Authorization header
+2. Resolves the user's DID document via DID resolver
+3. Retrieves the user's public signing key (`atproto` key)
+4. Verifies the JWT signature using the public key
+5. Validates the audience matches the service DID
+6. Extracts the user's DID from the `iss` claim
+7. Authorizes the request for that user
+
+### Security
+
+- JWTs are short-lived (max 1 hour expiration)
+- Signatures are verified using secp256k1 keys
+- Each job is tied to the authenticated user's DID
+- Users can only access their own jobs
+
 ## Configuration
 
 See `VideoConfigValues` interface for all options:
+- `serviceDid` - Service DID for JWT audience validation (required)
+- `didPlcUrl` - PLC directory URL for DID resolution
 - Database connection settings
 - Storage directory path
 - ffmpeg/ffprobe paths

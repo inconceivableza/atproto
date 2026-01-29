@@ -6,9 +6,11 @@ import cors from 'cors'
 import express from 'express'
 import { HttpTerminator, createHttpTerminator } from 'http-terminator'
 import { DAY, SECOND } from '@atproto/common'
+import { IdResolver } from '@atproto/identity'
 import API from './api'
 import { VideoConfig } from './config'
 import AppContext from './context'
+import { AuthVerifier } from './auth-verifier'
 import { Database } from './db'
 import { VideoProcessor, ProcessingQueue } from './processing'
 import { createServer } from './lexicon'
@@ -16,6 +18,7 @@ import { createServer } from './lexicon'
 export { VideoConfig } from './config'
 export type { VideoConfigValues } from './config'
 export { AppContext } from './context'
+export { AuthVerifier } from './auth-verifier'
 export { Database } from './db'
 export * from './processing'
 
@@ -36,15 +39,29 @@ export class VideoService {
     app.use(cors({ maxAge: DAY / SECOND }))
     app.use(compression())
 
-    // Initialize database
+    // Validate required config
     if (!config.dbPostgresUrl) {
       throw new Error('VIDEO_DB_POSTGRES_URL is required')
     }
+    if (!config.serviceDid) {
+      throw new Error('VIDEO_SERVICE_DID is required')
+    }
 
+    // Initialize database
     const db = new Database({
       url: config.dbPostgresUrl,
       schema: config.dbPostgresSchema,
       poolSize: config.dbPoolSize,
+    })
+
+    // Initialize identity resolver
+    const idResolver = new IdResolver({
+      plcUrl: config.didPlcUrl,
+    })
+
+    // Initialize auth verifier
+    const authVerifier = new AuthVerifier(idResolver, {
+      serviceDid: config.serviceDid,
     })
 
     // Initialize video processor
@@ -64,6 +81,8 @@ export class VideoService {
       db,
       processor,
       queue,
+      idResolver,
+      authVerifier,
     })
 
     // Health check endpoint
@@ -126,7 +145,7 @@ export class VideoService {
     this.ctx.queue.start()
     console.log('Video processing queue started')
 
-    const server = this.app.listen(this.ctx.cfg.port)
+    const server = this.app.listen(this.ctx.cfg.port, this.ctx.cfg.hostname)
     this.server = server
     server.keepAliveTimeout = 90000
     this.terminator = createHttpTerminator({ server })

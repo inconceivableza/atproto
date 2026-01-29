@@ -1,12 +1,16 @@
 export interface VideoConfigValues {
   port?: number
-  serverDid: string
+  hostname?: string
+  serviceDid: string
   publicUrl?: string
 
   // Database
   dbPostgresUrl?: string
   dbPostgresSchema?: string
   dbPoolSize?: number
+
+  // Identity Resolution
+  didPlcUrl?: string
 
   // Video processing
   maxVideoSize?: number
@@ -55,11 +59,13 @@ export class VideoConfig {
   static readEnv(overrides?: Partial<VideoConfigValues>) {
     const cfg: VideoConfigValues = {
       port: parseIntWithFallback(process.env.VIDEO_PORT, 2583),
-      serverDid: process.env.VIDEO_SERVER_DID || '',
+      hostname: process.env.VIDEO_HOSTNAME,
+      serviceDid: process.env.VIDEO_SERVICE_DID || '',
       publicUrl: process.env.VIDEO_PUBLIC_URL,
       dbPostgresUrl: process.env.VIDEO_DB_POSTGRES_URL,
       dbPostgresSchema: process.env.VIDEO_DB_POSTGRES_SCHEMA,
       dbPoolSize: parseIntWithFallback(process.env.VIDEO_DB_POOL_SIZE, 10),
+      didPlcUrl: process.env.VIDEO_DID_PLC_URL || 'https://plc.directory',
       storageDir: process.env.VIDEO_STORAGE_DIR,
       ffmpegPath: process.env.VIDEO_FFMPEG_PATH,
       ffprobePath: process.env.VIDEO_FFPROBE_PATH,
@@ -84,12 +90,20 @@ export class VideoConfig {
     return this.assignedPort || this.cfg.port
   }
 
-  get serverDid() {
-    return this.cfg.serverDid
+  get hostname() {
+    return this.cfg.hostname
+  }
+
+  get serviceDid() {
+    return this.cfg.serviceDid
   }
 
   get publicUrl() {
     return this.cfg.publicUrl
+  }
+
+  get didPlcUrl() {
+    return this.cfg.didPlcUrl
   }
 
   get dbPostgresUrl() {

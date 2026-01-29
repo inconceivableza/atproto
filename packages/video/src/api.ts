@@ -5,13 +5,16 @@ import AppContext from './context'
 export default function (server: Server, ctx: AppContext) {
   // Upload video endpoint
   server.app.bsky.video.uploadVideo({
-    // TODO: Add auth verifier function here
-    handler: async ({ input, req }) => {
-      // TODO: Get authenticated user DID from req
-      const did = 'did:example:placeholder' // Replace with actual auth
+    auth: ctx.authVerifier.user,
+    handler: async ({ input, auth }) => {
+      const did = ctx.authVerifier.parseCreds(auth)
+      if (!did) {
+        throw new Error('Authentication required')
+      }
 
       // Read video data from input
-      const videoData = input.encoding === 'video/mp4' ? input.body : Buffer.from([])
+      const videoData =
+        input.encoding === 'video/mp4' ? input.body : Buffer.from([])
       const videoBytes = videoData.length
 
       // Validate video size
@@ -71,14 +74,24 @@ export default function (server: Server, ctx: AppContext) {
 
   // Get job status endpoint
   server.app.bsky.video.getJobStatus({
-    // TODO: Add auth verifier function here
-    handler: async ({ params }) => {
+    auth: ctx.authVerifier.user,
+    handler: async ({ params, auth }) => {
+      const did = ctx.authVerifier.parseCreds(auth)
+      if (!did) {
+        throw new Error('Authentication required')
+      }
+
       const { jobId } = params
 
       const job = await ctx.videoJobs.getJob(jobId)
 
       if (!job) {
         throw new Error('Job not found')
+      }
+
+      // Verify the job belongs to the authenticated user
+      if (job.did !== did) {
+        throw new Error('Forbidden: job does not belong to authenticated user')
       }
 
       return {
@@ -107,10 +120,12 @@ export default function (server: Server, ctx: AppContext) {
 
   // Get upload limits endpoint
   server.app.bsky.video.getUploadLimits({
-    // TODO: Add auth verifier function here
-    handler: async ({ req }) => {
-      // TODO: Get authenticated user DID from req
-      const did = 'did:example:placeholder' // Replace with actual auth
+    auth: ctx.authVerifier.user,
+    handler: async ({ auth }) => {
+      const did = ctx.authVerifier.parseCreds(auth)
+      if (!did) {
+        throw new Error('Authentication required')
+      }
 
       const stats = await ctx.videoUploadLimits.getUploadStats(did)
       const remainingBytes = Math.max(

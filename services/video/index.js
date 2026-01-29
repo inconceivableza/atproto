@@ -26,11 +26,12 @@ const main = async () => {
 const readEnv = () => ({
   port: maybeParseInt(process.env.VIDEO_PORT),
   hostname: process.env.VIDEO_HOSTNAME,
-  serverDid: process.env.VIDEO_SERVER_DID,
+  serviceDid: process.env.VIDEO_SERVICE_DID,
   publicUrl: process.env.VIDEO_PUBLIC_URL,
   dbPostgresUrl: process.env.VIDEO_DB_POSTGRES_URL,
   dbPostgresSchema: process.env.VIDEO_DB_POSTGRES_SCHEMA,
   dbPoolSize: maybeParseInt(process.env.VIDEO_DB_POOL_SIZE),
+  didPlcUrl: process.env.VIDEO_DID_PLC_URL,
   storageDir: process.env.VIDEO_STORAGE_DIR,
   ffmpegPath: process.env.VIDEO_FFMPEG_PATH,
   ffprobePath: process.env.VIDEO_FFPROBE_PATH,
