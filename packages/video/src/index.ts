@@ -9,11 +9,13 @@ import { DAY, SECOND } from '@atproto/common'
 import API from './api'
 import { VideoConfig } from './config'
 import AppContext from './context'
+import { Database } from './db'
 import { createServer } from './lexicon'
 
 export { VideoConfig } from './config'
 export type { VideoConfigValues } from './config'
 export { AppContext } from './context'
+export { Database } from './db'
 
 export class VideoService {
   public ctx: AppContext
@@ -32,8 +34,20 @@ export class VideoService {
     app.use(cors({ maxAge: DAY / SECOND }))
     app.use(compression())
 
+    // Initialize database
+    if (!config.dbPostgresUrl) {
+      throw new Error('VIDEO_DB_POSTGRES_URL is required')
+    }
+
+    const db = new Database({
+      url: config.dbPostgresUrl,
+      schema: config.dbPostgresSchema,
+      poolSize: config.dbPoolSize,
+    })
+
     const ctx = new AppContext({
       cfg: config,
+      db,
     })
 
     // Health check endpoint
@@ -75,6 +89,9 @@ export class VideoService {
   }
 
   async start(): Promise<http.Server> {
+    // Run database migrations
+    await this.ctx.db.migrateToLatestOrThrow()
+
     const server = this.app.listen(this.ctx.cfg.port)
     this.server = server
     server.keepAliveTimeout = 90000
@@ -87,6 +104,7 @@ export class VideoService {
 
   async destroy(): Promise<void> {
     await this.terminator?.terminate()
+    await this.ctx.db.close()
   }
 }
 

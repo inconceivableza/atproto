@@ -35,15 +35,19 @@
     "cors": "^2.8.5",
     "express": "^4.17.2",
     "http-terminator": "^3.2.0",
+    "kysely": "^0.22.0",
     "multiformats": "^9.9.0",
+    "pg": "^8.10.0",
     "pino": "^8.21.0",
     "pino-http": "^8.2.1",
+    "typed-emitter": "^2.1.0",
     "zod": "^3.23.8"
   },
   "devDependencies": {
     "@atproto/lex-cli": "workspace:^",
     "@types/cors": "^2.8.12",
     "@types/express": "^4.17.13",
+    "@types/pg": "^8.6.6",
     "typescript": "^5.6.3"
   }
 }

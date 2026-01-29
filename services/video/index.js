@@ -28,6 +28,9 @@ const readEnv = () => ({
   hostname: process.env.VIDEO_HOSTNAME,
   serverDid: process.env.VIDEO_SERVER_DID,
   publicUrl: process.env.VIDEO_PUBLIC_URL,
+  dbPostgresUrl: process.env.VIDEO_DB_POSTGRES_URL,
+  dbPostgresSchema: process.env.VIDEO_DB_POSTGRES_SCHEMA,
+  dbPoolSize: maybeParseInt(process.env.VIDEO_DB_POOL_SIZE),
   maxVideoSize: maybeParseInt(process.env.VIDEO_MAX_SIZE),
   blobstoreLocation: process.env.VIDEO_BLOBSTORE_LOCATION,
   dailyUploadLimitBytes: maybeParseInt(

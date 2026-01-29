@@ -10,6 +10,9 @@ export VIDEO_PORT=2583
 export VIDEO_HOSTNAME=localhost
 export VIDEO_SERVER_DID=did:plc:your-server-did
 export VIDEO_PUBLIC_URL=https://video.example.com
+export VIDEO_DB_POSTGRES_URL=postgresql://user:password@localhost:5432/video
+export VIDEO_DB_POSTGRES_SCHEMA=public
+export VIDEO_DB_POOL_SIZE=10
 export VIDEO_JWT_SECRET=your-jwt-secret
 export VIDEO_SERVICE_SIGNING_KEY=your-signing-key
 
@@ -23,6 +26,9 @@ node index.js
 - `VIDEO_HOSTNAME` - Hostname to bind to (default: localhost)
 - `VIDEO_SERVER_DID` - Server DID for authentication
 - `VIDEO_PUBLIC_URL` - Public URL for the service
+- `VIDEO_DB_POSTGRES_URL` - PostgreSQL connection string (required)
+- `VIDEO_DB_POSTGRES_SCHEMA` - PostgreSQL schema name (optional)
+- `VIDEO_DB_POOL_SIZE` - Database connection pool size (default: 10)
 - `VIDEO_MAX_SIZE` - Max video size in bytes (default: 100MB)
 - `VIDEO_BLOBSTORE_LOCATION` - Path to blob storage directory
 - `VIDEO_DAILY_UPLOAD_LIMIT_BYTES` - Daily upload limit in bytes (default: 500MB)

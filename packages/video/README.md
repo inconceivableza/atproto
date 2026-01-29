@@ -10,13 +10,26 @@ This package provides the video processing service that handles:
 - Job status tracking
 - Upload limits management
 
+## Database
+
+This service uses PostgreSQL for persistent storage, following the same patterns as the bsky and ozone services.
+
+Required tables:
+- `video_job` - Video processing job tracking
+- `video_upload_limit` - Daily upload quota tracking per user
+
+Migrations are automatically run on service startup.
+
 ## Usage
 
 ```typescript
 import { VideoService, VideoConfig } from '@atproto/video'
 
-const config = VideoConfig.readEnv()
-const service = await VideoService.create(config)
+const config = VideoConfig.readEnv({
+  dbPostgresUrl: 'postgresql://user:password@localhost:5432/video',
+  dbPostgresSchema: 'public',
+})
+const service = VideoService.create(config)
 await service.start()
 ```
 

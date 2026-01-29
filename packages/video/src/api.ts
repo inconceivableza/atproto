@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto'
 import { Server } from './lexicon'
 import AppContext from './context'
 
@@ -6,13 +7,56 @@ export default function (server: Server, ctx: AppContext) {
   server.app.bsky.video.uploadVideo({
     // TODO: Add auth verifier function here
     handler: async ({ input, req }) => {
-      // TODO: Implement video upload logic
-      // 1. Validate user permissions and limits
-      // 2. Store video blob
-      // 3. Create processing job
-      // 4. Return job status
+      // TODO: Get authenticated user DID from req
+      const did = 'did:example:placeholder' // Replace with actual auth
 
-      throw new Error('Not implemented: uploadVideo')
+      // TODO: Get video size from input
+      const videoBytes = 0 // Replace with actual size calculation
+
+      // Check upload limits
+      const limitCheck = await ctx.videoUploadLimits.canUpload(
+        did,
+        videoBytes,
+        ctx.cfg.dailyUploadLimitBytes,
+        ctx.cfg.dailyUploadLimitVideos,
+      )
+
+      if (!limitCheck.canUpload) {
+        throw new Error(limitCheck.reason || 'Upload limit exceeded')
+      }
+
+      // Create a new job
+      const jobId = randomUUID()
+      const job = await ctx.videoJobs.createJob({ jobId, did })
+
+      // TODO: Store video blob
+      // TODO: Start video processing (e.g., transcoding)
+      // TODO: Update job progress
+
+      // Record the upload in limits
+      await ctx.videoUploadLimits.recordUpload({ did, videoBytes })
+
+      return {
+        encoding: 'application/json',
+        body: {
+          jobStatus: {
+            jobId: job!.jobId,
+            did: job!.did,
+            state: job!.state,
+            progress: job!.progress,
+            blob: job!.blobCid
+              ? {
+                  $type: 'blob',
+                  ref: { $link: job!.blobCid },
+                  mimeType: 'video/mp4',
+                  size: 0,
+                }
+              : undefined,
+            error: job!.error,
+            message: undefined,
+          },
+        },
+      }
     },
   })
 
@@ -22,11 +66,33 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ params }) => {
       const { jobId } = params
 
-      // TODO: Implement job status lookup
-      // 1. Query job database
-      // 2. Return current status
+      const job = await ctx.videoJobs.getJob(jobId)
 
-      throw new Error('Not implemented: getJobStatus')
+      if (!job) {
+        throw new Error('Job not found')
+      }
+
+      return {
+        encoding: 'application/json',
+        body: {
+          jobStatus: {
+            jobId: job.jobId,
+            did: job.did,
+            state: job.state,
+            progress: job.progress,
+            blob: job.blobCid
+              ? {
+                  $type: 'blob',
+                  ref: { $link: job.blobCid },
+                  mimeType: 'video/mp4',
+                  size: 0,
+                }
+              : undefined,
+            error: job.error,
+            message: undefined,
+          },
+        },
+      }
     },
   })
 
@@ -34,13 +100,29 @@ export default function (server: Server, ctx: AppContext) {
   server.app.bsky.video.getUploadLimits({
     // TODO: Add auth verifier function here
     handler: async ({ req }) => {
-      // TODO: Implement upload limits check
-      // 1. Get user from auth token
-      // 2. Check current usage
-      // 3. Calculate remaining limits
-      // 4. Return limits object
+      // TODO: Get authenticated user DID from req
+      const did = 'did:example:placeholder' // Replace with actual auth
 
-      throw new Error('Not implemented: getUploadLimits')
+      const stats = await ctx.videoUploadLimits.getUploadStats(did)
+      const remainingBytes = Math.max(
+        0,
+        ctx.cfg.dailyUploadLimitBytes - stats.uploadedBytes,
+      )
+      const remainingVideos = Math.max(
+        0,
+        ctx.cfg.dailyUploadLimitVideos - stats.uploadedVideos,
+      )
+
+      return {
+        encoding: 'application/json',
+        body: {
+          canUpload: remainingVideos > 0 && remainingBytes > 0,
+          remainingDailyVideos: remainingVideos,
+          remainingDailyBytes: remainingBytes,
+          message: undefined,
+          error: undefined,
+        },
+      }
     },
   })
 

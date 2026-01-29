@@ -3,6 +3,11 @@ export interface VideoConfigValues {
   serverDid: string
   publicUrl?: string
 
+  // Database
+  dbPostgresUrl?: string
+  dbPostgresSchema?: string
+  dbPoolSize?: number
+
   // Video processing
   maxVideoSize?: number
   supportedMimeTypes?: string[]
@@ -41,6 +46,9 @@ export class VideoConfig {
       port: parseIntWithFallback(process.env.VIDEO_PORT, 2583),
       serverDid: process.env.VIDEO_SERVER_DID || '',
       publicUrl: process.env.VIDEO_PUBLIC_URL,
+      dbPostgresUrl: process.env.VIDEO_DB_POSTGRES_URL,
+      dbPostgresSchema: process.env.VIDEO_DB_POSTGRES_SCHEMA,
+      dbPoolSize: parseIntWithFallback(process.env.VIDEO_DB_POOL_SIZE, 10),
       maxVideoSize: parseIntWithFallback(process.env.VIDEO_MAX_SIZE),
       blobstoreLocation: process.env.VIDEO_BLOBSTORE_LOCATION,
       dailyUploadLimitBytes: parseIntWithFallback(
@@ -66,6 +74,18 @@ export class VideoConfig {
 
   get publicUrl() {
     return this.cfg.publicUrl
+  }
+
+  get dbPostgresUrl() {
+    return this.cfg.dbPostgresUrl
+  }
+
+  get dbPostgresSchema() {
+    return this.cfg.dbPostgresSchema
+  }
+
+  get dbPoolSize() {
+    return this.cfg.dbPoolSize!
   }
 
   get maxVideoSize() {
