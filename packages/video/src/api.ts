@@ -32,9 +32,13 @@ export default function (server: Server, ctx: AppContext) {
         throw new Error('Bearer token required')
       }
 
-      // Read video data from input
-      const videoData =
-        input.encoding === 'video/mp4' ? input.body : Buffer.from([])
+      // Read video data from input stream
+      const videoData = await new Promise<Buffer>((resolve, reject) => {
+        const chunks: Buffer[] = []
+        input.body.on('data', (chunk) => chunks.push(chunk))
+        input.body.on('end', () => resolve(Buffer.concat(chunks)))
+        input.body.on('error', reject)
+      })
       const videoBytes = videoData.length
 
       // Validate video size
@@ -98,14 +102,14 @@ export default function (server: Server, ctx: AppContext) {
               jobId: existingJob.jobId,
               did: existingJob.did,
               state: existingJob.state,
-              progress: existingJob.progress,
+              progress: existingJob.progress ?? undefined,
               blob: {
                 $type: 'blob',
                 ref: { $link: videoCid },
-                mimeType: input.encoding as string,
+                mimeType: input.encoding,
                 size: videoBytes,
               },
-              error: existingJob.error,
+              error: existingJob.error ?? undefined,
               message: undefined,
             },
           },
@@ -130,14 +134,14 @@ export default function (server: Server, ctx: AppContext) {
             jobId: job!.jobId,
             did: job!.did,
             state: job!.state,
-            progress: job!.progress,
+            progress: job!.progress ?? undefined,
             blob: {
               $type: 'blob',
               ref: { $link: videoCid },
-              mimeType: input.encoding as string,
+              mimeType: input.encoding,
               size: videoBytes,
             },
-            error: job!.error,
+            error: job!.error ?? undefined,
             message: undefined,
           },
         },
@@ -174,7 +178,7 @@ export default function (server: Server, ctx: AppContext) {
             jobId: job.jobId,
             did: job.did,
             state: job.state,
-            progress: job.progress,
+            progress: job.progress ?? undefined,
             blob: job.blobCid
               ? {
                   $type: 'blob',
@@ -183,7 +187,7 @@ export default function (server: Server, ctx: AppContext) {
                   size: 0,
                 }
               : undefined,
-            error: job.error,
+            error: job.error ?? undefined,
             message: undefined,
           },
         },

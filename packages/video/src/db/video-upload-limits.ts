@@ -1,3 +1,4 @@
+import { sql } from 'kysely'
 import { Database } from './db'
 import { today } from './util'
 
@@ -19,14 +20,22 @@ export class VideoUploadLimits {
       .where('date', '=', targetDate)
       .executeTakeFirst()
 
-    return (
-      record || {
-        did,
-        date: targetDate,
-        uploadedBytes: 0,
-        uploadedVideos: 0,
+    if (record) {
+      // Convert bigint string to number
+      return {
+        did: record.did,
+        date: record.date,
+        uploadedBytes: parseInt(record.uploadedBytes, 10),
+        uploadedVideos: record.uploadedVideos,
       }
-    )
+    }
+
+    return {
+      did,
+      date: targetDate,
+      uploadedBytes: 0,
+      uploadedVideos: 0,
+    }
   }
 
   async recordUpload(params: RecordUploadParams) {
@@ -37,10 +46,10 @@ export class VideoUploadLimits {
     // Try to update existing record
     const updated = await this.db.db
       .updateTable('video_upload_limit')
-      .set((eb) => ({
-        uploadedBytes: eb('uploadedBytes', '+', videoBytes),
-        uploadedVideos: eb('uploadedVideos', '+', 1),
-      }))
+      .set({
+        uploadedBytes: sql`uploaded_bytes + ${videoBytes}`,
+        uploadedVideos: sql`uploaded_videos + 1`,
+      })
       .where('did', '=', did)
       .where('date', '=', date)
       .execute()
