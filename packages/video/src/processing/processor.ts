@@ -1,6 +1,5 @@
 import { promises as fs } from 'node:fs'
 import path from 'node:path'
-import { randomUUID } from 'node:crypto'
 import { AtpAgent } from '@atproto/api'
 import { IdResolver, getPds } from '@atproto/identity'
 import { Database, VideoJobs } from '../db'
@@ -81,9 +80,19 @@ export class VideoProcessor {
         Math.min(1, videoInfo.duration / 2), // Grab frame from middle of video
       )
 
-      // Generate a blob CID for the processed video
-      // TODO: This should be a proper CID based on the content
-      const blobCid = randomUUID()
+      // Get the job to retrieve the videoCid
+      const job = await this.videoJobs.getJob(jobId)
+      if (!job) {
+        throw new Error(`Job ${jobId} not found`)
+      }
+
+      // Use the videoCid as the blob identifier for the processed video
+      // Since we use videoCid as jobId, they should be the same, but we
+      // explicitly use videoCid to be clear about the content-addressed nature
+      // Clients can use this CID to construct URLs like:
+      // - https://video.service/video/{videoCid}/playlist.m3u8
+      // - https://video.service/video/{videoCid}/thumbnail.jpg
+      const blobCid = job.videoCid || jobId
 
       // Update job state to completed
       await this.videoJobs.updateJob(jobId, {

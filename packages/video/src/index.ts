@@ -15,6 +15,7 @@ import { Database } from './db'
 import { VideoProcessor, ProcessingQueue } from './processing'
 import { VideoSubscription } from './subscription'
 import { createServer } from './lexicon'
+import { createVideoServingRoutes } from './video-serving'
 
 export { VideoConfig } from './config'
 export type { VideoConfigValues } from './config'
@@ -106,6 +107,13 @@ export class VideoService {
       res.status(200).json({ version: '0.0.1' })
     })
 
+    // Video serving routes (HLS playlists, segments, thumbnails)
+    // Note: :jobId is actually the videoCid (content-addressed identifier)
+    const videoRoutes = createVideoServingRoutes(ctx)
+    app.get('/video/:jobId/playlist.m3u8', videoRoutes.servePlaylist)
+    app.get('/video/:jobId/thumbnail.jpg', videoRoutes.serveThumbnail)
+    app.get('/video/:jobId/:filename', videoRoutes.serveSegment)
+
     // Create XRPC server
     let server = createServer({
       validateResponse: false,
@@ -165,7 +173,7 @@ export class VideoService {
     this.ctx.queue.start()
     console.log('Video processing queue started')
 
-    const server = this.app.listen(this.ctx.cfg.port, this.ctx.cfg.hostname)
+    const server = this.app.listen(this.ctx.cfg.port)
     this.server = server
     server.keepAliveTimeout = 90000
     this.terminator = createHttpTerminator({ server })

@@ -1,4 +1,3 @@
-import { randomUUID } from 'node:crypto'
 import { AtpAgent } from '@atproto/api'
 import { getPds } from '@atproto/identity'
 import { Server } from './lexicon'
@@ -84,8 +83,35 @@ export default function (server: Server, ctx: AppContext) {
       const videoCid = blobRef.ref.toString()
 
       // Create a processing job with the video CID
+      // Use the videoCid as the jobId for consistency and deduplication
       // This job will be picked up by the queue and processed
-      const jobId = randomUUID()
+      const jobId = videoCid
+
+      // Check if job already exists (in case of duplicate uploads)
+      const existingJob = await ctx.videoJobs.getJob(jobId)
+      if (existingJob) {
+        // Job already exists, return existing status
+        return {
+          encoding: 'application/json',
+          body: {
+            jobStatus: {
+              jobId: existingJob.jobId,
+              did: existingJob.did,
+              state: existingJob.state,
+              progress: existingJob.progress,
+              blob: {
+                $type: 'blob',
+                ref: { $link: videoCid },
+                mimeType: input.encoding as string,
+                size: videoBytes,
+              },
+              error: existingJob.error,
+              message: undefined,
+            },
+          },
+        }
+      }
+
       const job = await ctx.videoJobs.createJob({
         jobId,
         did,

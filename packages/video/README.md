@@ -43,10 +43,20 @@ This package provides the video processing service that handles:
 This service uses PostgreSQL for persistent storage, following the same patterns as the bsky and ozone services.
 
 Tables:
-- `video_job` - Video processing job tracking (state, progress, errors)
+- `video_job` - Video processing job tracking (state, progress, errors, videoCid, postUri)
 - `video_upload_limit` - Daily upload quota tracking per user
 
 Migrations are automatically run on service startup.
+
+## Known Limitations
+
+1. **Cursor Persistence**: The relay subscription currently uses an in-memory cursor (starts from 0). If the service restarts, it reprocesses the entire firehose history. Duplicate job creation is prevented by checking for existing jobs, but this is inefficient. A production implementation should persist the cursor to the database.
+
+2. **Job Cleanup**: Processed video files (HLS segments, thumbnails) are stored indefinitely. A cleanup mechanism should be implemented to remove old job data after a retention period.
+
+3. **Rate Limiting**: Upload limits are tracked but not enforced in a distributed manner. Multiple instances of the video service may not coordinate limits properly.
+
+4. **File Storage**: Videos are stored on the local filesystem. A production deployment should use object storage (S3, etc.) for scalability and reliability.
 
 ## Usage
 
@@ -71,28 +81,64 @@ await service.start()
 1. **Upload to PDS**: Client uploads video blob to their PDS via `com.atproto.repo.uploadBlob`
 2. **Post Creation**: Client creates a post with video embed referencing the blob
 3. **Relay Subscription**: Video service listens to relay for posts with video embeds
-4. **Job Creation**: When a video embed is detected, a job is created
+4. **Job Creation**: Job is created with videoCid as the jobId (content-addressed deduplication)
 5. **Blob Fetch**: Job queue fetches the original video blob from user's PDS
 6. **Processing**: Video is processed asynchronously (HLS conversion, thumbnail generation)
-7. **Completion**: Job state updated to `JOB_STATE_COMPLETED` with processed blob CID
+7. **Completion**: Job state updated to `JOB_STATE_COMPLETED` with videoCid as blobCid
+8. **Playback**: Client requests `GET /video/{videoCid}/playlist.m3u8` to play the video
 
 ### Proxied Flow (uploadVideo Endpoint)
 
 1. **Upload to Video Service**: Client uploads video to `app.bsky.video.uploadVideo`
-2. **Proxy to PDS**: Video service uploads blob to user's PDS via `com.atproto.repo.uploadBlob`
-3. **Job Creation**: Video service creates a processing job with the blob CID
-4. **Return Blob Reference**: Client receives blob reference
+2. **Proxy to PDS**: Video service uploads blob to user's PDS via `com.atproto.repo.uploadBlob`, receives videoCid
+3. **Job Creation**: Video service creates a processing job with videoCid as jobId
+4. **Return Blob Reference**: Client receives blob reference with videoCid
 5. **Post Creation**: Client creates post with the blob reference
-6. **Relay Processing**: Same as standard flow - relay subscription triggers processing
-7. **Polling**: Client can poll `getJobStatus` for progress
+6. **Relay Processing**: Same as standard flow - relay subscription detects it (deduped by CID)
+7. **Polling**: Client polls `getJobStatus` with videoCid to wait for completion
+8. **Playback**: Once complete, client uses videoCid to play video from video service
 
 Both flows converge at the relay subscription, ensuring consistent processing regardless of upload method.
 
+## Video Playback
+
+After processing completes, clients can access the video files using the videoCid:
+
+```
+# HLS Master Playlist (for video players)
+GET https://video.example.com/video/{videoCid}/playlist.m3u8
+
+# Thumbnail
+GET https://video.example.com/video/{videoCid}/thumbnail.jpg
+
+# HLS Segments (referenced by playlist)
+GET https://video.example.com/video/{videoCid}/stream_0.ts
+GET https://video.example.com/video/{videoCid}/stream_1.ts
+# etc.
+```
+
+The videoCid is content-addressed, meaning:
+- The same video uploaded multiple times will have the same CID
+- Jobs are automatically deduplicated based on CID
+- URLs are stable and cacheable
+
+The master playlist contains references to variant playlists for different quality levels (1080p, 720p, 480p), which in turn reference the .ts segment files.
+
 ## API Endpoints
+
+### XRPC Endpoints
 
 - `app.bsky.video.uploadVideo` - Proxy upload: uploads video to user's PDS via uploadBlob, creates processing job
 - `app.bsky.video.getJobStatus` - Get the status of a video processing job
 - `app.bsky.video.getUploadLimits` - Get current upload limits for a user
+
+### Video Serving Endpoints
+
+- `GET /video/:videoCid/playlist.m3u8` - HLS master playlist for the processed video
+- `GET /video/:videoCid/thumbnail.jpg` - Video thumbnail image
+- `GET /video/:videoCid/:filename` - HLS segment files (.ts) and variant playlists (.m3u8)
+
+Note: The videoCid is used as the jobId for content-addressed storage and serving.
 
 ### uploadVideo Flow
 
@@ -102,10 +148,12 @@ When a client calls `uploadVideo`:
 3. Video service verifies the token (confirms user authorized this)
 4. Video service resolves the user's PDS from their DID
 5. Video service uploads blob to user's PDS using the **user's token** via `uploadBlob`
-6. Video service creates a processing job with the blob CID
-7. Returns the blob reference to the client
-8. Client creates a post with this blob reference
-9. Relay subscription detects the post and triggers video processing
+6. PDS returns blob reference with videoCid (content-addressed identifier)
+7. Video service checks if job exists for this videoCid (automatic deduplication)
+8. If new, creates processing job with videoCid as jobId
+9. Returns blob reference + videoCid to client
+10. Client creates a post with this blob reference
+11. Relay subscription detects the post (skips if already processing based on CID)
 
 ## Authentication
 
