@@ -38,6 +38,35 @@ This package provides the video processing service that handles:
 - Ubuntu/Debian: `apt-get install ffmpeg`
 - macOS: `brew install ffmpeg`
 
+## CLI Tools
+
+### Convert Video
+
+Convert a video file to HLS format from the command line:
+
+```bash
+# Convert a video file (output to ./hls-output/)
+npm run convert-video video.mp4
+
+# Convert with custom output directory
+npm run convert-video video.mp4 ./my-output
+
+# Example with full path
+npm run convert-video /path/to/video.mp4 /path/to/output
+```
+
+This will:
+- Validate ffmpeg installation
+- Analyze the input video
+- Convert to HLS with 3 quality variants (1080p, 720p, 480p)
+- Generate a thumbnail
+- Create master playlist and segment files
+
+Test playback with:
+```bash
+ffplay ./hls-output/playlist.m3u8
+```
+
 ## Database
 
 This service uses PostgreSQL for persistent storage, following the same patterns as the bsky and ozone services.

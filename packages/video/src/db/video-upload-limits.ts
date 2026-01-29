@@ -61,7 +61,7 @@ export class VideoUploadLimits {
         .values({
           did,
           date,
-          uploadedBytes: videoBytes,
+          uploadedBytes: videoBytes.toString(),
           uploadedVideos: 1,
         })
         .execute()

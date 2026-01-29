@@ -18,7 +18,8 @@
   "scripts": {
     "codegen": "lex gen-server --yes ./src/lexicon ../../lexicons/app/bsky/video/* ../../lexicons/app/bsky/embed/* ../../lexicons/app/bsky/feed/post.json",
     "build": "tsc --build tsconfig.build.json",
-    "test": "jest"
+    "test": "jest",
+    "convert-video": "tsx scripts/convert-video.ts"
   },
   "engines": {
     "node": ">=18.7.0"
@@ -52,7 +53,9 @@
     "@atproto/lex-cli": "workspace:^",
     "@types/cors": "^2.8.12",
     "@types/express": "^4.17.13",
+    "@types/node": "^18.19.67",
     "@types/pg": "^8.6.6",
+    "tsx": "^4.7.0",
     "typescript": "^5.6.3"
   }
 }
