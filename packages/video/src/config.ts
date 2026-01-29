@@ -12,6 +12,9 @@ export interface VideoConfigValues {
   // Identity Resolution
   didPlcUrl?: string
 
+  // Relay subscription
+  relayService?: string
+
   // Video processing
   maxVideoSize?: number
   supportedMimeTypes?: string[]
@@ -29,10 +32,6 @@ export interface VideoConfigValues {
   // Rate limiting
   dailyUploadLimitBytes?: number
   dailyUploadLimitVideos?: number
-
-  // Auth
-  jwtSecret?: string
-  serviceSigningKey?: string
 }
 
 export class VideoConfig {
@@ -66,6 +65,7 @@ export class VideoConfig {
       dbPostgresSchema: process.env.VIDEO_DB_POSTGRES_SCHEMA,
       dbPoolSize: parseIntWithFallback(process.env.VIDEO_DB_POOL_SIZE, 10),
       didPlcUrl: process.env.VIDEO_DID_PLC_URL || 'https://plc.directory',
+      relayService: process.env.VIDEO_RELAY_SERVICE,
       storageDir: process.env.VIDEO_STORAGE_DIR,
       ffmpegPath: process.env.VIDEO_FFMPEG_PATH,
       ffprobePath: process.env.VIDEO_FFPROBE_PATH,
@@ -79,8 +79,6 @@ export class VideoConfig {
       dailyUploadLimitVideos: parseIntWithFallback(
         process.env.VIDEO_DAILY_UPLOAD_LIMIT_VIDEOS,
       ),
-      jwtSecret: process.env.VIDEO_JWT_SECRET,
-      serviceSigningKey: process.env.VIDEO_SERVICE_SIGNING_KEY,
       ...overrides,
     }
     return new VideoConfig(cfg)
@@ -104,6 +102,10 @@ export class VideoConfig {
 
   get didPlcUrl() {
     return this.cfg.didPlcUrl
+  }
+
+  get relayService() {
+    return this.cfg.relayService
   }
 
   get dbPostgresUrl() {
@@ -148,14 +150,6 @@ export class VideoConfig {
 
   get dailyUploadLimitVideos() {
     return this.cfg.dailyUploadLimitVideos!
-  }
-
-  get jwtSecret() {
-    return this.cfg.jwtSecret
-  }
-
-  get serviceSigningKey() {
-    return this.cfg.serviceSigningKey
   }
 
   assignPort(port: number) {

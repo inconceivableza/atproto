@@ -40,11 +40,31 @@ export class AppNS {
 
 export class AppBskyNS {
   _server: Server
+  embed: AppBskyEmbedNS
+  feed: AppBskyFeedNS
   video: AppBskyVideoNS
 
   constructor(server: Server) {
     this._server = server
+    this.embed = new AppBskyEmbedNS(server)
+    this.feed = new AppBskyFeedNS(server)
     this.video = new AppBskyVideoNS(server)
+  }
+}
+
+export class AppBskyEmbedNS {
+  _server: Server
+
+  constructor(server: Server) {
+    this._server = server
+  }
+}
+
+export class AppBskyFeedNS {
+  _server: Server
+
+  constructor(server: Server) {
+    this._server = server
   }
 }
 

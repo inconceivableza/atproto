@@ -120,8 +120,27 @@ export class ProcessingQueue extends EventEmitter {
     try {
       this.emit('job-start', jobId)
 
+      // Get job details to check for videoCid
+      const job = await this.videoJobs.getJob(jobId)
+      if (!job) {
+        throw new Error(`Job ${jobId} not found`)
+      }
+
       const storagePath = this.processor.getJobStoragePath(jobId)
-      const inputPath = `${storagePath}/input.mp4`
+      let inputPath: string
+
+      // If job has videoCid, fetch from PDS
+      // Otherwise assume it was directly uploaded
+      if (job.videoCid) {
+        console.log(`[Queue] Fetching video blob ${job.videoCid} from PDS for job ${jobId}`)
+        inputPath = await this.processor.fetchAndStoreVideoBlob(
+          did,
+          job.videoCid,
+          jobId,
+        )
+      } else {
+        inputPath = `${storagePath}/input.mp4`
+      }
 
       await this.processor.processVideo({
         jobId,

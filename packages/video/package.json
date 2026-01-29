@@ -16,7 +16,7 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "codegen": "lex gen-server --yes ./src/lexicon ../../lexicons/app/bsky/video/*",
+    "codegen": "lex gen-server --yes ./src/lexicon ../../lexicons/app/bsky/video/* ../../lexicons/app/bsky/embed/* ../../lexicons/app/bsky/feed/post.json",
     "build": "tsc --build tsconfig.build.json",
     "test": "jest"
   },
@@ -29,6 +29,8 @@
     "@atproto/crypto": "workspace:^",
     "@atproto/identity": "workspace:^",
     "@atproto/lexicon": "workspace:^",
+    "@atproto/repo": "workspace:^",
+    "@atproto/sync": "workspace:^",
     "@atproto/syntax": "workspace:^",
     "@atproto/xrpc-server": "workspace:^",
     "compression": "^1.7.4",

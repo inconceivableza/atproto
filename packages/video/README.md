@@ -5,7 +5,8 @@ Reference implementation of video processing service for the AT Protocol.
 ## Overview
 
 This package provides the video processing service that handles:
-- Video upload and storage
+- Listening to relay for video uploads via `com.atproto.repo.uploadBlob`
+- Fetching video blobs from user PDSs
 - HLS (HTTP Live Streaming) video conversion with multiple quality variants
 - Thumbnail generation
 - Asynchronous job processing with progress tracking
@@ -53,7 +54,9 @@ Migrations are automatically run on service startup.
 import { VideoService, VideoConfig } from '@atproto/video'
 
 const config = VideoConfig.readEnv({
+  serviceDid: 'did:web:video.example.com',
   dbPostgresUrl: 'postgresql://user:password@localhost:5432/video',
+  relayService: 'wss://bsky.network',
   storageDir: './storage',
   processingConcurrency: 2,
 })
@@ -63,22 +66,46 @@ await service.start()
 
 ## Architecture
 
-1. **Upload**: Client uploads video via `uploadVideo` endpoint
-2. **Storage**: Video stored in job-specific directory
-3. **Queue**: Job created with state `JOB_STATE_CREATED`
-4. **Processing**: Queue picks up job and processes asynchronously
-   - Validates video with ffprobe
-   - Converts to HLS with multiple quality variants
-   - Generates thumbnail
-   - Updates progress in database
-5. **Completion**: Job state updated to `JOB_STATE_COMPLETED` with blob CID
-6. **Polling**: Client polls `getJobStatus` for progress and completion
+### Standard Flow (Direct PDS Upload)
+
+1. **Upload to PDS**: Client uploads video blob to their PDS via `com.atproto.repo.uploadBlob`
+2. **Post Creation**: Client creates a post with video embed referencing the blob
+3. **Relay Subscription**: Video service listens to relay for posts with video embeds
+4. **Job Creation**: When a video embed is detected, a job is created
+5. **Blob Fetch**: Job queue fetches the original video blob from user's PDS
+6. **Processing**: Video is processed asynchronously (HLS conversion, thumbnail generation)
+7. **Completion**: Job state updated to `JOB_STATE_COMPLETED` with processed blob CID
+
+### Proxied Flow (uploadVideo Endpoint)
+
+1. **Upload to Video Service**: Client uploads video to `app.bsky.video.uploadVideo`
+2. **Proxy to PDS**: Video service uploads blob to user's PDS via `com.atproto.repo.uploadBlob`
+3. **Job Creation**: Video service creates a processing job with the blob CID
+4. **Return Blob Reference**: Client receives blob reference
+5. **Post Creation**: Client creates post with the blob reference
+6. **Relay Processing**: Same as standard flow - relay subscription triggers processing
+7. **Polling**: Client can poll `getJobStatus` for progress
+
+Both flows converge at the relay subscription, ensuring consistent processing regardless of upload method.
 
 ## API Endpoints
 
-- `app.bsky.video.uploadVideo` - Upload a video for processing
+- `app.bsky.video.uploadVideo` - Proxy upload: uploads video to user's PDS via uploadBlob, creates processing job
 - `app.bsky.video.getJobStatus` - Get the status of a video processing job
 - `app.bsky.video.getUploadLimits` - Get current upload limits for a user
+
+### uploadVideo Flow
+
+When a client calls `uploadVideo`:
+1. Client requests service auth token from PDS: `getServiceAuth({ aud: videoServiceDid })`
+2. Client uploads video + token to video service
+3. Video service verifies the token (confirms user authorized this)
+4. Video service resolves the user's PDS from their DID
+5. Video service uploads blob to user's PDS using the **user's token** via `uploadBlob`
+6. Video service creates a processing job with the blob CID
+7. Returns the blob reference to the client
+8. Client creates a post with this blob reference
+9. Relay subscription detects the post and triggers video processing
 
 ## Authentication
 
@@ -118,6 +145,22 @@ The video service:
 6. Extracts the user's DID from the `iss` claim
 7. Authorizes the request for that user
 
+### Authentication for Proxied Uploads
+
+When the video service uses `uploadVideo` to proxy blob uploads to the user's PDS, it uses the user's own authentication:
+
+1. User requests a service auth token from their PDS for the video service
+2. User sends video + token to video service
+3. Video service verifies the token (proves user authorized this)
+4. Video service uses the **same token** to upload the blob to the user's PDS
+5. PDS accepts the upload because the token proves the user authorized it
+
+This is secure because:
+- The JWT was issued by the user's PDS
+- It proves the user authorized the video service to act on their behalf
+- The video service is simply proxying the upload using the user's credentials
+- No separate service-to-service authentication needed
+
 ### Security
 
 - JWTs are short-lived (max 1 hour expiration)
@@ -129,6 +172,7 @@ The video service:
 
 See `VideoConfigValues` interface for all options:
 - `serviceDid` - Service DID for JWT audience validation (required)
+- `relayService` - Relay WebSocket URL for subscribing to repo events (required, e.g., wss://bsky.network)
 - `didPlcUrl` - PLC directory URL for DID resolution
 - Database connection settings
 - Storage directory path

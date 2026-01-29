@@ -1,6 +1,8 @@
 import { promises as fs } from 'node:fs'
 import path from 'node:path'
 import { randomUUID } from 'node:crypto'
+import { AtpAgent } from '@atproto/api'
+import { IdResolver, getPds } from '@atproto/identity'
 import { Database, VideoJobs } from '../db'
 import { FFmpegProcessor } from './ffmpeg'
 
@@ -15,17 +17,20 @@ export interface VideoProcessorConfig {
   ffmpegPath?: string
   ffprobePath?: string
   storageDir: string
+  idResolver?: IdResolver
 }
 
 export class VideoProcessor {
   private ffmpeg: FFmpegProcessor
   private videoJobs: VideoJobs
   private config: VideoProcessorConfig
+  private idResolver?: IdResolver
 
   constructor(db: Database, config: VideoProcessorConfig) {
     this.ffmpeg = new FFmpegProcessor(config.ffmpegPath, config.ffprobePath)
     this.videoJobs = new VideoJobs(db)
     this.config = config
+    this.idResolver = config.idResolver
   }
 
   /**
@@ -106,7 +111,47 @@ export class VideoProcessor {
   }
 
   /**
-   * Store uploaded video file
+   * Fetch video blob from user's PDS and store locally
+   */
+  async fetchAndStoreVideoBlob(
+    did: string,
+    videoCid: string,
+    jobId: string,
+  ): Promise<string> {
+    if (!this.idResolver) {
+      throw new Error('IdResolver not configured')
+    }
+
+    // Resolve the user's DID to get their PDS
+    const didDoc = await this.idResolver.did.resolve(did)
+    if (!didDoc) {
+      throw new Error(`Could not resolve DID: ${did}`)
+    }
+
+    const pds = getPds(didDoc)
+    if (!pds) {
+      throw new Error(`No PDS found for DID: ${did}`)
+    }
+
+    // Fetch the blob from the PDS
+    const agent = new AtpAgent({ service: pds })
+    const { data } = await agent.com.atproto.sync.getBlob({
+      did,
+      cid: videoCid,
+    })
+
+    // Store the blob locally
+    const storagePath = this.getJobStoragePath(jobId)
+    await fs.mkdir(storagePath, { recursive: true })
+
+    const inputPath = path.join(storagePath, 'input.mp4')
+    await fs.writeFile(inputPath, Buffer.from(data))
+
+    return inputPath
+  }
+
+  /**
+   * Store uploaded video file (for direct uploads)
    */
   async storeUploadedVideo(
     jobId: string,

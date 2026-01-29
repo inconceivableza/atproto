@@ -55,6 +55,41 @@ const initial: Migration = {
   },
 }
 
+const addVideoCidAndPostUri: Migration = {
+  async up(db: Kysely<unknown>): Promise<void> {
+    // Add videoCid column to track the original video blob CID
+    await db.schema
+      .alterTable('video_job')
+      .addColumn('videoCid', 'varchar')
+      .execute()
+
+    // Add postUri column to track which post this video belongs to
+    await db.schema
+      .alterTable('video_job')
+      .addColumn('postUri', 'varchar')
+      .execute()
+
+    // Index for querying jobs by videoCid
+    await db.schema
+      .createIndex('video_job_videocid_idx')
+      .on('video_job')
+      .column('videoCid')
+      .execute()
+  },
+
+  async down(db: Kysely<unknown>): Promise<void> {
+    await db.schema
+      .alterTable('video_job')
+      .dropColumn('videoCid')
+      .execute()
+    await db.schema
+      .alterTable('video_job')
+      .dropColumn('postUri')
+      .execute()
+  },
+}
+
 export default {
   '20260129T000000000Z-init': initial,
+  '20260129T120000000Z-add-videocid-posturi': addVideoCidAndPostUri,
 }

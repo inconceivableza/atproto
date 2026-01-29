@@ -3,6 +3,7 @@ import { VideoConfig } from './config'
 import { Database, VideoJobs, VideoUploadLimits } from './db'
 import { VideoProcessor, ProcessingQueue } from './processing'
 import { AuthVerifier } from './auth-verifier'
+import { VideoSubscription } from './subscription'
 
 export type AppContextOptions = {
   cfg: VideoConfig
@@ -11,6 +12,7 @@ export type AppContextOptions = {
   queue: ProcessingQueue
   idResolver: IdResolver
   authVerifier: AuthVerifier
+  subscription: VideoSubscription
 }
 
 export class AppContext {
@@ -22,6 +24,7 @@ export class AppContext {
   public queue: ProcessingQueue
   public idResolver: IdResolver
   public authVerifier: AuthVerifier
+  public subscription: VideoSubscription
 
   constructor(opts: AppContextOptions) {
     this.cfg = opts.cfg
@@ -32,6 +35,7 @@ export class AppContext {
     this.queue = opts.queue
     this.idResolver = opts.idResolver
     this.authVerifier = opts.authVerifier
+    this.subscription = opts.subscription
   }
 }
 

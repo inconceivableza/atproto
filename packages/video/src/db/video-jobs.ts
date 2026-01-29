@@ -4,6 +4,8 @@ import { now } from './util'
 export interface CreateJobParams {
   jobId: string
   did: string
+  videoCid?: string
+  postUri?: string
 }
 
 export interface UpdateJobParams {
@@ -17,7 +19,7 @@ export class VideoJobs {
   constructor(private db: Database) {}
 
   async createJob(params: CreateJobParams) {
-    const { jobId, did } = params
+    const { jobId, did, videoCid, postUri } = params
     const timestamp = now()
 
     await this.db.db
@@ -27,6 +29,8 @@ export class VideoJobs {
         did,
         state: 'JOB_STATE_CREATED',
         blobCid: null,
+        videoCid: videoCid || null,
+        postUri: postUri || null,
         error: null,
         progress: null,
         createdAt: timestamp,

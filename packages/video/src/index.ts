@@ -13,6 +13,7 @@ import AppContext from './context'
 import { AuthVerifier } from './auth-verifier'
 import { Database } from './db'
 import { VideoProcessor, ProcessingQueue } from './processing'
+import { VideoSubscription } from './subscription'
 import { createServer } from './lexicon'
 
 export { VideoConfig } from './config'
@@ -20,6 +21,7 @@ export type { VideoConfigValues } from './config'
 export { AppContext } from './context'
 export { AuthVerifier } from './auth-verifier'
 export { Database } from './db'
+export { VideoSubscription } from './subscription'
 export * from './processing'
 
 export class VideoService {
@@ -46,6 +48,9 @@ export class VideoService {
     if (!config.serviceDid) {
       throw new Error('VIDEO_SERVICE_DID is required')
     }
+    if (!config.relayService) {
+      throw new Error('VIDEO_RELAY_SERVICE is required')
+    }
 
     // Initialize database
     const db = new Database({
@@ -69,11 +74,21 @@ export class VideoService {
       ffmpegPath: config.ffmpegPath,
       ffprobePath: config.ffprobePath,
       storageDir: config.storageDir,
+      idResolver,
     })
 
     // Initialize processing queue
     const queue = new ProcessingQueue(db, processor, {
       concurrency: config.processingConcurrency,
+    })
+
+    // Initialize video subscription
+    const subscription = new VideoSubscription({
+      service: config.relayService,
+      db,
+      idResolver,
+      processor,
+      videoJobs: new (require('./db/video-jobs').VideoJobs)(db),
     })
 
     const ctx = new AppContext({
@@ -83,6 +98,7 @@ export class VideoService {
       queue,
       idResolver,
       authVerifier,
+      subscription,
     })
 
     // Health check endpoint
@@ -141,6 +157,10 @@ export class VideoService {
     // Run database migrations
     await this.ctx.db.migrateToLatestOrThrow()
 
+    // Start relay subscription
+    this.ctx.subscription.start()
+    console.log('Video relay subscription started')
+
     // Start processing queue
     this.ctx.queue.start()
     console.log('Video processing queue started')
@@ -156,6 +176,8 @@ export class VideoService {
   }
 
   async destroy(): Promise<void> {
+    await this.ctx.subscription.destroy()
+    console.log('Video relay subscription stopped')
     await this.ctx.queue.stop()
     console.log('Video processing queue stopped')
     await this.terminator?.terminate()
