@@ -1,0 +1,50 @@
+/* eslint-env node */
+
+'use strict'
+
+const { VideoService, VideoConfig } = require('@atproto/video')
+const pkg = require('@atproto/video/package.json')
+
+const main = async () => {
+  const env = readEnv()
+  env.version ??= pkg.version
+  const config = VideoConfig.readEnv(env)
+  const service = VideoService.create(config)
+
+  await service.start()
+
+  console.log(`video service is running on port ${config.port}`)
+
+  // Graceful shutdown (see also https://aws.amazon.com/blogs/containers/graceful-shutdowns-with-ecs/)
+  process.on('SIGTERM', async () => {
+    console.log('video service is stopping')
+    await service.destroy()
+    console.log('video service is stopped')
+  })
+}
+
+const readEnv = () => ({
+  port: maybeParseInt(process.env.VIDEO_PORT),
+  hostname: process.env.VIDEO_HOSTNAME,
+  serverDid: process.env.VIDEO_SERVER_DID,
+  publicUrl: process.env.VIDEO_PUBLIC_URL,
+  maxVideoSize: maybeParseInt(process.env.VIDEO_MAX_SIZE),
+  blobstoreLocation: process.env.VIDEO_BLOBSTORE_LOCATION,
+  dailyUploadLimitBytes: maybeParseInt(
+    process.env.VIDEO_DAILY_UPLOAD_LIMIT_BYTES,
+  ),
+  dailyUploadLimitVideos: maybeParseInt(
+    process.env.VIDEO_DAILY_UPLOAD_LIMIT_VIDEOS,
+  ),
+  jwtSecret: process.env.VIDEO_JWT_SECRET,
+  serviceSigningKey: process.env.VIDEO_SERVICE_SIGNING_KEY,
+})
+
+const maybeParseInt = (str) => {
+  if (!str) return
+  const int = parseInt(str, 10)
+  if (isNaN(int)) return
+  return int
+}
+
+main()
