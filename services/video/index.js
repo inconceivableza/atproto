@@ -32,6 +32,7 @@ const readEnv = () => ({
   dbPostgresSchema: process.env.VIDEO_DB_POSTGRES_SCHEMA,
   dbPoolSize: maybeParseInt(process.env.VIDEO_DB_POOL_SIZE),
   didPlcUrl: process.env.VIDEO_DID_PLC_URL,
+  relayService: process.env.VIDEO_RELAY_SERVICE,
   storageDir: process.env.VIDEO_STORAGE_DIR,
   ffmpegPath: process.env.VIDEO_FFMPEG_PATH,
   ffprobePath: process.env.VIDEO_FFPROBE_PATH,
@@ -45,8 +46,6 @@ const readEnv = () => ({
   dailyUploadLimitVideos: maybeParseInt(
     process.env.VIDEO_DAILY_UPLOAD_LIMIT_VIDEOS,
   ),
-  jwtSecret: process.env.VIDEO_JWT_SECRET,
-  serviceSigningKey: process.env.VIDEO_SERVICE_SIGNING_KEY,
 })
 
 const maybeParseInt = (str) => {

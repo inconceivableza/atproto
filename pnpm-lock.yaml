@@ -2058,6 +2058,12 @@ importers:
       '@atproto/lexicon':
         specifier: workspace:^
         version: link:../lexicon
+      '@atproto/repo':
+        specifier: workspace:^
+        version: link:../repo
+      '@atproto/sync':
+        specifier: workspace:^
+        version: link:../sync
       '@atproto/syntax':
         specifier: workspace:^
         version: link:../syntax
@@ -2076,6 +2082,12 @@ importers:
       http-terminator:
         specifier: ^3.2.0
         version: 3.2.0
+      jose:
+        specifier: ^5.0.1
+        version: 5.3.0
+      key-encoder:
+        specifier: ^2.0.3
+        version: 2.0.3
       kysely:
         specifier: ^0.22.0
         version: 0.22.0
@@ -2094,6 +2106,9 @@ importers:
       typed-emitter:
         specifier: ^2.1.0
         version: 2.1.0
+      uint8arrays:
+        specifier: 3.0.0
+        version: 3.0.0
       zod:
         specifier: ^3.23.8
         version: 3.25.76

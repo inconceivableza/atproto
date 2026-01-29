@@ -18,6 +18,7 @@ export VIDEO_DB_POSTGRES_URL=postgresql://user:password@localhost:5432/video
 export VIDEO_DB_POSTGRES_SCHEMA=public
 export VIDEO_DB_POOL_SIZE=10
 export VIDEO_DID_PLC_URL=https://plc.directory
+export VIDEO_RELAY_SERVICE=wss://bsky.network
 export VIDEO_STORAGE_DIR=./storage
 export VIDEO_FFMPEG_PATH=ffmpeg
 export VIDEO_FFPROBE_PATH=ffprobe
@@ -44,6 +45,7 @@ node index.js
 - `VIDEO_DB_POSTGRES_SCHEMA` - PostgreSQL schema name (optional)
 - `VIDEO_DB_POOL_SIZE` - Database connection pool size (default: 10)
 - `VIDEO_DID_PLC_URL` - PLC directory URL for DID resolution (default: https://plc.directory)
+- `VIDEO_RELAY_SERVICE` - Relay service WebSocket URL for subscribing to repo events (required, e.g., wss://bsky.network)
 - `VIDEO_STORAGE_DIR` - Directory for storing videos and HLS output (default: ./storage)
 - `VIDEO_FFMPEG_PATH` - Path to ffmpeg binary (default: ffmpeg)
 - `VIDEO_FFPROBE_PATH` - Path to ffprobe binary (default: ffprobe)
