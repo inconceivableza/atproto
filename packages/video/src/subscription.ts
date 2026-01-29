@@ -72,7 +72,7 @@ export class VideoSubscription {
     if (uri.collection !== 'app.bsky.feed.post') {
       return
     }
-
+    // TODO handle recipes, reviews
     const post = record as PostRecord
     if (!post.embed) {
       return
