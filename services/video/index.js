@@ -31,8 +31,13 @@ const readEnv = () => ({
   dbPostgresUrl: process.env.VIDEO_DB_POSTGRES_URL,
   dbPostgresSchema: process.env.VIDEO_DB_POSTGRES_SCHEMA,
   dbPoolSize: maybeParseInt(process.env.VIDEO_DB_POOL_SIZE),
+  storageDir: process.env.VIDEO_STORAGE_DIR,
+  ffmpegPath: process.env.VIDEO_FFMPEG_PATH,
+  ffprobePath: process.env.VIDEO_FFPROBE_PATH,
+  processingConcurrency: maybeParseInt(
+    process.env.VIDEO_PROCESSING_CONCURRENCY,
+  ),
   maxVideoSize: maybeParseInt(process.env.VIDEO_MAX_SIZE),
-  blobstoreLocation: process.env.VIDEO_BLOBSTORE_LOCATION,
   dailyUploadLimitBytes: maybeParseInt(
     process.env.VIDEO_DAILY_UPLOAD_LIMIT_BYTES,
   ),

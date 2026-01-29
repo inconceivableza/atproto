@@ -10,8 +10,16 @@ export default function (server: Server, ctx: AppContext) {
       // TODO: Get authenticated user DID from req
       const did = 'did:example:placeholder' // Replace with actual auth
 
-      // TODO: Get video size from input
-      const videoBytes = 0 // Replace with actual size calculation
+      // Read video data from input
+      const videoData = input.encoding === 'video/mp4' ? input.body : Buffer.from([])
+      const videoBytes = videoData.length
+
+      // Validate video size
+      if (videoBytes > ctx.cfg.maxVideoSize) {
+        throw new Error(
+          `Video exceeds maximum size of ${ctx.cfg.maxVideoSize} bytes`,
+        )
+      }
 
       // Check upload limits
       const limitCheck = await ctx.videoUploadLimits.canUpload(
@@ -29,12 +37,13 @@ export default function (server: Server, ctx: AppContext) {
       const jobId = randomUUID()
       const job = await ctx.videoJobs.createJob({ jobId, did })
 
-      // TODO: Store video blob
-      // TODO: Start video processing (e.g., transcoding)
-      // TODO: Update job progress
+      // Store uploaded video file
+      await ctx.processor.storeUploadedVideo(jobId, videoData)
 
       // Record the upload in limits
       await ctx.videoUploadLimits.recordUpload({ did, videoBytes })
+
+      // Job will be picked up by the processing queue automatically
 
       return {
         encoding: 'application/json',

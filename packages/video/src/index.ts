@@ -10,12 +10,14 @@ import API from './api'
 import { VideoConfig } from './config'
 import AppContext from './context'
 import { Database } from './db'
+import { VideoProcessor, ProcessingQueue } from './processing'
 import { createServer } from './lexicon'
 
 export { VideoConfig } from './config'
 export type { VideoConfigValues } from './config'
 export { AppContext } from './context'
 export { Database } from './db'
+export * from './processing'
 
 export class VideoService {
   public ctx: AppContext
@@ -45,9 +47,23 @@ export class VideoService {
       poolSize: config.dbPoolSize,
     })
 
+    // Initialize video processor
+    const processor = new VideoProcessor(db, {
+      ffmpegPath: config.ffmpegPath,
+      ffprobePath: config.ffprobePath,
+      storageDir: config.storageDir,
+    })
+
+    // Initialize processing queue
+    const queue = new ProcessingQueue(db, processor, {
+      concurrency: config.processingConcurrency,
+    })
+
     const ctx = new AppContext({
       cfg: config,
       db,
+      processor,
+      queue,
     })
 
     // Health check endpoint
@@ -89,8 +105,26 @@ export class VideoService {
   }
 
   async start(): Promise<http.Server> {
+    // Validate ffmpeg setup
+    const setup = await this.ctx.processor.validateSetup()
+    if (!setup.ffmpeg) {
+      throw new Error('ffmpeg not found. Please install ffmpeg.')
+    }
+    if (!setup.ffprobe) {
+      throw new Error('ffprobe not found. Please install ffmpeg.')
+    }
+    if (!setup.storage) {
+      throw new Error(
+        `Storage directory ${this.ctx.cfg.storageDir} is not writable`,
+      )
+    }
+
     // Run database migrations
     await this.ctx.db.migrateToLatestOrThrow()
+
+    // Start processing queue
+    this.ctx.queue.start()
+    console.log('Video processing queue started')
 
     const server = this.app.listen(this.ctx.cfg.port)
     this.server = server
@@ -103,6 +137,8 @@ export class VideoService {
   }
 
   async destroy(): Promise<void> {
+    await this.ctx.queue.stop()
+    console.log('Video processing queue stopped')
     await this.terminator?.terminate()
     await this.ctx.db.close()
   }

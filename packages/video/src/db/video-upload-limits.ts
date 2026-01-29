@@ -32,7 +32,8 @@ export class VideoUploadLimits {
   async recordUpload(params: RecordUploadParams) {
     const { did, videoBytes } = params
     const date = today()
-
+    // TODO ensure this will work with concurrent uploads (maybe it needs to be calculated based on what's in the job queue)
+    // Also check that the right thing happens if an uplaod fails
     // Try to update existing record
     const updated = await this.db.db
       .updateTable('video_upload_limit')

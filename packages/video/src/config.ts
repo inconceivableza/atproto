@@ -13,7 +13,14 @@ export interface VideoConfigValues {
   supportedMimeTypes?: string[]
 
   // Storage
-  blobstoreLocation?: string
+  storageDir?: string
+
+  // FFmpeg
+  ffmpegPath?: string
+  ffprobePath?: string
+
+  // Processing
+  processingConcurrency?: number
 
   // Rate limiting
   dailyUploadLimitBytes?: number
@@ -29,6 +36,10 @@ export class VideoConfig {
 
   constructor(private cfg: VideoConfigValues) {
     // Set defaults
+    this.cfg.storageDir ??= './storage'
+    this.cfg.ffmpegPath ??= 'ffmpeg'
+    this.cfg.ffprobePath ??= 'ffprobe'
+    this.cfg.processingConcurrency ??= 2
     this.cfg.maxVideoSize ??= 100 * 1024 * 1024 // 100MB
     this.cfg.supportedMimeTypes ??= [
       'video/mp4',
@@ -49,8 +60,13 @@ export class VideoConfig {
       dbPostgresUrl: process.env.VIDEO_DB_POSTGRES_URL,
       dbPostgresSchema: process.env.VIDEO_DB_POSTGRES_SCHEMA,
       dbPoolSize: parseIntWithFallback(process.env.VIDEO_DB_POOL_SIZE, 10),
+      storageDir: process.env.VIDEO_STORAGE_DIR,
+      ffmpegPath: process.env.VIDEO_FFMPEG_PATH,
+      ffprobePath: process.env.VIDEO_FFPROBE_PATH,
+      processingConcurrency: parseIntWithFallback(
+        process.env.VIDEO_PROCESSING_CONCURRENCY,
+      ),
       maxVideoSize: parseIntWithFallback(process.env.VIDEO_MAX_SIZE),
-      blobstoreLocation: process.env.VIDEO_BLOBSTORE_LOCATION,
       dailyUploadLimitBytes: parseIntWithFallback(
         process.env.VIDEO_DAILY_UPLOAD_LIMIT_BYTES,
       ),
@@ -96,8 +112,20 @@ export class VideoConfig {
     return this.cfg.supportedMimeTypes!
   }
 
-  get blobstoreLocation() {
-    return this.cfg.blobstoreLocation
+  get storageDir() {
+    return this.cfg.storageDir!
+  }
+
+  get ffmpegPath() {
+    return this.cfg.ffmpegPath!
+  }
+
+  get ffprobePath() {
+    return this.cfg.ffprobePath!
+  }
+
+  get processingConcurrency() {
+    return this.cfg.processingConcurrency!
   }
 
   get dailyUploadLimitBytes() {
