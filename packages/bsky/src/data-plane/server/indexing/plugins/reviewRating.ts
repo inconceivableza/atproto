@@ -66,7 +66,6 @@ const insertFn = async (
         imageCid: img.image.ref.toString(),
         alt: img.alt,
       }))
-      // TODO: potentially delete if revised without image
       await db.insertInto('post_embed_image').values(imagesEmbed).execute()
     } else if (isEmbedVideo(postEmbed)) {
       const { video } = postEmbed

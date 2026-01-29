@@ -175,14 +175,14 @@ function baseAuthorFeedQuery(db: Database, req: GetAuthorFeedRequest) {
     .selectFrom('feed_item')
     .selectAll('feed_item')
     .where('originatorDid', '=', actorDid)
-  // defaults to posts, reposts, and replies
+
   switch (feedType) {
     case FeedType.POSTS_AND_AUTHOR_THREADS:
       return builder
         .innerJoin('post', 'post.uri', 'feed_item.postUri')
         .where((qb) =>
           qb
-            .where('type', "=", 'repost')//.where("postUri", "ilike", `at://%/${ids.AppBskyFeedPost}/%`))
+            .where('type', "=", 'repost')
             .orWhere('post.replyParent', 'is', null)
             .orWhere('post.replyRoot', 'like', `at://${actorDid}/%`)
         )
