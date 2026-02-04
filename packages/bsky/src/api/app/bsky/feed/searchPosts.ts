@@ -65,7 +65,8 @@ const skeleton = async (inputs: SkeletonFnInput<Context, Params>) => {
     author: params.author,
   })
 
-  if (ctx.searchAgent) {
+  // Use dataplane fallback for empty queries (search indexer requires a query string)
+  if (ctx.searchAgent && params.q?.trim()) {
     // @NOTE cursors won't change on appview swap
     const { data: res } =
       await ctx.searchAgent.api.app.bsky.unspecced.searchPostsSkeleton({

@@ -48,7 +48,8 @@ const skeleton = async (inputs: SkeletonFnInput<Context, Params>) => {
   const { ctx, params } = inputs
   const { q } = params
 
-  if (ctx.searchAgent) {
+  // Use dataplane fallback for empty queries (search indexer requires a query string)
+  if (ctx.searchAgent && q?.trim()) {
     // @NOTE cursors won't change on appview swap
     const { data: res } =
       await ctx.searchAgent.app.bsky.unspecced.searchStarterPacksSkeleton({

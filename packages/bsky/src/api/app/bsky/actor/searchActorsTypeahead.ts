@@ -50,7 +50,8 @@ const skeleton = async (inputs: SkeletonFnInput<Context, Params>) => {
   // add typeahead option
   // add hits total
 
-  if (ctx.searchAgent) {
+  // Use dataplane fallback for empty queries (search indexer requires a query string)
+  if (ctx.searchAgent && term.trim()) {
     const { data: res } =
       await ctx.searchAgent.app.bsky.unspecced.searchActorsSkeleton({
         typeahead: true,

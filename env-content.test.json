@@ -22,6 +22,7 @@
     "log_for_owner_dids": [],
     "extra_headers_for_owner_dids": [],
     "known_shutdown_feeds": [],
+    "feedback_proxy_did": "",
     "authed_only": [],
     "fallback_to": "following"
   },
