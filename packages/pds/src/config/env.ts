@@ -7,18 +7,22 @@ const envContentFilenames = {
   development: '../../env-content.json',
 }
 
+function parseJsonFile(filename) {
+  return JSON.parse(fs.readFileSync(filename, {encoding: 'utf-8'}))
+}
+
 export function readEnv() {
   const nodeEnv = envStr('NODE_ENV') || 'development'
   const envContentFile = envStr('PDS_ENV_CONTENT_FILE') || envContentFilenames[nodeEnv] || 'env-content.json'
-  const envContent = fs.existsSync(envContentFile) ?
-    JSON.parse(fs.readFileSync(envContentFile, {encoding: 'utf-8'}))
-    : {}
+  const envContentExists = fs.existsSync(envContentFile)
+  if (!envContentExists) console.warn(`Could not find env-content file ${envContentFile}: will try use ${envContentFilenames.production}`)
+  const envContent = envContentExists ? parseJsonFile(envContentFile) : (
+    fs.existsSync(envContentFilenames.production) ? parseJsonFile(envContentFilenames.production) : {}
+  )
   const policyBaseUrl = envContent.links?.policyBase
   const supportUrl = envContent.links?.pdsSupport ?? envContent.links?.helpDesk
   const brandingFile = envStr('PDS_BRANDING_FILE') || 'branding.json'
-  const branding = fs.existsSync(brandingFile) ?
-    JSON.parse(fs.readFileSync(brandingFile, {encoding: 'utf-8'}))
-    : {}
+  const branding = fs.existsSync(brandingFile) ? parseJsonFile(brandingFile) : {}
   return {
     // service
     port: envInt('PDS_PORT'),
