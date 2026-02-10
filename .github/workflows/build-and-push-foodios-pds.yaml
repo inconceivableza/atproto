@@ -21,6 +21,34 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Fetch branding.json from social-app
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # Get the date of the current commit in this atproto repo
+          COMMIT_DATE=$(git log -1 --format=%cI)
+          echo "Current atproto commit date: ${COMMIT_DATE}"
+
+          # Find the latest social-app commit on main before this date
+          SOCIAL_SHA=$(gh api \
+            "repos/inconceivableza/social-app/commits?sha=main&until=${COMMIT_DATE}&per_page=1" \
+            --jq '.[0].sha' 2>/dev/null || true)
+
+          if [ -z "${SOCIAL_SHA}" ] || [ "${SOCIAL_SHA}" = "null" ]; then
+            echo "Could not find social-app commit before ${COMMIT_DATE}, using latest main"
+            SOCIAL_SHA="main"
+          fi
+
+          echo "Using social-app ref: ${SOCIAL_SHA}"
+
+          # Download branding.json from that commit
+          gh api \
+            "repos/inconceivableza/social-app/contents/conf/branding.json?ref=${SOCIAL_SHA}" \
+            --jq '.content' | base64 -d > branding.json
+
+          echo "Fetched branding.json:"
+          cat branding.json
+
       - name: Setup Docker buildx
         uses: docker/setup-buildx-action@v3
 

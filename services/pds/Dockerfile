@@ -78,6 +78,7 @@ RUN mkdir /app/data && chown node /app/data
 VOLUME /app/data
 EXPOSE 3000
 ENV PDS_PORT=3000
+ENV PDS_BRANDING_FILE=/app/branding.json
 ENV NODE_ENV=production
 # potential perf issues w/ io_uring on this version of node
 ENV UV_USE_IO_URING=0
